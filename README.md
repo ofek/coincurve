@@ -8,135 +8,17 @@ Python FFI bindings for [libsecp256k1](https://github.com/bitcoin/secp256k1)
 ## Installation
 
 ```
-pip install secp256k1
+pip install coincurve
 ```
 
 ### Precompiled binary packages (wheels)
 
 Precompiled binary wheels is available for Python 2.7, 3.3, 3.4, and 3.5 on Linux. To take advantage of those you need to use pip >= 8.1.0.
 
-In case you don't want to use the binary packages you can prevent pip from
-using them with the following command:
-
-```
-pip install --no-binary secp256k1
-```
-
-
-### Installation with compilation
-
-If you either can't or don't want to use the binary package options described
-above read on to learn what is needed to install the source pacakge.
-
-There are two modes of installation depending on whether you already have
-libsecp256k1 installed on your system:
-
-
-###### Using a system installed libsecp256k1
-
-If the library is already installed it should usually be automatically detected
-and used.
-However if libsecp256k1 is installed in a non standard location you can use the
-environment variables `INCLUDE_DIR` and `LIB_DIR` to point the way:
-
-```
-INCLUDE_DIR=/opt/somewhere/include LIB_DIR=/opt/somewhere/lib pip install --no-binary secp256k1
-```
-
-
-###### Using the bundled libsecp256k1
-
-If on the other hand you don't have libsecp256k1 installed on your system, a
-bundled version will be built and used. In this case only the `recovery` module
-will be enabled since it's the only one not currently considered as
-"experimental" by the library authors. This can be overridden by setting the
-`SECP_BUNDLED_EXPERIMENTAL` environment variable:
-
-```
-SECP_BUNDLED_EXPERIMENTAL=1 pip install --no-binary secp256k1
-```
-
-For the bundled version to compile successfully you need to have a C compiler
-as well as the development headers for `libffi` and `libgmp` installed.
-
-On Debian / Ubuntu for example the necessary packages are:
-
-* `build-essential`
-* `automake`
-* `pkg-config`
-* `libtool`
-* `libffi-dev`
-* `libgmp-dev`
-
-On OS X the necessary homebrew packages are:
-
-* `automake`
-* `pkg-config`
-* `libtool`
-* `libffi`
-* `gmp`
-
-
-## Command line usage
-
-###### Generate a private key and show the corresponding public key
-
-```
-$ python -m secp256k1 privkey -p
-
-a1455c78a922c52f391c5784f8ca1457367fa57f9d7a74fdab7d2c90ca05c02e
-Public key: 02477ce3b986ab14d123d6c4167b085f4d08c1569963a0201b2ffc7d9d6086d2f3
-```
-
-###### Sign a message
-
-```
-$ python -m secp256k1 sign \
-	-k a1455c78a922c52f391c5784f8ca1457367fa57f9d7a74fdab7d2c90ca05c02e \
-	-m hello
-
-3045022100a71d86190354d64e5b3eb2bd656313422cdf7def69bf3669cdbfd09a9162c96e0220713b81f3440bff0b639d2f29b2c48494b812fa89b754b7b6cdc9eaa8027cf369
-```
-
-###### Check signature
-
-```
-$ python -m secp256k1 checksig \
-	-p 02477ce3b986ab14d123d6c4167b085f4d08c1569963a0201b2ffc7d9d6086d2f3 \
-	-m hello \
-	-s 3045022100a71d86190354d64e5b3eb2bd656313422cdf7def69bf3669cdbfd09a9162c96e0220713b81f3440bff0b639d2f29b2c48494b812fa89b754b7b6cdc9eaa8027cf369
-
-True
-```
-
-###### Generate a signature that allows recovering the public key
-
-```
-$ python -m secp256k1 signrec \
-	-k a1455c78a922c52f391c5784f8ca1457367fa57f9d7a74fdab7d2c90ca05c02e \
-	-m hello
-
-515fe95d0780b11633f3352deb064f1517d58f295a99131e9389da8bfacd64422513d0cd4e18a58d9f4873b592afe54cf63e8f294351d1e612c8a297b5255079 1
-```
-
-###### Recover public key
-
-```
-$ python -m secp256k1 recpub \
-	-s 515fe95d0780b11633f3352deb064f1517d58f295a99131e9389da8bfacd64422513d0cd4e18a58d9f4873b592afe54cf63e8f294351d1e612c8a297b5255079 \
-	-i 1 \
-	-m hello
-
-Public key: 02477ce3b986ab14d123d6c4167b085f4d08c1569963a0201b2ffc7d9d6086d2f3
-```
-
-
-It is easier to get started with command line, but it is more common to use this as a library. For that, check the next sections.
-
 
 ## API
 
-#### class `secp256k1.PrivateKey(privkey, raw, flags)`
+#### class `coincurve.PrivateKey(privkey, raw, flags)`
 
 The `PrivateKey` class loads or creates a private key by obtaining 32 bytes from urandom and operates over it.
 
@@ -144,11 +26,11 @@ The `PrivateKey` class loads or creates a private key by obtaining 32 bytes from
 
 - `privkey=None` - generate a new private key if None, otherwise load a private key.
 - `raw=True` - if `True`, it is assumed that `privkey` is just a sequence of bytes, otherwise it is assumed that it is in the DER format. This is not used when `privkey` is not specified.
-- `flags=secp256k1.ALL_FLAGS` - see Constants.
+- `flags=coincurve.ALL_FLAGS` - see Constants.
 
 ##### Methods and instance attributes
 
-- `pubkey`: an instance of `secp256k1.PublicKey`.
+- `pubkey`: an instance of `coincurve.PublicKey`.
 - `private_key`: raw bytes for the private key.
 
 - `set_raw_privkey(privkey)`<br/>
@@ -189,7 +71,7 @@ To combine pubnonces, use `PublicKey.combine`.<br/><br/>
 Do not pass the pubnonce produced for the respective privnonce; combine the pubnonces from other signers and pass that instead.
 
 
-#### class `secp256k1.PublicKey(pubkey, raw, flags)`
+#### class `coincurve.PublicKey(pubkey, raw, flags)`
 
 The `PublicKey` class loads an existing public key and operates over it.
 
@@ -197,7 +79,7 @@ The `PublicKey` class loads an existing public key and operates over it.
 
 - `pubkey=None` - do not load a public key if None, otherwise do.
 - `raw=False` - if `False`, it is assumed that `pubkey` has gone through `PublicKey.deserialize` already, otherwise it must be specified as bytes.
-- `flags=secp256k1.FLAG_VERIFY` - see Constants.
+- `flags=coincurve.FLAG_VERIFY` - see Constants.
 
 ##### Methods and instance attributes
 
@@ -230,9 +112,9 @@ compute an EC Diffie-Hellman secret in constant time. The instance `public_key` 
 > NOTE: `ecdh` can only be used if the `secp256k1` C library is compiled with support for it. If there is no support, an Exception will be raised when calling it.
 
 
-#### class `secp256k1.ECDSA`
+#### class `coincurve.ECDSA`
 
-The `ECDSA` class is intended to be used as a mix in. Its methods can be accessed from any `secp256k1.PrivateKey` or `secp256k1.PublicKey` instances.
+The `ECDSA` class is intended to be used as a mix in. Its methods can be accessed from any `coincurve.PrivateKey` or `coincurve.PublicKey` instances.
 
 ##### Methods
 
@@ -254,7 +136,7 @@ This function always return a tuple containing a boolean (True if not previously
 
 - `ecdsa_recover(msg, recover_sig, raw=False, digest=hashlib.sha256)` -> internal object<br/>
 recover an ECDSA public key from a signature generated by `ecdsa_sign_recoverable`. `recover_sig` is expected to be an object returned from `ecdsa_sign_recoverable` (or if it was serialized using `ecdsa_recoverable_serialize`, then first run it through `ecdsa_recoverable_deserialize`). `msg`, `raw`, and `digest` are used as described in `ecdsa_sign`.<br/><br/>
-In order to call `ecdsa_recover` from a `PublicKey` instance, it's necessary to create the instance by settings `flags` to `ALL_FLAGS`: `secp256k1.PublicKey(..., flags=secp256k1.ALL_FLAGS)`.
+In order to call `ecdsa_recover` from a `PublicKey` instance, it's necessary to create the instance by settings `flags` to `ALL_FLAGS`: `coincurve.PublicKey(..., flags=coincurve.ALL_FLAGS)`.
 
 - `ecdsa_recoverable_serialize(recover_sig)` -> (bytes, int)<br/>
 convert the result from `ecdsa_sign_recoverable` to a tuple composed of 65 bytesand an integer denominated as recovery id.
@@ -268,9 +150,9 @@ convert a recoverable signature to a normal signature, i.e. one that can be used
 > NOTE: `ecdsa_recover*` can only be used if the `secp256k1` C library is compiled with support for it. If there is no support, an Exception will be raised when calling any of them.
 
 
-#### class `secp256k1.Schnorr`
+#### class `coincurve.Schnorr`
 
-The `Schnorr` class is intended to be used as a mix in. Its methods can be accessed from any `secp256k1.PrivateKey` or `secp256k1.PublicKey` instances.
+The `Schnorr` class is intended to be used as a mix in. Its methods can be accessed from any `coincurve.PrivateKey` or `coincurve.PublicKey` instances.
 
 ##### Methods
 
@@ -285,9 +167,9 @@ combine multiple Schnorr partial signatures. `raw_sigs` is expected to be a list
 
 #### Constants
 
-##### `secp256k1.FLAG_SIGN`
-##### `secp256k1.FLAG_VERIFY`
-##### `secp256k1.ALL_FLAGS`
+##### `coincurve.FLAG_SIGN`
+##### `coincurve.FLAG_VERIFY`
+##### `coincurve.ALL_FLAGS`
 
 `ALL_FLAGS` combines `FLAG_SIGN` and `FLAG_VERIFY` using bitwise OR.
 
@@ -298,7 +180,7 @@ These flags are used during context creation (undocumented here) and affect whic
 ## Example
 
 ```python
-from secp256k1 import PrivateKey, PublicKey
+from coincurve import PrivateKey, PublicKey
 
 privkey = PrivateKey()
 privkey_der = privkey.serialize()
@@ -322,7 +204,7 @@ assert pubkey2.ecdsa_verify(b'hello', sig)
 ```
 
 ```python
-from secp256k1 import PrivateKey
+from coincurve import PrivateKey
 
 key = '31a84594060e103f5a63eb742bd46cf5f5900d8406e2726dedfc61c7cf43ebad'
 msg = '9e5755ec2f328cc8635a55415d0e9a09c2b6f2c9b0343c945fbbfe08247a4cbe'
@@ -336,7 +218,7 @@ assert sig_ser == bytes(bytearray.fromhex(sig))
 ```
 
 ```python
-from secp256k1 import PrivateKey
+from coincurve import PrivateKey
 
 key = '7ccca75d019dbae79ac4266501578684ee64eeb3c9212105f7a3bdc0ddb0f27e'
 pub_compressed = '03e9a06e539d6bf5cf1ca5c41b59121fa3df07a338322405a312c67b6349a707e9'
@@ -349,39 +231,3 @@ pubkey_ser_uncompressed = privkey.pubkey.serialize(compressed=False)
 assert pubkey_ser == bytes(bytearray.fromhex(pub_compressed))
 assert pubkey_ser_uncompressed == bytes(bytearray.fromhex(pub_uncompressed))
 ```
-
-
-## Technical details about the bundled libsecp256k1
-
-The bundling of libsecp256k1 is handled by the various setup.py build phases:
-
-- During 'sdist':
-  If the directory `libsecp256k1` doesn't exist in the
-  source directory it is downloaded from the location specified
-  by the `LIB_TARBALL_URL` constant in `setup.py` and extracted into
-  a directory called `libsecp256k1`
-
-  To upgrade to a newer version of the bundled libsecp256k1 source
-  simply delete the `libsecp256k1` directory and update the
-  `LIB_TARBALL_URL` to point to a newer commit.
-
-- During 'install':
-  If an existing (system) installation of libsecp256k1 is found
-  (either in the default library locations or in the location pointed
-  to by the environment variable `LIB_DIR`) it is used as before.
-
-  Due to the way the way cffi modules are implemented it is necessary
-  to perform this detection in the cffi build module
-  `_cffi_build/build.py` as well as in `setup.py`. For that reason
-  some utility functions have been moved into a `setup_support.py`
-  module which is imported from both.
-
-  If however no existing installation can be found the bundled
-  source code is used to build a library locally that will be
-  statically linked into the CFFI extension.
-
-  By default only the `recovery` module will be enabled in this bundled
-  version as it is the only one not considered to be 'experimental' by
-  the libsecp256k1 authors. It is possible to override this and enable
-  all modules by setting the environment variable
-  `SECP_BUNDLED_EXPERIMENTAL`.

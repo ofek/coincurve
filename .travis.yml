@@ -1,0 +1,85 @@
+sudo: false
+language: python
+python:
+- '2.7'
+- '3.3'
+- '3.4'
+- '3.5'
+env:
+  global:
+  - LD_LIBRARY_PATH=./libsecp256k1_ext/.libs
+  - DYLD_FALLBACK_LIBRARY_PATH=./libsecp256k1_ext/.libs
+  - LIB_DIR=./libsecp256k1_ext/.libs
+  - INCLUDE_DIR=./libsecp256k1_ext/include
+  - WHEELBUILDER_IMAGE=quay.io/pypa/manylinux1_x86_64
+  - PYPI_USERNAME=lud
+  - secure: ajKFrW+W8UGynsRl6JDiOqGjIVKq5O46c2sI39QNdhwKJ1wo3oRMddPzJkmXiPfhifo6rp5VvdtudaIjkKDOGZQKpujmdlFIHm/ZRNK64nI6JY6bTNqCEnuxMloy+ybUpaL59bbWYNJQU4YVRwVyY6Iyqi6zRWs8LLG7MlWHozn5LCj2pxDgxXzKyl7lPZdtJ3LZq208ORJO4goa0GYptGl53LE3Nfk6Bx/vK0lzESnk+UkfptfIbSiFDG/L1VdkQtIKyM+6wbMBAgQ5+JQCW7fEJ7t4XsiC/5mZ207IloRvpAzl63oDURa/GnffHXA6gDoyr3tloWEmfBW0k7TVl780kG6W7sRrMsSFErGWsyljlqyMZzBrISgWjFp7C7Ppa0bWO14L/sq47TtR1nMjNhgcRq4p3qhuhDzt4k4XQJtgdJNcqIFsK0CXFsNNnW4P35qqX5u4Ld8zg0h8t88AR9ymy3X2U5+H61tPt+WPBtxkOlJkD2wgevhDvanZFgtBGNJgPavyhdCosHG/5pWELuE5k/TMdHWYbLKofHJ7qIH9SgJx6MDTVV5U7+cquo0J0a0N2QQbv0peNNP+X0BNRgflNck1ePsSFhhpOUzwyrQbicakvhM8cGzBQi5odeLB4cf2CkIOFkgdYC2jk5qXVMGvGdDE7Q0kNzXiz/6fu2w=
+  matrix:
+  - BUNDLED=0
+  - BUNDLED=1
+  - BUNDLED=1 SECP_BUNDLED_WITH_BIGNUM=1
+  - BUNDLED=1 SECP_BUNDLED_EXPERIMENTAL=1
+  - BUNDLED=1 SECP_BUNDLED_EXPERIMENTAL=1 SECP_BUNDLED_WITH_BIGNUM=1
+cache:
+  directories:
+  - $HOME/.cache/pip
+  - $HOME/.cache/python-dl
+matrix:
+  include:
+  - os: osx
+    language: generic
+    osx_image: xcode7.1
+    python: 2.7
+    env:
+    - TRAVIS_PYTHON_VERSION=2.7
+    - BUNDLED=1
+  - os: osx
+    language: generic
+    osx_image: xcode7.1
+    python: 3.4
+    env:
+    - TRAVIS_PYTHON_VERSION=3.4
+    - BUNDLED=1
+  - os: osx
+    language: generic
+    osx_image: xcode7.1
+    python: 3.5
+    env:
+    - TRAVIS_PYTHON_VERSION=3.5
+    - BUNDLED=1
+  - os: linux
+    language: python
+    python: 3.5
+    sudo: required
+    services:
+    - docker
+    env:
+    - BUNDLED=1
+    - BUILD_LINUX_WHEELS=1
+addons:
+  apt:
+    packages:
+    - git
+    - libtool
+    - autoconf
+    - automake
+    - pkg-config
+    - libffi-dev
+    - libgmp-dev
+before_install:
+- source .travis/install.sh
+install:
+- python setup.py install
+script:
+- mv secp256k1 _secp256k1
+- coverage run --parallel --include="*/site-packages/*.egg/secp256k1/*" -m py.test
+- mv _secp256k1 secp256k1
+- coverage combine
+after_success:
+- coveralls
+deploy:
+  provider: script
+  skip_cleanup: true
+  script: .travis/deploy.sh
+  on:
+    tags: true

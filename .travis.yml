@@ -12,8 +12,7 @@ env:
   - LIB_DIR=./libsecp256k1_ext/.libs
   - INCLUDE_DIR=./libsecp256k1_ext/include
   - WHEELBUILDER_IMAGE=quay.io/pypa/manylinux1_x86_64
-  - PYPI_USERNAME=lud
-  - secure: ajKFrW+W8UGynsRl6JDiOqGjIVKq5O46c2sI39QNdhwKJ1wo3oRMddPzJkmXiPfhifo6rp5VvdtudaIjkKDOGZQKpujmdlFIHm/ZRNK64nI6JY6bTNqCEnuxMloy+ybUpaL59bbWYNJQU4YVRwVyY6Iyqi6zRWs8LLG7MlWHozn5LCj2pxDgxXzKyl7lPZdtJ3LZq208ORJO4goa0GYptGl53LE3Nfk6Bx/vK0lzESnk+UkfptfIbSiFDG/L1VdkQtIKyM+6wbMBAgQ5+JQCW7fEJ7t4XsiC/5mZ207IloRvpAzl63oDURa/GnffHXA6gDoyr3tloWEmfBW0k7TVl780kG6W7sRrMsSFErGWsyljlqyMZzBrISgWjFp7C7Ppa0bWO14L/sq47TtR1nMjNhgcRq4p3qhuhDzt4k4XQJtgdJNcqIFsK0CXFsNNnW4P35qqX5u4Ld8zg0h8t88AR9ymy3X2U5+H61tPt+WPBtxkOlJkD2wgevhDvanZFgtBGNJgPavyhdCosHG/5pWELuE5k/TMdHWYbLKofHJ7qIH9SgJx6MDTVV5U7+cquo0J0a0N2QQbv0peNNP+X0BNRgflNck1ePsSFhhpOUzwyrQbicakvhM8cGzBQi5odeLB4cf2CkIOFkgdYC2jk5qXVMGvGdDE7Q0kNzXiz/6fu2w=
+  - PYPI_USERNAME=Ofekmeister
   matrix:
   - BUNDLED=0
   - BUNDLED=1

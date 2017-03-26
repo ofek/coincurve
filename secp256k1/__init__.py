@@ -508,3 +508,115 @@ def _tweak_private(inst, func, scalar):
         raise Exception("Tweak is out of range")
 
     return bytes(ffi.buffer(key, 32))
+
+
+def _main_cli(args, out, encoding='utf-8'):
+    import binascii
+
+    def show_public(public_key):
+        rawp = public_key.serialize()
+        out.write(u"Public key: {}\n".format(
+            binascii.hexlify(rawp).decode(encoding)))
+
+    def sign(funcname, params):
+        raw = bytes(bytearray.fromhex(params.private_key))
+        priv = PrivateKey(raw)
+        func = getattr(priv, funcname)
+        sig = func(params.message)
+        return priv, sig
+
+    if args.action == 'privkey':
+        if args.private_key:
+            rawkey = bytes(bytearray.fromhex(args.private_key))
+        else:
+            rawkey = None
+        priv = PrivateKey(rawkey)
+        raw = priv.private_key
+        out.write(u"{}\n".format(binascii.hexlify(raw).decode(encoding)))
+        if args.show_pubkey:
+            show_public(priv.pubkey)
+
+    elif args.action == 'sign':
+        priv, sig_raw = sign('ecdsa_sign', args)
+        sig = priv.ecdsa_serialize(sig_raw)
+        out.write(u"{}\n".format(binascii.hexlify(sig).decode(encoding)))
+        if args.show_pubkey:
+            show_public(priv.pubkey)
+
+    elif args.action == 'checksig':
+        raw = bytes(bytearray.fromhex(args.public_key))
+        sig = bytes(bytearray.fromhex(args.signature))
+        pub = PublicKey(raw, raw=True)
+        try:
+            sig_raw = pub.ecdsa_deserialize(sig)
+            good = pub.ecdsa_verify(args.message, sig_raw)
+        except:
+            good = False
+        out.write(u"{}\n".format(good))
+        return 0 if good else 1
+
+    elif args.action == 'signrec':
+        priv, sig = sign('ecdsa_sign_recoverable', args)
+        sig, recid = priv.ecdsa_recoverable_serialize(sig)
+        out.write(u"{} {}\n".format(binascii.hexlify(sig).decode(encoding), recid))
+        if args.show_pubkey:
+            show_public(priv.pubkey)
+
+    elif args.action == 'recpub':
+        empty = PublicKey(flags=ALL_FLAGS)
+        sig_raw = bytes(bytearray.fromhex(args.signature))
+        sig = empty.ecdsa_recoverable_deserialize(sig_raw, args.recid)
+        pubkey = empty.ecdsa_recover(args.message, sig)
+        show_public(PublicKey(pubkey))
+
+    return 0
+
+
+def _parse_cli():
+    import sys
+    from argparse import ArgumentParser
+
+    py2 = sys.version_info.major == 2
+    enc = sys.getfilesystemencoding()
+    def bytes_input(s):
+        return s if py2 else s.encode(enc)
+
+    parser = ArgumentParser(prog="secp256k1")
+    subparser = parser.add_subparsers(dest='action')
+
+    genparser = subparser.add_parser('privkey')
+    genparser.add_argument('-p', '--show-pubkey', action='store_true')
+    genparser.add_argument('-k', '--private_key')
+
+    sign = subparser.add_parser('sign')
+    sign.add_argument('-k', '--private-key', required=True)
+    sign.add_argument('-m', '--message', required=True, type=bytes_input)
+    sign.add_argument('-p', '--show-pubkey', action='store_true')
+
+    signrec = subparser.add_parser('signrec')
+    signrec.add_argument('-k', '--private-key', required=True)
+    signrec.add_argument('-m', '--message', required=True, type=bytes_input)
+    signrec.add_argument('-p', '--show-pubkey', action='store_true')
+
+    check = subparser.add_parser('checksig')
+    check.add_argument('-p', '--public-key', required=True)
+    check.add_argument('-m', '--message', required=True, type=bytes_input)
+    check.add_argument('-s', '--signature', required=True)
+
+    recpub = subparser.add_parser('recpub')
+    recpub.add_argument('-m', '--message', required=True, type=bytes_input)
+    recpub.add_argument('-i', '--recid', required=True, type=int)
+    recpub.add_argument('-s', '--signature', required=True)
+
+    return parser, enc
+
+
+def main():
+    import sys
+    parser, enc = _parse_cli()
+    args = parser.parse_args(sys.argv[1:])
+    sys.exit(_main_cli(args, sys.stdout, enc))
+
+
+if __name__ == '__main__':
+    main()

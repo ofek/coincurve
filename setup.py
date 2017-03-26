@@ -254,7 +254,7 @@ class develop(_develop):
 
 
 setup(
-    name="coincurve",
+    name="secp256k1",
     version="0.1.0",
 
     description='Cross-platform Python CFFI bindings for libsecp256k1',
@@ -272,7 +272,7 @@ setup(
     tests_require=['pytest==2.8.7'],
 
     packages=find_packages(exclude=('_cffi_build', '_cffi_build.*', 'libsecp256k1')),
-    ext_package="coincurve",
+    ext_package="secp256k1",
     cffi_modules=[
         "_cffi_build/build.py:ffi"
     ],

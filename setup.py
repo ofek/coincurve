@@ -192,11 +192,11 @@ class build_clib(_build_clib):
             "--with-pic",
             "--enable-module-recovery",
             "--prefix",
+            os.path.abspath(self.build_clib),
             "--with-bignum=gmp",
             "--enable-experimental",
             "--enable-module-ecdh",
             "--enable-module-schnorr",
-            os.path.abspath(self.build_clib),
         ]
 
         log.debug("Running configure: {}".format(" ".join(cmd)))

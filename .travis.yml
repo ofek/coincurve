@@ -5,6 +5,7 @@ python:
 - '3.3'
 - '3.4'
 - '3.5'
+- '3.6'
 env:
   global:
   - LD_LIBRARY_PATH=./libsecp256k1_ext/.libs
@@ -41,6 +42,13 @@ matrix:
     python: 3.5
     env:
     - TRAVIS_PYTHON_VERSION=3.5
+    - BUNDLED=1
+  - os: osx
+    language: generic
+    osx_image: xcode7.1
+    python: 3.6
+    env:
+    - TRAVIS_PYTHON_VERSION=3.6
     - BUNDLED=1
   - os: linux
     language: python

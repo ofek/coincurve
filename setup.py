@@ -29,7 +29,7 @@ except ImportError:
 
 
 sys.path.append(os.path.abspath(os.path.dirname(__file__)))
-from setup_support import absolute, build_flags
+from setup_support import absolute, build_flags, has_system_lib
 
 
 # Version of libsecp256k1 to download if none exists in the `libsecp256k1`
@@ -107,7 +107,7 @@ else:
 
 class Distribution(_Distribution):
     def has_c_libraries(self):
-        return True
+        return not has_system_lib()
 
 
 class build_clib(_build_clib):
@@ -144,6 +144,9 @@ class build_clib(_build_clib):
         return build_flags('libsecp256k1', 'l', os.path.abspath(self.build_temp))
 
     def run(self):
+        if has_system_lib():
+            log.info("Using system library")
+            return
 
         build_temp = os.path.abspath(self.build_temp)
 
@@ -189,12 +192,21 @@ class build_clib(_build_clib):
             "--with-pic",
             "--enable-module-recovery",
             "--prefix",
-            "--with-bignum=gmp",
-            "--enable-experimental",
-            "--enable-module-ecdh",
-            "--enable-module-schnorr",
             os.path.abspath(self.build_clib),
         ]
+        if os.environ.get('SECP_BUNDLED_WITH_BIGNUM'):
+            log.info("Building with bignum support (requires libgmp)")
+            cmd.extend(["--with-bignum=gmp"])
+        else:
+            cmd.extend(["--without-bignum"])
+
+        if os.environ.get('SECP_BUNDLED_EXPERIMENTAL'):
+            log.info("Building experimental")
+            cmd.extend([
+                "--enable-experimental",
+                "--enable-module-ecdh",
+                "--enable-module-schnorr",
+            ])
 
         log.debug("Running configure: {}".format(" ".join(cmd)))
         subprocess.check_call(
@@ -207,7 +219,10 @@ class build_clib(_build_clib):
 
         self.build_flags['include_dirs'].extend(build_flags('libsecp256k1', 'I', build_temp))
         self.build_flags['library_dirs'].extend(build_flags('libsecp256k1', 'L', build_temp))
-        self.build_flags['define'].append(('CFFI_ENABLE_RECOVERY', None))
+        if not has_system_lib():
+            self.build_flags['define'].append(('CFFI_ENABLE_RECOVERY', None))
+        else:
+            pass
 
 
 class build_ext(_build_ext):
@@ -227,6 +242,15 @@ class build_ext(_build_ext):
             self.define = build_clib.build_flags['define']
 
         return _build_ext.run(self)
+
+
+class develop(_develop):
+    def run(self):
+        if not has_system_lib():
+            raise DistutilsError(
+                "This library is not usable in 'develop' mode when using the "
+                "bundled libsecp256k1. See README for details.")
+        _develop.run(self)
 
 
 setup(
@@ -256,6 +280,7 @@ setup(
     cmdclass={
         'build_clib': build_clib,
         'build_ext': build_ext,
+        'develop': develop,
         'egg_info': egg_info,
         'sdist': sdist,
         'bdist_wheel': bdist_wheel

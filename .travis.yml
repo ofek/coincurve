@@ -14,7 +14,7 @@ env:
   - WHEELBUILDER_IMAGE=quay.io/pypa/manylinux1_x86_64
   - PYPI_USERNAME=Ofekmeister
   matrix:
-  - BUNDLED=1 SECP_BUNDLED_EXPERIMENTAL=1 SECP_BUNDLED_WITH_BIGNUM=1
+  - BUNDLED=1
 cache:
   directories:
   - $HOME/.cache/pip

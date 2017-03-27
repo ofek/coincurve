@@ -3,6 +3,9 @@ from collections import namedtuple
 
 from cffi import FFI
 
+
+here = os.path.dirname(os.path.abspath(__file__))
+
 Source = namedtuple('Source', ('h', 'include'))
 
 

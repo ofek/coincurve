@@ -13,8 +13,6 @@ env:
   - INCLUDE_DIR=./libsecp256k1_ext/include
   - WHEELBUILDER_IMAGE=quay.io/pypa/manylinux1_x86_64
   - PYPI_USERNAME=Ofekmeister
-  matrix:
-  - BUNDLED=1 SECP_BUNDLED_EXPERIMENTAL=1 SECP_BUNDLED_WITH_BIGNUM=1
 cache:
   directories:
   - $HOME/.cache/pip
@@ -26,22 +24,19 @@ matrix:
     osx_image: xcode7.1
     python: 2.7
     env:
-    - TRAVIS_PYTHON_VERSION=2.7
-    - BUNDLED=1
+    - TRAVIS_PYTHON_VERSION=2
   - os: osx
     language: generic
     osx_image: xcode7.1
     python: 3.4
     env:
     - TRAVIS_PYTHON_VERSION=3.4
-    - BUNDLED=1
   - os: osx
     language: generic
     osx_image: xcode7.1
     python: 3.5
     env:
     - TRAVIS_PYTHON_VERSION=3.5
-    - BUNDLED=1
   - os: linux
     language: python
     python: 3.5
@@ -49,7 +44,6 @@ matrix:
     services:
     - docker
     env:
-    - BUNDLED=1
     - BUILD_LINUX_WHEELS=1
 addons:
   apt:

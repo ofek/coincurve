@@ -15,7 +15,7 @@ if [[ "$TRAVIS_OS_NAME" == "linux" && ${BUILD_LINUX_WHEELS} -eq 1 ]]; then
 	docker run --rm -v $(pwd):/io ${WHEELBUILDER_IMAGE} /io/.travis/build-linux-wheels.sh
 else
 	# Only build wheels for the non experimental bundled version
-	if [[ ${BUNDLED} -eq 1 && ${SECP_BUNDLED_EXPERIMENTAL} -eq 0 && "$TRAVIS_OS_NAME" == "osx" ]]; then
+	if [[ "$TRAVIS_OS_NAME" == "osx" ]]; then
 		python -m pip install wheel
 		python setup.py bdist_wheel
 	fi

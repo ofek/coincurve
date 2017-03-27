@@ -255,7 +255,6 @@ setup(
     cmdclass={
         'build_clib': build_clib,
         'build_ext': build_ext,
-        'develop': develop,
         'egg_info': egg_info,
         'sdist': sdist,
         'bdist_wheel': bdist_wheel

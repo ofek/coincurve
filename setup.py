@@ -207,6 +207,7 @@ class build_clib(_build_clib):
 
         self.build_flags['include_dirs'].extend(build_flags('libsecp256k1', 'I', build_temp))
         self.build_flags['library_dirs'].extend(build_flags('libsecp256k1', 'L', build_temp))
+        self.build_flags['define'].append(('CFFI_ENABLE_RECOVERY', None))
 
 
 class build_ext(_build_ext):

@@ -23,18 +23,11 @@ def _mk_ffi(sources, name='_libsecp256k1', **kwargs):
 
     return _ffi
 
+modules = [
+    Source('secp256k1.h', '#include <secp256k1.h>'),
+    Source('secp256k1_ecdh.h', '#include <secp256k1_ecdh.h>'),
+    Source('secp256k1_recovery.h', '#include <secp256k1_recovery.h>'),
+    Source('secp256k1_schnorr.h', '#include <secp256k1_schnorr.h>'),
+]
 
-_base = [Source('secp256k1.h', '#include <secp256k1.h>')]
-
-_modules = {
-    'ecdh': Source('secp256k1_ecdh.h', '#include <secp256k1_ecdh.h>'),
-    'recovery': Source('secp256k1_recovery.h', '#include <secp256k1_recovery.h>'),
-    'schnorr': Source('secp256k1_schnorr.h', '#include <secp256k1_schnorr.h>'),
-}
-
-# By default we only build with recovery enabled since the other modules
-# are experimental
-if os.environ.get('SECP_BUNDLED_EXPERIMENTAL'):
-    ffi = _mk_ffi(_base + list(_modules.values()), libraries=['secp256k1'])
-else:
-    ffi = _mk_ffi(_base + [_modules['recovery']], libraries=['secp256k1'])
+ffi = _mk_ffi(modules, libraries=['secp256k1'])

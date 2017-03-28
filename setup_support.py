@@ -71,10 +71,10 @@ def _find_lib():
     from cffi import FFI
     ffi = FFI()
     try:
-        ffi.dlopen("coincurve")
+        ffi.dlopen("secp256k1")
     except OSError:
         if 'LIB_DIR' in os.environ:
-            for path in glob.glob(os.path.join(os.environ['LIB_DIR'], "*coincurve*")):
+            for path in glob.glob(os.path.join(os.environ['LIB_DIR'], "*secp256k1*")):
                 try:
                     FFI().dlopen(path)
                     return True

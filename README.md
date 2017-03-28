@@ -1,12 +1,13 @@
 # Coincurve
 
-Python CFFI bindings for [libsecp256k1](https://github.com/bitcoin/secp256k1)
+Python CFFI bindings for [libsecp256k1](https://github.com/bitcoin-core/secp256k1)
 (an experimental and optimized C library for EC operations on curve secp256k1).
 
 This is a fork of [https://github.com/ludbb/secp256k1-py](https://github.com/ludbb/secp256k1-py).
 
 New features:
 
+- Newer version of [libsecp256k1](https://github.com/bitcoin-core/secp256k1)
 - Implements a fix for [https://bugs.python.org/issue28150](https://bugs.python.org/issue28150)
   to support Python 3.6
 - Supports Windows (soon)
@@ -154,21 +155,6 @@ convert the result from `ecdsa_recoverable_serialize` back to an internal object
 convert a recoverable signature to a normal signature, i.e. one that can be used by `ecdsa_serialize` and related methods.
 
 > NOTE: `ecdsa_recover*` can only be used if the `secp256k1` C library is compiled with support for it. If there is no support, an Exception will be raised when calling any of them.
-
-
-#### class `secp256k1.Schnorr`
-
-The `Schnorr` class is intended to be used as a mix in. Its methods can be accessed from any `secp256k1.PrivateKey` or `secp256k1.PublicKey` instances.
-
-##### Methods
-
-- `schnorr_recover(msg, schnorr_sig, raw=False, digest=hashlib.sha256)` -> internal object<br/>
-recover and return a public key from a Schnorr signature. `schnorr_sig` is expected to be the result from `schnorr_partial_combine` or `schnorr_sign`. `msg`, `raw`, and `digest` are used as described in `ecdsa_sign`.
-
-- `schnorr_partial_combine(schnorr_sigs)` -> bytes<br/>
-combine multiple Schnorr partial signatures. `raw_sigs` is expected to be a list (or similar iterable) of signatures resulting from `PrivateKey.schnorr_partial_sign`. If the signatures cannot be combined, an Exception is raised.
-
-> NOTE: `schnorr_*` can only be used if the `secp256k1` C library is compiled with support for it. If there is no support, an Exception will be raised when calling any of them.
 
 
 #### Constants

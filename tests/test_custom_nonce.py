@@ -1,7 +1,7 @@
 import os
 import json
 import pytest
-import secp256k1
+import coincurve
 
 HERE = os.path.dirname(os.path.abspath(__file__))
 DATA = os.path.join(HERE, 'data')
@@ -45,7 +45,7 @@ from _noncefunc import ffi
 def test_ecdsa_with_custom_nonce():
     data = open(os.path.join(DATA, 'ecdsa_custom_nonce_sig.json')).read()
     vec = json.loads(data)['vectors']
-    inst = secp256k1.PrivateKey()
+    inst = coincurve.PrivateKey()
     for item in vec:
         seckey = bytes(bytearray.fromhex(item['privkey']))
         msg32 = bytes(bytearray.fromhex(item['msg']))

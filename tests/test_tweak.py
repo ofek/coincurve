@@ -1,8 +1,8 @@
 import pytest
-import secp256k1
+import coincurve
 
 def test_pubkey_tweak():
-    inst = secp256k1.PrivateKey()
+    inst = coincurve.PrivateKey()
     pub = inst.pubkey
 
     scalar = [b'\x01' * 32]
@@ -19,11 +19,11 @@ def test_pubkey_tweak():
 
     scalar = scalar + b'\x01'
     res = pub.tweak_add(scalar)
-    assert isinstance(res, secp256k1.PublicKey)
+    assert isinstance(res, coincurve.PublicKey)
     assert res.serialize() != pub.serialize()
 
 def test_privkey_tweak():
-    key = secp256k1.PrivateKey()
+    key = coincurve.PrivateKey()
 
     scalar = [b'\x01' * 32]
     with pytest.raises(TypeError):

@@ -3,7 +3,7 @@ import json
 import pytest
 from io import StringIO
 
-import secp256k1
+import coincurve
 
 HERE = os.path.dirname(os.path.abspath(__file__))
 DATA = os.path.join(HERE, 'data')
@@ -13,7 +13,7 @@ def test_ecdsa():
     data = open(os.path.join(DATA, 'ecdsa_sig.json')).read()
     vec = json.loads(data)['vectors']
 
-    inst = secp256k1.PrivateKey()
+    inst = coincurve.PrivateKey()
 
     for item in vec:
         seckey = bytes(bytearray.fromhex(item['privkey']))
@@ -30,7 +30,7 @@ def test_ecdsa():
         assert inst.pubkey.ecdsa_verify(msg32, sig_raw, raw=True)
 
 def test_ecdsa_compact():
-    key = secp256k1.PrivateKey()
+    key = coincurve.PrivateKey()
     raw_sig = key.ecdsa_sign(b'test')
     assert key.pubkey.ecdsa_verify(b'test', raw_sig)
 
@@ -42,7 +42,7 @@ def test_ecdsa_compact():
     assert key.pubkey.ecdsa_verify(b'test', sig_raw)
 
 def test_ecdsa_normalize():
-    key = secp256k1.PrivateKey()
+    key = coincurve.PrivateKey()
     raw_sig = key.ecdsa_sign(b'hi')
 
     had_to_normalize, normsig = key.ecdsa_signature_normalize(raw_sig)
@@ -66,15 +66,15 @@ def test_ecdsa_normalize():
     assert normsig == None
 
 def test_ecdsa_recover():
-    if not secp256k1.HAS_RECOVERABLE:
+    if not coincurve.HAS_RECOVERABLE:
         pytest.skip('secp256k1_recovery not enabled, skipping')
         return
 
-    class MyECDSA(secp256k1.Base, secp256k1.ECDSA):
+    class MyECDSA(coincurve.Base, coincurve.ECDSA):
         def __init__(self):
-            secp256k1.Base.__init__(self, ctx=None, flags=secp256k1.ALL_FLAGS)
+            coincurve.Base.__init__(self, ctx=None, flags=coincurve.ALL_FLAGS)
 
-    privkey = secp256k1.PrivateKey()
+    privkey = coincurve.PrivateKey()
     unrelated = MyECDSA()
 
     # Create a signature that allows recovering the public key.
@@ -83,7 +83,7 @@ def test_ecdsa_recover():
     pubkey = unrelated.ecdsa_recover(b'hello', recsig)
     # Check that the recovered public key matches the one used
     # in privkey.pubkey.
-    pubser = secp256k1.PublicKey(pubkey).serialize()
+    pubser = coincurve.PublicKey(pubkey).serialize()
     assert privkey.pubkey.serialize() == pubser
 
     # Check that after serializing and deserializing recsig
@@ -91,25 +91,25 @@ def test_ecdsa_recover():
     recsig_ser = unrelated.ecdsa_recoverable_serialize(recsig)
     recsig2 = unrelated.ecdsa_recoverable_deserialize(*recsig_ser)
     pubkey2 = unrelated.ecdsa_recover(b'hello', recsig2)
-    pubser2 = secp256k1.PublicKey(pubkey2).serialize()
+    pubser2 = coincurve.PublicKey(pubkey2).serialize()
     assert pubser == pubser2
 
     raw_sig = unrelated.ecdsa_recoverable_convert(recsig2)
     unrelated.ecdsa_deserialize(unrelated.ecdsa_serialize(raw_sig))
 
 def test_cli_ecdsa():
-    parser, enc = secp256k1._parse_cli()
+    parser, enc = coincurve._parse_cli()
 
     args = parser.parse_args(['privkey', '-p'])
     out = StringIO()
-    res = secp256k1._main_cli(args, out, enc)
+    res = coincurve._main_cli(args, out, enc)
     assert res == 0
     raw_privkey, raw_pubkey = out.getvalue().strip().split('\n')
     raw_pubkey = raw_pubkey.split(':')[1].strip()
 
     args = parser.parse_args(['sign', '-k', raw_privkey, '-m', 'hi', '-p'])
     out = StringIO()
-    res = secp256k1._main_cli(args, out, enc)
+    res = coincurve._main_cli(args, out, enc)
     assert res == 0
     signature, raw_pubkey2 = out.getvalue().strip().split('\n')
     assert raw_pubkey2.split(':')[1].strip() == raw_pubkey
@@ -117,7 +117,7 @@ def test_cli_ecdsa():
     args = parser.parse_args(
         ['checksig', '-p', raw_pubkey, '-m', 'hi', '-s', signature])
     out = StringIO()
-    res = secp256k1._main_cli(args, out, enc)
+    res = coincurve._main_cli(args, out, enc)
     assert res == 0
     assert out.getvalue().strip() == str(True)
 
@@ -125,26 +125,26 @@ def test_cli_ecdsa():
     args = parser.parse_args(
         ['checksig', '-p', raw_pubkey, '-m', 'hi', '-s', signature[:-2]])
     out = StringIO()
-    res = secp256k1._main_cli(args, out, enc)
+    res = coincurve._main_cli(args, out, enc)
     assert res == 1
     assert out.getvalue().strip() == str(False)
 
 def test_cli_ecdsa_recover():
-    if not secp256k1.HAS_RECOVERABLE:
+    if not coincurve.HAS_RECOVERABLE:
         pytest.skip('secp256k1_recovery not enabled, skipping')
         return
-    parser, enc = secp256k1._parse_cli()
+    parser, enc = coincurve._parse_cli()
 
     args = parser.parse_args(['privkey', '-p'])
     out = StringIO()
-    res = secp256k1._main_cli(args, out, enc)
+    res = coincurve._main_cli(args, out, enc)
     assert res == 0
     raw_privkey, raw_pubkey = out.getvalue().strip().split('\n')
     raw_pubkey = raw_pubkey.split(':')[1].strip()
 
     args = parser.parse_args(['signrec', '-k', raw_privkey, '-m', 'hi', '-p'])
     out = StringIO()
-    res = secp256k1._main_cli(args, out, enc)
+    res = coincurve._main_cli(args, out, enc)
     assert res == 0
     signature, raw_pubkey2 = out.getvalue().strip().split('\n')
     assert raw_pubkey2.split(':')[1].strip() == raw_pubkey
@@ -153,7 +153,7 @@ def test_cli_ecdsa_recover():
     args = parser.parse_args(
         ['recpub', '-m', 'hi', '-s', sig_raw, '-i', recid])
     out = StringIO()
-    res = secp256k1._main_cli(args, out, enc)
+    res = coincurve._main_cli(args, out, enc)
     assert res == 0
     recpub = out.getvalue().strip()
     assert recpub.split(':')[1].strip() == raw_pubkey

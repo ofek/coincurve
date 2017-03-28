@@ -28,6 +28,6 @@ python -m pip install twine
 # Ignore non-existing files in globs
 shopt -s nullglob
 
-twine upload --skip-existing dist/secp256k1*.{whl,gz} -u "${PYPI_USERNAME}" -p "${PYPI_PASSWORD}"
+twine upload --skip-existing dist/coincurve*.{whl,gz} -u "${PYPI_USERNAME}" -p "${PYPI_PASSWORD}"
 
 set +e +x

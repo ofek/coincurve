@@ -20,7 +20,7 @@ done
 
 # Adjust wheel tags
 mkdir out
-for whl in wheelhouse/secp256k1*.whl; do
+for whl in wheelhouse/coincurve*.whl; do
     auditwheel repair $whl -w out
 done
 

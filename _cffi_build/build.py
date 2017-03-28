@@ -30,4 +30,4 @@ modules = [
     Source('secp256k1_schnorr.h', '#include <secp256k1_schnorr.h>'),
 ]
 
-ffi = _mk_ffi(modules, libraries=['secp256k1'])
+ffi = _mk_ffi(modules, libraries=['coincurve'])

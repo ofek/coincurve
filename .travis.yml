@@ -75,9 +75,9 @@ before_install:
 install:
 - python setup.py install
 script:
-- mv secp256k1 _secp256k1
-- coverage run --parallel --include="*/site-packages/*.egg/secp256k1/*" -m py.test
-- mv _secp256k1 secp256k1
+- mv coincurve _coincurve
+- coverage run --parallel --include="*/site-packages/*.egg/coincurve/*" -m py.test
+- mv _coincurve coincurve
 - coverage combine
 after_success:
 - coveralls

@@ -4,7 +4,7 @@ set -e
 set -x
 
 # Install a system package required by our library
-yum install -y pkg-config libffi libffi-devel gmp-devel
+yum install -y pkg-config libffi libffi-devel
 
 # The whole auto* stack in CentOS is too old - see https://github.com/pypa/manylinux/issues/71
 wget -q https://ftp.gnu.org/gnu/autoconf/autoconf-latest.tar.gz && tar zxf autoconf-latest.tar.gz && cd autoconf* && ./configure > /dev/null && make install > /dev/null && cd ..

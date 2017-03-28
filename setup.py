@@ -195,13 +195,14 @@ class build_clib(_build_clib):
             os.path.abspath(self.build_clib),
             "--enable-experimental",
             "--enable-module-ecdh",
+            "--with-bignum=gmp",
         ]
 
-        if os.environ.get('BUILD_LINUX_WHEELS') != '1':
-            log.info("Building with bignum support (requires libgmp)")
-            cmd.extend(["--with-bignum=gmp"])
-        else:
-            cmd.extend(["--without-bignum"])
+        # if os.environ.get('BUILD_LINUX_WHEELS') != '1':
+        #     log.info("Building with bignum support (requires libgmp)")
+        #     cmd.extend(["--with-bignum=gmp"])
+        # else:
+        #     cmd.extend(["--without-bignum"])
 
         log.debug("Running configure: {}".format(" ".join(cmd)))
         subprocess.check_call(

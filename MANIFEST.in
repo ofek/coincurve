@@ -1,0 +1,3 @@
+include setup_support.py
+recursive-include _cffi_build *.py *.h
+graft libsecp256k1

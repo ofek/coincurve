@@ -70,6 +70,10 @@ if [[ $TRAVIS_OS_NAME == "osx" ]]; then
 		builtin popd
 	fi
 
+	if [[ "${NEED_SSL_FIX}" == "true" ]]; then
+		/Applications/Python ${TRAVIS_PYTHON_VERSION}/Install Certificates.command
+	fi
+
 	mkdir ~/virtualenv
 	${python} -m ${virtualenv} ~/virtualenv/python${TRAVIS_PYTHON_VERSION}
 	source ~/virtualenv/python${TRAVIS_PYTHON_VERSION}/bin/activate

@@ -48,6 +48,7 @@ matrix:
     osx_image: xcode7.1
     python: 3.6
     env:
+    - NEED_SSL_FIX=true
     - TRAVIS_PYTHON_VERSION=3.6
     - BUNDLED=1
   - os: linux

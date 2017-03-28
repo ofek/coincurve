@@ -197,7 +197,6 @@ class build_clib(_build_clib):
             "--enable-module-ecdh",
         ]
 
-        print(os.environ)
         if os.environ.get('BUILD_LINUX_WHEELS') != '1':
             log.info("Building with bignum support (requires libgmp)")
             cmd.extend(["--with-bignum=gmp"])

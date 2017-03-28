@@ -71,7 +71,7 @@ if [[ $TRAVIS_OS_NAME == "osx" ]]; then
 	fi
 
 	if [[ "${NEED_SSL_FIX}" == "true" ]]; then
-		ls /Library/Frameworks/Python.framework/Versions/${TRAVIS_PYTHON_VERSION}
+		ls /Library/Frameworks/Python.framework/Versions/${TRAVIS_PYTHON_VERSION}/bin
 	fi
 
 	mkdir ~/virtualenv

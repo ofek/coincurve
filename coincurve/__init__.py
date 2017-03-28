@@ -178,7 +178,7 @@ class PublicKey(Base, ECDSA):
         assert self.public_key, "No public key defined"
 
         len_compressed = 33 if compressed else 65
-        res_compressed = ffi.new('char [%d]' % len_compressed)
+        res_compressed = ffi.new('unsigned char [%d]' % len_compressed)
         outlen = ffi.new('size_t *', len_compressed)
         compflag = EC_COMPRESSED if compressed else EC_UNCOMPRESSED
 
@@ -385,7 +385,7 @@ def _tweak_private(inst, func, scalar):
         raise TypeError('scalar must be composed of 32 bytes')
 
     # Create a copy of the current private key.
-    key = ffi.new('char [32]', inst.private_key)
+    key = ffi.new('unsigned char [32]', inst.private_key)
 
     res = func(inst.ctx, key, scalar)
     if not res:

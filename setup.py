@@ -193,10 +193,15 @@ class build_clib(_build_clib):
             "--enable-module-recovery",
             "--prefix",
             os.path.abspath(self.build_clib),
-            "--with-bignum=gmp",
             "--enable-experimental",
             "--enable-module-ecdh",
         ]
+
+        if not os.environ.get('BUILD_LINUX_WHEELS'):
+            log.info("Building with bignum support (requires libgmp)")
+            cmd.extend(["--with-bignum=gmp"])
+        else:
+            cmd.extend(["--without-bignum"])
 
         log.debug("Running configure: {}".format(" ".join(cmd)))
         subprocess.check_call(

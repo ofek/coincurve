@@ -11,6 +11,9 @@ wget -q https://ftp.gnu.org/gnu/autoconf/autoconf-latest.tar.gz && tar zxf autoc
 wget -q https://ftp.gnu.org/gnu/automake/automake-1.15.tar.gz && tar zxf automake-*.tar.gz && cd automake* && ./configure > /dev/null && make install > /dev/null && cd ..
 wget -q https://ftp.gnu.org/gnu/libtool/libtool-2.4.5.tar.gz && tar zxf libtool-*.tar.gz && cd libtool* && ./configure > /dev/null && make install > /dev/null && cd ..
 
+# Use updated GMP
+# wget -q https://gmplib.org/download/gmp/gmp-6.1.2.tar.bz2 && tar -xvjpf gmp-*.tar.bz2 && cd gmp* && ./configure && make && make check && make install && cd ..
+
 # Compile wheels
 for PYBIN in /opt/python/*/bin; do
 	if [[ ${PYBIN} != *"cp26"* ]]; then

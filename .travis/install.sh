@@ -70,6 +70,7 @@ if [[ $TRAVIS_OS_NAME == "osx" ]]; then
 		builtin popd
 	fi
 
+	# https://bugs.python.org/issue28150
 	if [[ "${NEED_SSL_FIX}" == "true" ]]; then
 		"/Applications/Python ${TRAVIS_PYTHON_VERSION}/Install Certificates.command"
 	fi

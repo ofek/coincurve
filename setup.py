@@ -195,6 +195,7 @@ class build_clib(_build_clib):
             os.path.abspath(self.build_clib),
             "--enable-experimental",
             "--enable-module-ecdh",
+            "--enable-endomorphism",
             "--with-bignum=gmp",
         ]
 

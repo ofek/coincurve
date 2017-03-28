@@ -56,7 +56,7 @@ if [[ $TRAVIS_OS_NAME == "osx" ]]; then
 			python=/Library/Frameworks/Python.framework/Versions/${TRAVIS_PYTHON_VERSION}/bin/python3
 			virtualenv=virtualenv
 			;;
-		3.4|3.5)
+		3.4|3.5|3.6)
 			python=/Library/Frameworks/Python.framework/Versions/${TRAVIS_PYTHON_VERSION}/bin/python3
 			virtualenv=venv
 			;;

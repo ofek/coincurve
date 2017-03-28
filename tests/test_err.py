@@ -119,47 +119,6 @@ def test_ecdsa_recoverable():
     with pytest.raises(Exception):
         priv.ecdsa_recoverable_deserialize(b'hello', 0)
 
-def test_schnorr():
-    if not coincurve.HAS_SCHNORR:
-        pytest.skip('secp256k1_schnorr not enabled, skipping')
-        return
-
-    inst = coincurve.PrivateKey()
-    raw_sig = inst.schnorr_sign(b'hello')
-
-    test1 = coincurve.PublicKey(inst.pubkey.public_key,
-                                flags=coincurve.NO_FLAGS)
-    with pytest.raises(Exception):
-        test1.schnorr_verify(b'hello', raw_sig)
-
-    blank = coincurve.PublicKey(flags=coincurve.NO_FLAGS)
-    with pytest.raises(Exception):
-        blank.schnorr_recover(b'hello', raw_sig)
-
-    blank = coincurve.PublicKey(flags=coincurve.FLAG_SIGN)
-    with pytest.raises(Exception):
-        blank.schnorr_recover(b'hello', raw_sig)
-
-def test_schnorr_partial():
-    if not coincurve.HAS_SCHNORR:
-        pytest.skip('secp256k1_schnorr not enabled, skipping')
-        return
-
-    signer1 = coincurve.PrivateKey()
-    pubnonce1, privnonce1 = signer1.schnorr_generate_nonce_pair(b'hello')
-
-    signer2 = coincurve.PrivateKey()
-    pubnonce2, privnonce2 = signer2.schnorr_generate_nonce_pair(b'hello')
-
-    partial1 = signer1.schnorr_partial_sign(b'hello', privnonce1, pubnonce2)
-    blank = coincurve.PublicKey(flags=coincurve.NO_FLAGS)
-
-    with pytest.raises(TypeError):
-        blank.schnorr_partial_combine([partial1, coincurve.ffi.NULL])
-
-    with pytest.raises(Exception):
-        blank.schnorr_partial_combine([partial1, b''])
-
 def test_tweak():
     key = coincurve.PrivateKey()
 

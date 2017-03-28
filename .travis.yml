@@ -84,6 +84,6 @@ after_success:
 deploy:
   provider: script
   skip_cleanup: true
-  script: .travis/deploy.sh
+  script: chmod +x .travis/deploy.sh && .travis/deploy.sh
   on:
     tags: true

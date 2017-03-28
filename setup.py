@@ -245,7 +245,7 @@ class develop(_develop):
 
 setup(
     name="coincurve",
-    version="0.1.0",
+    version="1.0.0",
 
     description='Cross-platform Python CFFI bindings for libsecp256k1',
     long_description=open('README.md', 'r').read(),

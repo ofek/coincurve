@@ -198,12 +198,6 @@ class build_clib(_build_clib):
             "--with-bignum=gmp",
         ]
 
-        # if os.environ.get('BUILD_LINUX_WHEELS') != '1':
-        #     log.info("Building with bignum support (requires libgmp)")
-        #     cmd.extend(["--with-bignum=gmp"])
-        # else:
-        #     cmd.extend(["--without-bignum"])
-
         log.debug("Running configure: {}".format(" ".join(cmd)))
         subprocess.check_call(
             cmd,

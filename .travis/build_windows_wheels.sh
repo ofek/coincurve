@@ -10,7 +10,7 @@ build_dll() {
 }
 
 cd ..
-git clone https://github.com/bitcoin-core/secp256k1
+git clone https://github.com/bitcoin-core/secp256k1.git
 
 mv secp256k1 64bit
 cp 64bit 32bit -R

@@ -29,3 +29,4 @@ cd ../clean
 python setup.py bdist_wheel --plat-tag=win32
 
 mv dist/* ../coincurve/dist/
+cd ../coincurve

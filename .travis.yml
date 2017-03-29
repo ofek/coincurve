@@ -61,7 +61,7 @@ matrix:
     - BUNDLED=1
     - BUILD_LINUX_WHEELS=1
 before_install:
-- sudo apt-get update
+- sudo apt-get -f install
 - sudo apt-get install -y git build-essential automake autoconf libtool pkg-config libffi-dev libgmp-dev mingw-w64
 - source .travis/install.sh
 install:

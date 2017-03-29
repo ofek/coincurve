@@ -95,3 +95,11 @@ def has_system_lib():
     if _has_system_lib is None:
         _has_system_lib = _find_lib()
     return _has_system_lib
+
+
+def detect_dll():
+    here = os.path.dirname(os.path.abspath(__file__))
+    for fn in os.listdir(os.path.join(here, 'coincurve')):
+        if fn.endswith('.dll'):
+            return True
+    return False

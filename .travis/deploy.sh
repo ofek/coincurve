@@ -11,7 +11,7 @@ mkdir dist
 python setup.py sdist
 
 if [[ "$TRAVIS_OS_NAME" == "linux" && ${BUILD_LINUX_WHEELS} -eq 1 ]]; then
-	docker run --rm -v $(pwd):/io ${WHEELBUILDER_IMAGE} /io/.travis/build-linux-wheels.sh
+	#docker run --rm -v $(pwd):/io ${WHEELBUILDER_IMAGE} /io/.travis/build-linux-wheels.sh
 	.travis/build_windows_wheels.sh
 else
 	# Only build wheels for the non experimental bundled version

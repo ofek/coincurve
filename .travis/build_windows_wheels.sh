@@ -5,7 +5,7 @@ set -e -x
 build_dll() {
     ./autogen.sh
     echo "LDFLAGS = -no-undefined" >> Makefile.am
-    ./configure --host=$1 --enable-module-recovery --enable-experimental --enable-module-ecdh --enable-endomorphism
+    ./configure --host=$1 --enable-module-recovery --enable-experimental --enable-module-ecdh --enable-endomorphism --disable-jni
     make
 }
 

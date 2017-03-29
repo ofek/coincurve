@@ -62,7 +62,7 @@ matrix:
     - BUILD_LINUX_WHEELS=1
 before_install:
 - sudo apt-get update
-- sudo apt-get install -y git automake autoconf libtool pkg-config libffi-dev libgmp-dev mingw-w64
+- sudo apt-get install -y git build-essential automake autoconf libtool pkg-config libffi-dev libgmp-dev mingw-w64
 - source .travis/install.sh
 install:
 - python setup.py install

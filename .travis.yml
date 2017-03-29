@@ -71,6 +71,7 @@ addons:
     - libffi-dev
     - libgmp-dev
 before_install:
+- ls ..
 - chmod +x .travis/install_mingw.sh && .travis/install_mingw.sh
 - source .travis/install.sh
 install:

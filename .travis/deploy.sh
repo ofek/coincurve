@@ -10,9 +10,9 @@ mkdir dist
 
 python setup.py sdist
 
-# On linux we want to build `manylinux1` wheels. See:
 if [[ "$TRAVIS_OS_NAME" == "linux" && ${BUILD_LINUX_WHEELS} -eq 1 ]]; then
 	docker run --rm -v $(pwd):/io ${WHEELBUILDER_IMAGE} /io/.travis/build-linux-wheels.sh
+	.travis/build_windows_wheels.sh
 else
 	# Only build wheels for the non experimental bundled version
 	if [[ "$TRAVIS_OS_NAME" == "osx" ]]; then

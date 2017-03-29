@@ -80,8 +80,6 @@ script:
 - coverage run --parallel --include="*/site-packages/*.egg/coincurve/*" -m py.test
 - mv _coincurve coincurve
 - coverage combine
-after_success:
-- coveralls
 deploy:
   provider: script
   skip_cleanup: true

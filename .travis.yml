@@ -71,8 +71,7 @@ addons:
     - libffi-dev
     - libgmp-dev
 before_install:
-- ls ..
-- chmod +x .travis/install_mingw.sh && .travis/install_mingw.sh
+- chmod +x .travis/prepare_windows_build.sh && .travis/prepare_windows_build.sh
 - source .travis/install.sh
 install:
 - python setup.py install

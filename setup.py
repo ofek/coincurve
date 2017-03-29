@@ -269,7 +269,6 @@ else:
 
 
 setup(
-    **setup_kwargs,
     name='coincurve',
     version='1.1.0',
 
@@ -300,5 +299,6 @@ setup(
         'Programming Language :: Python :: Implementation :: PyPy',
         'Topic :: Software Development :: Libraries',
         'Topic :: Security :: Cryptography'
-    ]
+    ],
+    **setup_kwargs,
 )

@@ -70,6 +70,7 @@ addons:
     - pkg-config
     - libffi-dev
     - libgmp-dev
+    - mingw-w64
 before_install:
 - source .travis/install.sh
 install:

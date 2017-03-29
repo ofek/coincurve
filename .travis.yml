@@ -1,4 +1,4 @@
-sudo: true
+sudo: false
 language: python
 python:
 - '2.7'
@@ -60,8 +60,19 @@ matrix:
     env:
     - BUNDLED=1
     - BUILD_LINUX_WHEELS=1
+addons:
+  apt:
+    packages:
+    - git
+    - libtool
+    - autoconf
+    - automake
+    - pkg-config
+    - libffi-dev
+    - libgmp-dev
+    - gcc-mingw-w64
+    - mingw-w64
 before_install:
-- sudo apt-get -f install -y git automake autoconf libtool pkg-config libffi-dev libgmp-dev mingw-w64
 - source .travis/install.sh
 install:
 - python setup.py install

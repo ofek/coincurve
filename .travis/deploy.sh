@@ -7,7 +7,7 @@ echo "deploy"
 # remove left over files from previous steps
 rm -rf build dist
 mkdir dist
-
+ls
 python setup.py sdist
 
 # On linux we want to build `manylinux1` wheels. See:

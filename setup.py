@@ -300,5 +300,5 @@ setup(
         'Topic :: Software Development :: Libraries',
         'Topic :: Security :: Cryptography'
     ],
-    **setup_kwargs,
+    **setup_kwargs
 )

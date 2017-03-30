@@ -42,22 +42,3 @@ def test_pubkey_combine():
     res = new.combine([pub1])
     assert new.public_key == res
     assert new.serialize() == k1.pubkey.serialize()
-
-def test_cli():
-    parser, enc = coincurve._parse_cli()
-
-    args = parser.parse_args(['privkey', '-p'])
-    out = StringIO()
-    res = coincurve._main_cli(args, out, enc)
-    assert res == 0
-    raw_privkey, raw_pubkey = out.getvalue().strip().split('\n')
-    raw_pubkey = raw_pubkey.split(':')[1].strip()
-
-    args = parser.parse_args(['privkey', '-k', raw_privkey, '-p'])
-    out = StringIO()
-    res = coincurve._main_cli(args, out, enc)
-    assert res == 0
-    raw_privkey2, raw_pubkey2 = out.getvalue().strip().split('\n')
-    raw_pubkey2 = raw_pubkey2.split(':')[1].strip()
-    assert raw_privkey2 == raw_privkey
-    assert raw_pubkey2 == raw_pubkey2

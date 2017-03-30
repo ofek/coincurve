@@ -12,7 +12,6 @@ env:
   - DYLD_FALLBACK_LIBRARY_PATH=./libsecp256k1_ext/.libs
   - LIB_DIR=./libsecp256k1_ext/.libs
   - INCLUDE_DIR=./libsecp256k1_ext/include
-  - WHEELBUILDER_IMAGE=quay.io/pypa/manylinux1_x86_64
   - PYPI_USERNAME=Ofekmeister
   matrix:
   - BUNDLED=1

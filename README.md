@@ -7,12 +7,12 @@ This is a fork of [https://github.com/ludbb/secp256k1-py](https://github.com/lud
 
 New features:
 
-- Newer version of [libsecp256k1](https://github.com/bitcoin-core/secp256k1)
+- Supports Windows!
+- Each release uses newest version of [libsecp256k1](https://github.com/bitcoin-core/secp256k1)
 - Implements a fix for [https://bugs.python.org/issue28150](https://bugs.python.org/issue28150)
-  to support Python 3.6
+  to support Python 3.6+ on macOS
 - Linux & macOS wheels now use GMP
 - Endomorphism optimization is now enabled
-- Supports Windows (soon)
 
 ## Installation
 

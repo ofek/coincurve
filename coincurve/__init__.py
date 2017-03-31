@@ -250,7 +250,7 @@ class PublicKey(Base, ECDSA):
         if not isinstance(scalar, bytes) or len(scalar) != 32:
             raise TypeError('scalar must be composed of 32 bytes')
 
-        result = ffi.new('char [32]')
+        result = ffi.new('unsigned char [32]')
 
         res = lib.secp256k1_ecdh(self.ctx, result, self.public_key, scalar)
         if not res:

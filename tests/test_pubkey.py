@@ -9,7 +9,8 @@ DATA = os.path.join(HERE, 'data')
 
 
 def test_pubkey_from_privkey():
-    data = open(os.path.join(DATA, 'pubkey.json')).read()
+    with open(os.path.join(DATA, 'pubkey.json')) as f:
+        data = f.read()
     vec = json.loads(data)['vectors']
 
     inst = coincurve.PrivateKey()
@@ -25,6 +26,7 @@ def test_pubkey_from_privkey():
         assert inst.pubkey.serialize(compressed=True) == pubkey_comp
 
         assert inst.deserialize(inst.serialize()) == seckey
+
 
 def test_pubkey_combine():
     k1 = coincurve.PrivateKey()

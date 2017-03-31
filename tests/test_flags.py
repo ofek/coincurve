@@ -1,6 +1,7 @@
 import pytest
 import coincurve
 
+
 def test_values():
     assert coincurve.FLAG_VERIFY == (
         coincurve.lib.SECP256K1_FLAGS_TYPE_CONTEXT |
@@ -11,6 +12,7 @@ def test_values():
         coincurve.lib.SECP256K1_FLAGS_BIT_CONTEXT_SIGN)
     assert coincurve.FLAG_SIGN == 513
     assert coincurve.ALL_FLAGS == coincurve.FLAG_SIGN | coincurve.FLAG_VERIFY
+
 
 def test_privkey():
     with pytest.raises(AssertionError):
@@ -30,6 +32,7 @@ def test_privkey():
     sig = privkey.ecdsa_sign(b'hi')
     assert privkey.pubkey.ecdsa_verify(b'hi', sig)
 
+
 def test_pubkey():
     privkey = coincurve.PrivateKey()
     sig = privkey.ecdsa_sign(b'hello')
@@ -42,6 +45,7 @@ def test_pubkey():
 
     pubkey = coincurve.PublicKey(pubkeyser, raw=True)
     assert pubkey.ecdsa_verify(b'hello', sig)
+
 
 def test_recoverable():
     if not coincurve.HAS_RECOVERABLE:

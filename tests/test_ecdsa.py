@@ -10,7 +10,8 @@ DATA = os.path.join(HERE, 'data')
 
 
 def test_ecdsa():
-    data = open(os.path.join(DATA, 'ecdsa_sig.json')).read()
+    with open(os.path.join(DATA, 'ecdsa_sig.json')) as f:
+        data = f.read()
     vec = json.loads(data)['vectors']
 
     inst = coincurve.PrivateKey()
@@ -29,6 +30,7 @@ def test_ecdsa():
 
         assert inst.pubkey.ecdsa_verify(msg32, sig_raw, raw=True)
 
+
 def test_ecdsa_compact():
     key = coincurve.PrivateKey()
     raw_sig = key.ecdsa_sign(b'test')
@@ -40,6 +42,7 @@ def test_ecdsa_compact():
     sig_raw = key.ecdsa_deserialize_compact(compact)
     assert key.ecdsa_serialize_compact(sig_raw) == compact
     assert key.pubkey.ecdsa_verify(b'test', sig_raw)
+
 
 def test_ecdsa_normalize():
     key = coincurve.PrivateKey()
@@ -64,6 +67,7 @@ def test_ecdsa_normalize():
     normalized, normsig = key.ecdsa_signature_normalize(raw_sig, True)
     assert normalized == True
     assert normsig == None
+
 
 def test_ecdsa_recover():
     if not coincurve.HAS_RECOVERABLE:

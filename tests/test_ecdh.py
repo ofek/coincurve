@@ -2,6 +2,7 @@ import pytest
 
 import coincurve
 
+
 def test_ecdh():
     if not coincurve.HAS_ECDH:
         pytest.skip('secp256k1_ecdh not enabled, skipping')

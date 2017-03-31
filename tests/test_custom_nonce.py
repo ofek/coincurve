@@ -42,8 +42,10 @@ ffi.compile()
 import _noncefunc
 from _noncefunc import ffi
 
+
 def test_ecdsa_with_custom_nonce():
-    data = open(os.path.join(DATA, 'ecdsa_custom_nonce_sig.json')).read()
+    with open(os.path.join(DATA, 'ecdsa_custom_nonce_sig.json')) as f:
+        data = f.read()
     vec = json.loads(data)['vectors']
     inst = coincurve.PrivateKey()
     for item in vec:

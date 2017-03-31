@@ -1,6 +1,7 @@
 import pytest
 import coincurve
 
+
 def test_pubkey_tweak():
     inst = coincurve.PrivateKey()
     pub = inst.pubkey
@@ -21,6 +22,7 @@ def test_pubkey_tweak():
     res = pub.tweak_add(scalar)
     assert isinstance(res, coincurve.PublicKey)
     assert res.serialize() != pub.serialize()
+
 
 def test_privkey_tweak():
     key = coincurve.PrivateKey()

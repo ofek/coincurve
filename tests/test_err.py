@@ -2,6 +2,7 @@ import pytest
 import hashlib
 import coincurve
 
+
 def test_privkey():
     with pytest.raises(TypeError):
         key = 'abc'
@@ -23,6 +24,7 @@ def test_privkey():
 
     # "good" key, should be fine.
     assert coincurve.PrivateKey(b'1' * 32)
+
 
 def test_publickey():
     with pytest.raises(Exception):
@@ -61,6 +63,7 @@ def test_publickey():
         # Nothing to combine.
         new.combine([])
 
+
 def test_ecdsa():
     rawkey = (b'\xc9\xa9)Z\xf8Er\x97\x8b\xa23\x1f\xf7\xb6\x82qQ\xdc9\xc1'
               b'\x1d\xac6\xfd\xeb\x11\x05\xb1\xdf\x86\xb3\xe6')
@@ -81,6 +84,7 @@ def test_ecdsa():
     invalid_sig = priv.ecdsa_deserialize(sig)
     assert not priv.pubkey.ecdsa_verify(b'hi', invalid_sig)
 
+
 def test_ecdsa_compact():
     key = coincurve.PrivateKey()
 
@@ -93,6 +97,7 @@ def test_ecdsa_compact():
     with pytest.raises(Exception):
         # A serialization that is not compact has more than 64 bytes.
         key.ecdsa_deserialize_compact(ser)
+
 
 def test_ecdsa_recoverable():
     if not coincurve.HAS_RECOVERABLE:
@@ -118,6 +123,7 @@ def test_ecdsa_recoverable():
     # Invalid size.
     with pytest.raises(Exception):
         priv.ecdsa_recoverable_deserialize(b'hello', 0)
+
 
 def test_tweak():
     key = coincurve.PrivateKey()

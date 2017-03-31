@@ -40,7 +40,7 @@ LIB_TARBALL_URL = 'https://github.com/bitcoin-core/secp256k1/archive/master.tar.
 
 
 # We require setuptools >= 3.3
-if int(setuptools_version[:2]) < 33:
+if [int(i) for i in setuptools_version.split('.', 2)[:2]] < [3, 3]:
     raise SystemExit(
         'Your setuptools version ({}) is too old to correctly install this '
         'package. Please upgrade to a newer version (>= 3.3).'.format(setuptools_version)

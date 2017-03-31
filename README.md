@@ -5,19 +5,25 @@ Python CFFI bindings for [libsecp256k1](https://github.com/bitcoin-core/secp256k
 
 This is a fork of [https://github.com/ludbb/secp256k1-py](https://github.com/ludbb/secp256k1-py).
 
-New features:
+New features include:
 
-- Supports Windows!
+- Support for Windows (Python 3 only though, unlike Linux/macOS)
+- Linux, macOS, and Windows all have binary packages for both 64 and 32-bit architectures
+- A fix to remove CFFI warnings
+- A global context is used by default, drastically increasing performance
 - Each release uses newest version of [libsecp256k1](https://github.com/bitcoin-core/secp256k1)
 - Implements a fix for [https://bugs.python.org/issue28150](https://bugs.python.org/issue28150)
   to support Python 3.6+ on macOS
 - Linux & macOS wheels now use GMP
 - Endomorphism optimization is now enabled
 
+**To retain backward compatibility with secp256k1-py, use coincurve version 2.1.0 specifically!**
+Anything after that will have a modified (cleaner :) API and only support Python 3.
+
 ## Installation
 
 ```
-pip install coincurve
+pip install coincurve==2.1.0
 ```
 
 ### Precompiled binary packages (wheels)

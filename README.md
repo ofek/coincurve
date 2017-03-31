@@ -17,13 +17,13 @@ New features include:
 - Linux & macOS wheels now use GMP
 - Endomorphism optimization is now enabled
 
-**To retain backward compatibility with secp256k1-py, use coincurve version 2.1.0 specifically!**
+**To retain backward compatibility with secp256k1-py, use coincurve version 2.1.1 specifically!**
 Anything after that will have a modified (cleaner :) API and only support Python 3.
 
 ## Installation
 
 ```
-pip install coincurve==2.1.0
+pip install coincurve==2.1.1
 ```
 
 ### Precompiled binary packages (wheels)

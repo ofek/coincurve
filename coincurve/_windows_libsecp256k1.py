@@ -1,9 +1,8 @@
 import os
 
 from cffi import FFI
-ffi = FFI()
 
-base_definitions = """
+BASE_DEFINITIONS = """
 typedef struct secp256k1_context_struct secp256k1_context;
 
 typedef struct {
@@ -177,7 +176,7 @@ int secp256k1_ec_pubkey_combine(
 );
 """
 
-recovery_definitions = """
+RECOVERY_DEFINITIONS = """
 typedef struct {
     unsigned char data[65];
 } secp256k1_ecdsa_recoverable_signature;
@@ -219,7 +218,7 @@ int secp256k1_ecdsa_recover(
 );
 """
 
-ecdh_definitions = """
+ECDH_DEFINITIONS = """
 int secp256k1_ecdh(
   const secp256k1_context* ctx,
   unsigned char *result,
@@ -228,9 +227,11 @@ int secp256k1_ecdh(
 );
 """
 
-ffi.cdef(base_definitions)
-ffi.cdef(recovery_definitions)
-ffi.cdef(ecdh_definitions)
+ffi = FFI()
+
+ffi.cdef(BASE_DEFINITIONS)
+ffi.cdef(RECOVERY_DEFINITIONS)
+ffi.cdef(ECDH_DEFINITIONS)
 
 here = os.path.dirname(os.path.abspath(__file__))
 lib = ffi.dlopen(os.path.join(here, 'libsecp256k1.dll'))

@@ -11,7 +11,7 @@ class Context:
             raise ValueError('{} is an invalid context flag.'.format(flag))
         self._lock = Lock()
 
-        self._ctx = ffi.gc(
+        self.ctx = ffi.gc(
             lib.secp256k1_context_create(flag),
             lib.secp256k1_context_destroy
         )
@@ -24,7 +24,7 @@ class Context:
         with self._lock:
             seed = urandom(32) if not seed or len(seed) != 32 else seed
             res = lib.secp256k1_context_randomize(
-                self._ctx, ffi.new('unsigned char [32]', seed)
+                self.ctx, ffi.new('unsigned char [32]', seed)
             )
             assert res == 1
 

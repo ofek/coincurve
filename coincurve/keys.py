@@ -1,6 +1,7 @@
 from coincurve import GLOBAL_CONTEXT
+from coincurve.ecdsa import cdata_to_der, recoverable_to_der
 from coincurve.flags import EC_COMPRESSED, EC_UNCOMPRESSED
-from coincurve.utils import get_valid_secret, validate_secret
+from coincurve.utils import get_valid_secret, sha256, validate_secret
 from ._libsecp256k1 import ffi, lib
 
 
@@ -9,7 +10,9 @@ class PrivateKey:
         self.secret = (validate_secret(secret) if secret is not None
                        else get_valid_secret())
         self.context = context
-        self.public_key = PublicKey.from_secret(self.secret, self.context)
+        self.public_key = PublicKey.from_valid_secret(
+            self.secret, self.context
+        )
 
     def update_public_key(self):
         res = lib.secp256k1_ec_pubkey_create(
@@ -17,38 +20,35 @@ class PrivateKey:
         )
         assert res == 1
 
-    def ecdsa_sign(self, msg_hash, nonce=None):
+    def sign(self, message, hasher=sha256):
+        msg_hash = hasher(message)
         if len(msg_hash) != 32:
             raise ValueError('Message hash must be 32 bytes long.')
 
         signature = ffi.new('secp256k1_ecdsa_signature *')
 
-        if not nonce:
-            nonce_fn = ffi.NULL
-            nonce_data = ffi.NULL
-        else:
-            nonce_fn, nonce_data = nonce
-
         res = lib.secp256k1_ecdsa_sign(
-            self.context.ctx, signature, msg_hash, self.secret, nonce_fn,
-            nonce_data
+            self.context.ctx, signature, msg_hash, self.secret, ffi.NULL,
+            ffi.NULL
         )
         assert res == 1
 
-        return signature
+        return cdata_to_der(signature, self.context)
 
-    def ecdsa_sign_recoverable(self, msg_hash):
+    def sign_recoverable(self, message, hasher=sha256):
+        msg_hash = hasher(message)
         if len(msg_hash) != 32:
             raise ValueError('Message hash must be 32 bytes long.')
 
         signature = ffi.new('secp256k1_ecdsa_recoverable_signature *')
 
         res = lib.secp256k1_ecdsa_sign_recoverable(
-            self.context.ctx, signature, msg_hash, self.secret, ffi.NULL, ffi.NULL
+            self.context.ctx, signature, msg_hash, self.secret, ffi.NULL,
+            ffi.NULL
         )
         assert res == 1
 
-        return signature
+        return recoverable_to_der(signature, self.context)
 
     def add(self, scalar, update=False):
         """
@@ -131,15 +131,25 @@ class PublicKey:
 
         return PublicKey(public_key, context)
 
+    @classmethod
+    def from_valid_secret(cls, secret, context=GLOBAL_CONTEXT):
+        public_key = ffi.new('secp256k1_pubkey *')
+
+        res = lib.secp256k1_ec_pubkey_create(
+            context.ctx, public_key, secret
+        )
+        assert res == 1
+
+        return PublicKey(public_key, context)
+
     def format(self, compressed=True):
         length = 33 if compressed else 65
         serialized = ffi.new('unsigned char [%d]' % length)
         output_len = ffi.new('size_t *', length)
-        compression = EC_COMPRESSED if compressed else EC_UNCOMPRESSED
 
         lib.secp256k1_ec_pubkey_serialize(
             self.context.ctx, serialized, output_len, self.public_key,
-            compression
+            EC_COMPRESSED if compressed else EC_UNCOMPRESSED
         )
 
         return bytes(ffi.buffer(serialized, length))
@@ -156,7 +166,8 @@ class PublicKey:
 
         self.public_key = new_key
 
-    def ecdsa_verify(self, msg_hash, signature):
+    def verify(self, signature, message, hasher=sha256):
+        msg_hash = hasher(message)
         if len(msg_hash) != 32:
             raise ValueError('Message hash must be 32 bytes long.')
 

@@ -227,11 +227,29 @@ int secp256k1_ecdh(
 );
 """
 
+DER_DEFINITIONS = """
+int ec_privkey_export_der(
+    const secp256k1_context* ctx,
+    unsigned char *privkey,
+    size_t *privkeylen,
+    const unsigned char *seckey,
+    int compressed
+) SECP256K1_ARG_NONNULL(1) SECP256K1_ARG_NONNULL(2) SECP256K1_ARG_NONNULL(3) SECP256K1_ARG_NONNULL(4);
+
+int ec_privkey_import_der(
+    const secp256k1_context* ctx,
+    unsigned char *seckey,
+    const unsigned char *privkey,
+    size_t privkeylen
+) SECP256K1_ARG_NONNULL(1) SECP256K1_ARG_NONNULL(2) SECP256K1_ARG_NONNULL(3);
+"""
+
 ffi = FFI()
 
 ffi.cdef(BASE_DEFINITIONS)
 ffi.cdef(RECOVERY_DEFINITIONS)
 ffi.cdef(ECDH_DEFINITIONS)
+ffi.cdef(DER_DEFINITIONS)
 
 here = os.path.dirname(os.path.abspath(__file__))
 lib = ffi.dlopen(os.path.join(here, 'libsecp256k1.dll'))

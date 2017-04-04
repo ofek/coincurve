@@ -73,11 +73,11 @@ def download_library(command):
         except URLError as ex:
             raise SystemExit('Unable to download secp256k1 library: %s',
                              ex.message)
-        shutil.move(
+        shutil.copy(
             os.path.join(libdir, 'contrib', 'lax_der_privatekey_parsing.c'),
             os.path.join(libdir, 'src'),
         )
-        shutil.move(
+        shutil.copy(
             os.path.join(libdir, 'contrib', 'lax_der_privatekey_parsing.h'),
             os.path.join(libdir, 'include'),
         )

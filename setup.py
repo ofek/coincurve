@@ -107,7 +107,7 @@ class build_clib(_build_clib):
         _build_clib.finalize_options(self)
         if self.build_flags is None:
             self.build_flags = {
-                'include_dirs': [],
+                'include_dirs': ['contrib'],
                 'library_dirs': [],
                 'define': [],
             }

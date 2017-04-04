@@ -73,16 +73,6 @@ def download_library(command):
         except URLError as ex:
             raise SystemExit('Unable to download secp256k1 library: %s',
                              ex.message)
-        shutil.copy(
-            os.path.join(libdir, 'contrib', 'lax_der_privatekey_parsing.c'),
-            os.path.join(libdir, 'src'),
-        )
-        shutil.copy(
-            os.path.join(libdir, 'contrib', 'lax_der_privatekey_parsing.h'),
-            os.path.join(libdir, 'include'),
-        )
-        print(os.listdir(os.path.join(libdir, 'src')))
-        print(os.listdir(os.path.join(libdir, 'include')))
 
 
 class egg_info(_egg_info):

@@ -81,8 +81,8 @@ def download_library(command):
             os.path.join(libdir, 'contrib', 'lax_der_privatekey_parsing.h'),
             os.path.join(libdir, 'include'),
         )
-        print(os.path.join(libdir, 'src'))
-        print(os.path.join(libdir, 'include'))
+        print(os.listdir(os.path.join(libdir, 'src')))
+        print(os.listdir(os.path.join(libdir, 'include')))
 
 
 class egg_info(_egg_info):

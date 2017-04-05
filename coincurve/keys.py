@@ -1,7 +1,15 @@
-from coincurve import GLOBAL_CONTEXT
-from coincurve.ecdsa import cdata_to_der, recoverable_to_der
+from asn1crypto.keys import (
+    ECDomainParameters, ECPointBitString, ECPrivateKey, PrivateKeyAlgorithm,
+    PrivateKeyInfo
+)
+
+from coincurve.context import GLOBAL_CONTEXT
+from coincurve.ecdsa import cdata_to_der, der_to_cdata, recoverable_to_der
 from coincurve.flags import EC_COMPRESSED, EC_UNCOMPRESSED
-from coincurve.utils import get_valid_secret, sha256, validate_secret
+from coincurve.utils import (
+    bytes_to_int, der_to_pem, get_valid_secret, int_to_bytes, pem_to_der,
+    sha256, validate_secret
+)
 from ._libsecp256k1 import ffi, lib
 
 
@@ -13,12 +21,6 @@ class PrivateKey:
         self.public_key = PublicKey.from_valid_secret(
             self.secret, self.context
         )
-
-    def update_public_key(self):
-        res = lib.secp256k1_ec_pubkey_create(
-            self.context.ctx, self.public_key.public_key, self.secret
-        )
-        assert res == 1
 
     def sign(self, message, hasher=sha256):
         msg_hash = hasher(message)
@@ -70,7 +72,7 @@ class PrivateKey:
 
         if update:
             self.secret = secret
-            self.update_public_key()
+            self._update_public_key()
             return self
 
         return PrivateKey(secret, self.context)
@@ -95,10 +97,63 @@ class PrivateKey:
 
         if update:
             self.secret = secret
-            self.update_public_key()
+            self._update_public_key()
             return self
 
         return PrivateKey(secret, self.context)
+
+    def to_int(self):
+        return bytes_to_int(self.secret)
+
+    def to_pem(self):
+        return der_to_pem(self.to_der())
+
+    def to_der(self):
+        pk = ECPrivateKey({
+            'version': 'ecPrivkeyVer1',
+            'private_key': self.to_int(),
+            'public_key': ECPointBitString(
+                self.public_key.format(compressed=False)
+            )
+        })
+
+        return PrivateKeyInfo({
+            'version': 0,
+            'private_key_algorithm': PrivateKeyAlgorithm({
+                'algorithm': 'ec',
+                'parameters': ECDomainParameters(
+                    name='named',
+                    value='1.3.132.0.10'
+                )}),
+            'private_key': pk
+        }).dump()
+
+    @classmethod
+    def from_int(cls, num):
+        return PrivateKey(int_to_bytes(num))
+
+    @classmethod
+    def from_pem(cls, pem):
+        return PrivateKey(
+            int_to_bytes(
+                PrivateKeyInfo.load(
+                    pem_to_der(pem)
+                ).native['private_key']['private_key'])
+        )
+
+    @classmethod
+    def from_der(cls, der):
+        return PrivateKey(
+            int_to_bytes(
+                PrivateKeyInfo.load(der).native['private_key']['private_key']
+            )
+        )
+
+    def _update_public_key(self):
+        res = lib.secp256k1_ec_pubkey_create(
+            self.context.ctx, self.public_key.public_key, self.secret
+        )
+        assert res == 1
 
 
 class PublicKey:
@@ -172,10 +227,10 @@ class PublicKey:
             raise ValueError('Message hash must be 32 bytes long.')
 
         verified = lib.secp256k1_ecdsa_verify(
-            self.context.ctx, signature, msg_hash, self.public_key
+            self.context.ctx, der_to_cdata(signature), msg_hash, self.public_key
         )
 
-        # Performance hack to avoid global bool() lookup.
+        # A performance hack to avoid global bool() lookup.
         return not not verified
 
     def ecdh(self, scalar):

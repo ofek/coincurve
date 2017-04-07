@@ -1,4 +1,4 @@
-from coincurve import GLOBAL_CONTEXT
+from coincurve.context import GLOBAL_CONTEXT
 from ._libsecp256k1 import ffi, lib
 
 MAX_SIG_LENGTH = 72
@@ -9,22 +9,29 @@ def cdata_to_der(cdata, context=GLOBAL_CONTEXT):
     der = ffi.new('unsigned char[%d]' % MAX_SIG_LENGTH)
     der_length = ffi.new('size_t *', MAX_SIG_LENGTH)
 
-    res = lib.secp256k1_ecdsa_signature_serialize_der(
+    lib.secp256k1_ecdsa_signature_serialize_der(
         context.ctx, der, der_length, cdata
     )
-    assert res == 1
 
     return bytes(ffi.buffer(der, der_length[0]))
 
 
 def der_to_cdata(der, context=GLOBAL_CONTEXT):
     cdata = ffi.new('secp256k1_ecdsa_signature *')
-    res = lib.secp256k1_ecdsa_signature_parse_der(
+    parsed = lib.secp256k1_ecdsa_signature_parse_der(
         context.ctx, cdata, der, len(der)
     )
-    assert res == 1
+
+    if not parsed:
+        raise ValueError('The DER-encoded signature could not be parsed.')
 
     return cdata
+
+
+"""
+Warning:
+    The functions below may change and are not tested!
+"""
 
 
 def serialize_compact(raw_sig, context=GLOBAL_CONTEXT):

@@ -7,8 +7,8 @@ from coincurve.context import GLOBAL_CONTEXT
 from coincurve.ecdsa import cdata_to_der, der_to_cdata, recoverable_to_der
 from coincurve.flags import EC_COMPRESSED, EC_UNCOMPRESSED
 from coincurve.utils import (
-    bytes_to_int, der_to_pem, get_valid_secret, int_to_bytes, pem_to_der,
-    sha256, validate_secret
+    bytes_to_int, der_to_pem, get_valid_secret, int_to_bytes, pad_scalar,
+    pem_to_der, sha256, validate_secret
 )
 from ._libsecp256k1 import ffi, lib
 
@@ -29,11 +29,14 @@ class PrivateKey:
 
         signature = ffi.new('secp256k1_ecdsa_signature *')
 
-        res = lib.secp256k1_ecdsa_sign(
+        signed = lib.secp256k1_ecdsa_sign(
             self.context.ctx, signature, msg_hash, self.secret, ffi.NULL,
             ffi.NULL
         )
-        assert res == 1
+
+        if not signed:
+            raise ValueError('The nonce generation function failed, or the '
+                             'private key was invalid.')
 
         return cdata_to_der(signature, self.context)
 
@@ -44,11 +47,14 @@ class PrivateKey:
 
         signature = ffi.new('secp256k1_ecdsa_recoverable_signature *')
 
-        res = lib.secp256k1_ecdsa_sign_recoverable(
+        signed = lib.secp256k1_ecdsa_sign_recoverable(
             self.context.ctx, signature, msg_hash, self.secret, ffi.NULL,
             ffi.NULL
         )
-        assert res == 1
+
+        if not signed:
+            raise ValueError('The nonce generation function failed, or the '
+                             'private key was invalid.')
 
         return recoverable_to_der(signature, self.context)
 
@@ -57,16 +63,17 @@ class PrivateKey:
         Tweak the current private key by adding a 32 byte scalar
         to it and return a new raw private key composed of 32 bytes.
         """
-        if len(scalar) != 32:
-            raise TypeError('Scalar must be composed of 32 bytes.')
+        scalar = pad_scalar(scalar)
 
-        # Create a copy of the current private key.
         secret = ffi.new('unsigned char [32]', self.secret)
 
-        res = lib.secp256k1_ec_privkey_tweak_add(
+        success = lib.secp256k1_ec_privkey_tweak_add(
             self.context.ctx, secret, scalar
         )
-        assert res == 1
+
+        if not success:
+            raise ValueError('The tweak was out of range, or the resulting '
+                             'private key is invalid.')
 
         secret = bytes(ffi.buffer(secret, 32))
 
@@ -82,16 +89,13 @@ class PrivateKey:
         Tweak the current private key by multiplying it by a 32 byte scalar
         and return a new raw private key composed of 32 bytes.
         """
-        if len(scalar) != 32:
-            raise TypeError('Scalar must be composed of 32 bytes.')
+        scalar = validate_secret(scalar)
 
-        # Create a copy of the current private key.
         secret = ffi.new('unsigned char [32]', self.secret)
 
-        res = lib.secp256k1_ec_privkey_tweak_mul(
+        lib.secp256k1_ec_privkey_tweak_mul(
             self.context.ctx, secret, scalar
         )
-        assert res == 1
 
         secret = bytes(ffi.buffer(secret, 32))
 
@@ -129,31 +133,37 @@ class PrivateKey:
         }).dump()
 
     @classmethod
-    def from_int(cls, num):
-        return PrivateKey(int_to_bytes(num))
+    def from_int(cls, num, context=GLOBAL_CONTEXT):
+        return PrivateKey(int_to_bytes(num), context)
 
     @classmethod
-    def from_pem(cls, pem):
+    def from_pem(cls, pem, context=GLOBAL_CONTEXT):
         return PrivateKey(
-            int_to_bytes(
-                PrivateKeyInfo.load(
-                    pem_to_der(pem)
-                ).native['private_key']['private_key'])
+            int_to_bytes(PrivateKeyInfo.load(
+                pem_to_der(pem)
+            ).native['private_key']['private_key']),
+            context
         )
 
     @classmethod
-    def from_der(cls, der):
+    def from_der(cls, der, context=GLOBAL_CONTEXT):
         return PrivateKey(
             int_to_bytes(
                 PrivateKeyInfo.load(der).native['private_key']['private_key']
-            )
+            ),
+            context
         )
 
     def _update_public_key(self):
-        res = lib.secp256k1_ec_pubkey_create(
+        created = lib.secp256k1_ec_pubkey_create(
             self.context.ctx, self.public_key.public_key, self.secret
         )
-        assert res == 1
+
+        if not created:
+            raise ValueError('Invalid secret.')
+
+    def __eq__(self, other):
+        return self.secret == other.secret
 
 
 class PublicKey:
@@ -161,17 +171,17 @@ class PublicKey:
         if not isinstance(data, bytes):
             self.public_key = data
         else:
-            length = len(data)
-            if length not in (33, 65):
-                raise ValueError('{} is an invalid length for a public key.'
-                                 ''.format(length))
-
             public_key = ffi.new('secp256k1_pubkey *')
 
-            res = lib.secp256k1_ec_pubkey_parse(
-                context.ctx, public_key, data, length
+            parsed = lib.secp256k1_ec_pubkey_parse(
+                context.ctx, public_key, data, len(data)
             )
-            assert res == 1
+
+            if not parsed:
+                raise ValueError('The public key could not be parsed or is '
+                                 'invalid.')
+
+            self.public_key = public_key
 
         self.context = context
 
@@ -179,10 +189,14 @@ class PublicKey:
     def from_secret(cls, secret, context=GLOBAL_CONTEXT):
         public_key = ffi.new('secp256k1_pubkey *')
 
-        res = lib.secp256k1_ec_pubkey_create(
+        created = lib.secp256k1_ec_pubkey_create(
             context.ctx, public_key, validate_secret(secret)
         )
-        assert res == 1
+
+        if not created:
+            raise ValueError('Somehow an invalid secret was used. Please '
+                             'submit this as an issue here: '
+                             'https://github.com/ofek/coincurve/issues/new')
 
         return PublicKey(public_key, context)
 
@@ -190,12 +204,21 @@ class PublicKey:
     def from_valid_secret(cls, secret, context=GLOBAL_CONTEXT):
         public_key = ffi.new('secp256k1_pubkey *')
 
-        res = lib.secp256k1_ec_pubkey_create(
+        created = lib.secp256k1_ec_pubkey_create(
             context.ctx, public_key, secret
         )
-        assert res == 1
+
+        if not created:
+            raise ValueError('Invalid secret.')
 
         return PublicKey(public_key, context)
+
+    @classmethod
+    def from_point(cls, x, y, context=GLOBAL_CONTEXT):
+        return PublicKey(
+            b'\x04' + int_to_bytes(x) + int_to_bytes(y),
+            context
+        )
 
     def format(self, compressed=True):
         length = 33 if compressed else 65
@@ -209,15 +232,21 @@ class PublicKey:
 
         return bytes(ffi.buffer(serialized, length))
 
+    def point(self):
+        public_key = self.format(compressed=False)
+        return bytes_to_int(public_key[1:33]), bytes_to_int(public_key[33:])
+
     def combine(self, public_keys):
         """Add a number of public keys together."""
         new_key = ffi.new('secp256k1_pubkey *')
 
-        res = lib.secp256k1_ec_pubkey_combine(
+        combined = lib.secp256k1_ec_pubkey_combine(
             self.context.ctx, new_key, [pk.public_key for pk in public_keys],
             len(public_keys)
         )
-        assert res == 1
+
+        if not combined:
+            raise ValueError('The sum of the public keys is not valid.')
 
         self.public_key = new_key
 
@@ -234,15 +263,16 @@ class PublicKey:
         return not not verified
 
     def ecdh(self, scalar):
-        if len(scalar) != 32:
-            raise TypeError('Scalar must be composed of 32 bytes.')
+        scalar = pad_scalar(scalar)
 
         secret = ffi.new('unsigned char [32]')
 
-        res = lib.secp256k1_ecdh(
+        success = lib.secp256k1_ecdh(
             self.context.ctx, secret, self.public_key, scalar
         )
-        assert res == 1
+
+        if not success:
+            raise ValueError('Scalar was invalid (zero or overflow).')
 
         return bytes(ffi.buffer(secret, 32))
 
@@ -251,16 +281,17 @@ class PublicKey:
         Tweak the current public key by adding a 32 byte scalar times
         the generator to it and return a new PublicKey instance.
         """
-        if len(scalar) != 32:
-            raise TypeError('Scalar must be composed of 32 bytes.')
+        scalar = pad_scalar(scalar)
 
-        # Create a copy of the current public key.
         new_key = ffi.new('secp256k1_pubkey *', self.public_key[0])
 
-        res = lib.secp256k1_ec_pubkey_tweak_add(
+        success = lib.secp256k1_ec_pubkey_tweak_add(
             self.context.ctx, new_key, scalar
         )
-        assert res == 1
+
+        if not success:
+            raise ValueError('The tweak was out of range, or the resulting '
+                             'public key is invalid.')
 
         if update:
             self.public_key = new_key
@@ -273,16 +304,13 @@ class PublicKey:
         Tweak the current public key by multiplying it by a 32 byte scalar
         and return a new PublicKey instance.
         """
-        if len(scalar) != 32:
-            raise TypeError('Scalar must be composed of 32 bytes.')
+        scalar = validate_secret(scalar)
 
-        # Create a copy of the current public key.
         new_key = ffi.new('secp256k1_pubkey *', self.public_key[0])
 
-        res = lib.secp256k1_ec_pubkey_tweak_mul(
+        lib.secp256k1_ec_pubkey_tweak_mul(
             self.context.ctx, new_key, scalar
         )
-        assert res == 1
 
         if update:
             self.public_key = new_key

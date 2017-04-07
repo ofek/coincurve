@@ -8,6 +8,7 @@ from ._libsecp256k1 import ffi, lib
 
 GROUP_ORDER = (b'\xff\xff\xff\xff\xff\xff\xff\xff\xff\xff\xff\xff\xff\xff\xff'
                b'\xfe\xba\xae\xdc\xe6\xafH\xa0;\xbf\xd2^\x8c\xd06AA')
+GROUP_ORDER_INT = 0xfffffffffffffffffffffffffffffffebaaedce6af48a03bbfd25e8cd0364141
 KEY_SIZE = 32
 ZERO = b'\x00'
 PEM_HEADER = b'-----BEGIN PRIVATE KEY-----\n'
@@ -27,7 +28,7 @@ if hasattr(int, "to_bytes"):
         return num.to_bytes((num.bit_length() + 7) // 8 or 1, 'big')
 else:
     def int_to_bytes(num):
-        hexed = '{:x}'.format(num)
+        hexed = '%x' % num
 
         # Handle odd-length hex strings.
         if len(hexed) & 1:
@@ -61,33 +62,30 @@ def pem_to_der(pem):
 def get_valid_secret():
     while True:
         secret = urandom(KEY_SIZE)
-        if ZERO < secret <= GROUP_ORDER:
+        if ZERO < secret < GROUP_ORDER:
             return secret
 
 
 def pad_scalar(scalar):
-    return (ZERO * (KEY_SIZE - len(scalar))) + scalar[-KEY_SIZE:]
+    return (ZERO * (KEY_SIZE - len(scalar))) + scalar
 
 
 def validate_secret(secret):
-    if not ZERO < secret <= GROUP_ORDER:
+    if not ZERO < secret < GROUP_ORDER:
         raise ValueError('Secret scalar must be greater than 0 and less than '
-                         'or equal to the group order.')
+                         '{}.'.format(GROUP_ORDER_INT))
     return pad_scalar(secret)
 
 
 def verify_signature(signature, message, public_key, hasher=sha256, context=GLOBAL_CONTEXT):
-    length = len(public_key)
-    if length not in (33, 65):
-        raise ValueError('{} is an invalid length for a public key.'
-                         ''.format(length))
-
     pubkey = ffi.new('secp256k1_pubkey *')
 
-    res = lib.secp256k1_ec_pubkey_parse(
-        context.ctx, pubkey, public_key, length
+    pubkey_parsed = lib.secp256k1_ec_pubkey_parse(
+        context.ctx, pubkey, public_key, len(public_key)
     )
-    assert res == 1
+
+    if not pubkey_parsed:
+        raise ValueError('The public key could not be parsed or is invalid.')
 
     msg_hash = hasher(message)
     if len(msg_hash) != 32:
@@ -95,10 +93,12 @@ def verify_signature(signature, message, public_key, hasher=sha256, context=GLOB
 
     sig = ffi.new('secp256k1_ecdsa_signature *')
 
-    res = lib.secp256k1_ecdsa_signature_parse_der(
+    sig_parsed = lib.secp256k1_ecdsa_signature_parse_der(
         context.ctx, sig, signature, len(signature)
     )
-    assert res == 1
+
+    if not sig_parsed:
+        raise ValueError('The DER-encoded signature could not be parsed.')
 
     verified = lib.secp256k1_ecdsa_verify(
         context.ctx, sig, msg_hash, pubkey

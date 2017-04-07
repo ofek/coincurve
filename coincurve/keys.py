@@ -127,7 +127,7 @@ class PrivateKey:
                 'algorithm': 'ec',
                 'parameters': ECDomainParameters(
                     name='named',
-                    value='1.3.132.0.10'
+                    value=ensure_unicode('1.3.132.0.10')
                 )}),
             'private_key': pk
         }).dump()

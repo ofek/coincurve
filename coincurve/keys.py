@@ -124,7 +124,7 @@ class PrivateKey:
         return PrivateKeyInfo({
             'version': 0,
             'private_key_algorithm': PrivateKeyAlgorithm({
-                'algorithm': 'ec',
+                'algorithm': ensure_unicode('ec'),
                 'parameters': ECDomainParameters(
                     name='named',
                     value=ensure_unicode('1.3.132.0.10')

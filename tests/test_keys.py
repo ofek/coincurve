@@ -38,7 +38,7 @@ class TestPrivateKey:
 
     def test_signature_invalid_hasher(self):
         with pytest.raises(ValueError):
-            PrivateKey().sign(MESSAGE, lambda x:sha512(x).digest())
+            PrivateKey().sign(MESSAGE, lambda x: sha512(x).digest())
 
     def test_to_int(self):
         assert PrivateKey(PRIVATE_KEY_BYTES).to_int() == PRIVATE_KEY_NUM
@@ -102,16 +102,16 @@ class TestPublicKey:
     def test_ecdh(self):
         x = urandom(32)
         k = urandom(32)
-        P = G.multiply(x)
-        Q = G.multiply(k)
+        a = G.multiply(x)
+        b = G.multiply(k)
 
-        assert P.multiply(k) == Q.multiply(x)
+        assert a.multiply(k) == b.multiply(x)
 
     def test_transform(self):
         x = urandom(32)
         k = urandom(32)
-        P = G.multiply(x)
+        point = G.multiply(x)
 
-        assert P.add(k) == G.multiply(int_to_bytes(
+        assert point.add(k) == G.multiply(int_to_bytes(
             (bytes_to_int(x) + bytes_to_int(k)) % n
         ))

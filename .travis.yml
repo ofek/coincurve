@@ -52,6 +52,15 @@ matrix:
     - BUNDLED=1
   - os: linux
     language: python
+    python: 2.7
+    sudo: required
+    services:
+    - docker
+    env:
+    - BUNDLED=1
+    - BUILD_LINUX_WHEELS=1
+  - os: linux
+    language: python
     python: 3.5
     sudo: required
     services:

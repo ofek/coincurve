@@ -4,12 +4,19 @@ from os import urandom
 import pytest
 
 from coincurve.keys import PrivateKey, PublicKey
-from coincurve.utils import verify_signature
+from coincurve.utils import bytes_to_int, int_to_bytes, verify_signature
 from .samples import (
     PRIVATE_KEY_BYTES, PRIVATE_KEY_DER, PRIVATE_KEY_NUM, PRIVATE_KEY_PEM,
     PUBLIC_KEY_COMPRESSED, PUBLIC_KEY_UNCOMPRESSED, PUBLIC_KEY_X,
     PUBLIC_KEY_Y, MESSAGE, SIGNATURE
 )
+
+
+G = PublicKey(b'\x04y\xbef~\xf9\xdc\xbb\xacU\xa0b\x95\xce\x87\x0b\x07\x02\x9b'
+              b'\xfc\xdb-\xce(\xd9Y\xf2\x81[\x16\xf8\x17\x98H:\xdaw&\xa3\xc4e'
+              b']\xa4\xfb\xfc\x0e\x11\x08\xa8\xfd\x17\xb4H\xa6\x85T\x19\x9cG'
+              b'\xd0\x8f\xfb\x10\xd4\xb8')
+n = 0xfffffffffffffffffffffffffffffffebaaedce6af48a03bbfd25e8cd0364141
 
 
 class TestPrivateKey:
@@ -92,21 +99,19 @@ class TestPublicKey:
         public_key = PublicKey(PUBLIC_KEY_COMPRESSED)
         assert public_key.verify(SIGNATURE, MESSAGE)
 
+    def test_ecdh(self):
+        x = urandom(32)
+        k = urandom(32)
+        P = G.multiply(x)
+        Q = G.multiply(k)
 
+        assert P.multiply(k) == Q.multiply(x)
 
+    def test_transform(self):
+        x = urandom(32)
+        k = urandom(32)
+        P = G.multiply(x)
 
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
+        assert P.add(k) == G.multiply(int_to_bytes(
+            (bytes_to_int(x) + bytes_to_int(k)) % n
+        ))

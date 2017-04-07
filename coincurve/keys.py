@@ -317,3 +317,6 @@ class PublicKey:
             return self
 
         return PublicKey(new_key, self.context)
+
+    def __eq__(self, other):
+        return self.format(compressed=False) == other.format(compressed=False)

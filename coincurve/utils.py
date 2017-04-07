@@ -15,6 +15,12 @@ PEM_HEADER = b'-----BEGIN PRIVATE KEY-----\n'
 PEM_FOOTER = b'-----END PRIVATE KEY-----\n'
 
 
+def ensure_unicode(s):
+    if isinstance(s, bytes):
+        s = s.decode('utf-8')
+    return s
+
+
 if hasattr(int, "from_bytes"):
     def bytes_to_int(bytestr):
         return int.from_bytes(bytestr, 'big')

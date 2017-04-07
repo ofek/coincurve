@@ -7,8 +7,8 @@ from coincurve.context import GLOBAL_CONTEXT
 from coincurve.ecdsa import cdata_to_der, der_to_cdata, recoverable_to_der
 from coincurve.flags import EC_COMPRESSED, EC_UNCOMPRESSED
 from coincurve.utils import (
-    bytes_to_int, der_to_pem, get_valid_secret, int_to_bytes, pad_scalar,
-    pem_to_der, sha256, validate_secret
+    bytes_to_int, der_to_pem, ensure_unicode, get_valid_secret, int_to_bytes,
+    pad_scalar, pem_to_der, sha256, validate_secret
 )
 from ._libsecp256k1 import ffi, lib
 
@@ -114,7 +114,7 @@ class PrivateKey:
 
     def to_der(self):
         pk = ECPrivateKey({
-            'version': 'ecPrivkeyVer1',
+            'version': ensure_unicode('ecPrivkeyVer1'),
             'private_key': self.to_int(),
             'public_key': ECPointBitString(
                 self.public_key.format(compressed=False)

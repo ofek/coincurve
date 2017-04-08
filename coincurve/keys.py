@@ -236,20 +236,6 @@ class PublicKey:
         public_key = self.format(compressed=False)
         return bytes_to_int(public_key[1:33]), bytes_to_int(public_key[33:])
 
-    def combine(self, public_keys):
-        """Add a number of public keys together."""
-        new_key = ffi.new('secp256k1_pubkey *')
-
-        combined = lib.secp256k1_ec_pubkey_combine(
-            self.context.ctx, new_key, [pk.public_key for pk in public_keys],
-            len(public_keys)
-        )
-
-        if not combined:
-            raise ValueError('The sum of the public keys is not valid.')
-
-        self.public_key = new_key
-
     def verify(self, signature, message, hasher=sha256):
         msg_hash = hasher(message)
         if len(msg_hash) != 32:
@@ -311,6 +297,24 @@ class PublicKey:
         lib.secp256k1_ec_pubkey_tweak_mul(
             self.context.ctx, new_key, scalar
         )
+
+        if update:
+            self.public_key = new_key
+            return self
+
+        return PublicKey(new_key, self.context)
+
+    def combine(self, public_keys, update=False):
+        """Add a number of public keys together."""
+        new_key = ffi.new('secp256k1_pubkey *')
+
+        combined = lib.secp256k1_ec_pubkey_combine(
+            self.context.ctx, new_key, [pk.public_key for pk in public_keys],
+            len(public_keys)
+        )
+
+        if not combined:
+            raise ValueError('The sum of the public keys is invalid.')
 
         if update:
             self.public_key = new_key

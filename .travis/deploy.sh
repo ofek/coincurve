@@ -18,7 +18,6 @@ if [[ "$TRAVIS_OS_NAME" == "linux" && ${BUILD_LINUX_WHEELS} -eq 1 ]]; then
     fi
 	.travis/build_windows_wheels.sh
 else
-	# Only build wheels for the non experimental bundled version
 	if [[ "$TRAVIS_OS_NAME" == "osx" ]]; then
 		python -m pip install wheel
 		python setup.py bdist_wheel

@@ -38,14 +38,6 @@ matrix:
     - TRAVIS_PYTHON_VERSION=3.6
   - os: linux
     language: python
-    python: 2.7
-    sudo: required
-    services:
-    - docker
-    env:
-    - BUILD_LINUX_WHEELS=1
-  - os: linux
-    language: python
     python: 3.5
     sudo: required
     services:

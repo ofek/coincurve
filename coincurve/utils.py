@@ -30,17 +30,20 @@ else:
 
 
 if hasattr(int, "to_bytes"):
-    def int_to_bytes(num):
-        return num.to_bytes((num.bit_length() + 7) // 8 or 1, 'big')
+    def int_to_bytes(num, length=None):
+        return length or num.to_bytes((num.bit_length() + 7) // 8 or 1, 'big')
 else:
-    def int_to_bytes(num):
+    def int_to_bytes(num, length=None):
         hexed = '%x' % num
 
         # Handle odd-length hex strings.
         if len(hexed) & 1:
             hexed = '0' + hexed
 
-        return unhexlify(hexed)
+        if not length:
+            return unhexlify(hexed)
+
+        return pad_scalar(unhexlify(hexed), length)
 
 
 def sha256(bytestr):
@@ -72,8 +75,8 @@ def get_valid_secret():
             return secret
 
 
-def pad_scalar(scalar):
-    return (ZERO * (KEY_SIZE - len(scalar))) + scalar
+def pad_scalar(scalar, length=KEY_SIZE):
+    return (ZERO * (length - len(scalar))) + scalar
 
 
 def validate_secret(secret):

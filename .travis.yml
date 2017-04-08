@@ -2,8 +2,6 @@ sudo: true
 language: python
 python:
 - '2.7'
-- '3.3'
-- '3.4'
 - '3.5'
 - '3.6'
 env:
@@ -13,8 +11,6 @@ env:
   - LIB_DIR=./libsecp256k1_ext/.libs
   - INCLUDE_DIR=./libsecp256k1_ext/include
   - PYPI_USERNAME=Ofekmeister
-  matrix:
-  - BUNDLED=1
 cache:
   directories:
   - $HOME/.cache/pip
@@ -27,28 +23,12 @@ matrix:
     python: 2.7
     env:
     - TRAVIS_PYTHON_VERSION=2.7
-    - BUNDLED=1
-  - os: osx
-    language: generic
-    osx_image: xcode7.1
-    python: 3.3
-    env:
-    - TRAVIS_PYTHON_VERSION=3.3
-    - BUNDLED=1
-  - os: osx
-    language: generic
-    osx_image: xcode7.1
-    python: 3.4
-    env:
-    - TRAVIS_PYTHON_VERSION=3.4
-    - BUNDLED=1
   - os: osx
     language: generic
     osx_image: xcode7.1
     python: 3.5
     env:
     - TRAVIS_PYTHON_VERSION=3.5
-    - BUNDLED=1
   - os: osx
     language: generic
     osx_image: xcode7.1
@@ -56,7 +36,6 @@ matrix:
     env:
     - NEED_SSL_FIX=true
     - TRAVIS_PYTHON_VERSION=3.6
-    - BUNDLED=1
   - os: linux
     language: python
     python: 2.7
@@ -64,7 +43,6 @@ matrix:
     services:
     - docker
     env:
-    - BUNDLED=1
     - BUILD_LINUX_WHEELS=1
   - os: linux
     language: python
@@ -73,7 +51,6 @@ matrix:
     services:
     - docker
     env:
-    - BUNDLED=1
     - BUILD_LINUX_WHEELS=1
 addons:
   apt:

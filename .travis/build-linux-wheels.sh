@@ -21,7 +21,7 @@ done
 # Adjust wheel tags
 mkdir out
 for whl in wheelhouse/coincurve*.whl; do
-    auditwheel repair ${whl} -w out
+    auditwheel repair $whl -w out
 done
 
 cp out/*.whl /io/dist

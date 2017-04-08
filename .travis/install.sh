@@ -10,7 +10,7 @@ if [[ $TRAVIS_OS_NAME == "osx" ]]; then
 	# We use the official python.org installers to make sure our wheels are
 	# going to be as widely compatible as possible
 	PYTHON_PKG_27="https://www.python.org/ftp/python/2.7.12/python-2.7.12-macosx10.6.pkg"
-	PYTHON_PKG_33="http://www.python.org/ftp/python/3.3.5/python-3.3.5-macosx10.6.dmg"
+	PYTHON_PKG_33="https://www.python.org/ftp/python/3.3.5/python-3.3.5-macosx10.6.dmg"
 	PYTHON_PKG_34="https://www.python.org/ftp/python/3.4.4/python-3.4.4-macosx10.6.pkg"
 	PYTHON_PKG_35="https://www.python.org/ftp/python/3.5.2/python-3.5.2-macosx10.6.pkg"
 	PYTHON_PKG_36="https://www.python.org/ftp/python/3.6.1/python-3.6.1-macosx10.6.pkg"

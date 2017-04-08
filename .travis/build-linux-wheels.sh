@@ -11,11 +11,9 @@ wget -q https://gmplib.org/download/gmp/gmp-6.1.2.tar.bz2 && tar -xjpf gmp-*.tar
 
 # Compile wheels
 for PYBIN in /opt/python/*/bin; do
-    case ${PYBIN} in
-		cp27|cp35|cp36)
-			${PYBIN}/pip wheel /io/ -w wheelhouse/
-			;;
-	esac
+	if [[ ${PYBIN} =~ ^(cp27|cp35|cp36)$ ]]; then
+    	${PYBIN}/pip wheel /io/ -w wheelhouse/
+    fi
 done
 
 # Adjust wheel tags

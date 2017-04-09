@@ -43,7 +43,7 @@ class TestValidateSecret:
 
 
 def test_bytes_conversion():
-    n = urandom(32)
+    n = b'\x00' + urandom(31)
     assert int_to_bytes(bytes_to_int(n)) == n
 
 

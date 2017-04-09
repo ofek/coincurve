@@ -40,7 +40,7 @@ Installation
 ------------
 
 Coincurve is distributed on PyPI and is available on Linux/macOS and Windows and
-supports Python 3.3+ and PyPy3.3-5.5+.
+supports Python 2.7/3.5+ and PyPy2.7-v5.7.1/PyPy3.5-v5.7.1+.
 
 .. code-block:: bash
 
@@ -48,3 +48,35 @@ supports Python 3.3+ and PyPy3.3-5.5+.
 
 API
 ---
+
+Coincurve provides a simple API.
+
+PrivateKey(secret=None, context=GLOBAL_CONTEXT)
+^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+
+* Parameters:
+
+  - **secret** (``bytes``) - The secret to use.
+  - **context** (``coincurve.Context``)
+
+Methods
+~~~~~~~
+
+*sign(message, hasher=sha256)*
+
+* Parameters:
+
+  - **message** (``bytes``) - The message to sign.
+  - **hasher** - The hash function to use. hasher(message) should return 32 bytes.
+
+* Returns: ``bytes``. 71 <= len(signature) <= 72
+
+
+
+
+
+
+
+
+
+

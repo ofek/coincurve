@@ -103,10 +103,15 @@ Methods
 * Returns: ``coincurve.PrivateKey``
 
 ``to_int()``
+
 ``to_pem()``
+
 ``to_der()``
+
 *classmethod* ``from_int(num, context=GLOBAL_CONTEXT)``
+
 *classmethod* ``from_pem(pem, context=GLOBAL_CONTEXT)``
+
 *classmethod* ``from_der(der, context=GLOBAL_CONTEXT)``
 
 

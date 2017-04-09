@@ -51,8 +51,12 @@ API
 
 Coincurve provides a simple API.
 
-PrivateKey(secret=None, context=GLOBAL_CONTEXT)
-^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+coincurve.PrivateKey
+^^^^^^^^^^^^^^^^^^^^
+
+All instances have a ``public_key`` of type ``coincurve.PublicKey``
+
+``PrivateKey(secret=None, context=GLOBAL_CONTEXT)``
 
 * Parameters:
 
@@ -62,18 +66,48 @@ PrivateKey(secret=None, context=GLOBAL_CONTEXT)
 Methods
 ~~~~~~~
 
-*sign(message, hasher=sha256)*
+``sign(message, hasher=sha256)``
 
 * Parameters:
 
   - **message** (``bytes``) - The message to sign.
-  - **hasher** - The hash function to use. hasher(message) should return 32 bytes.
+  - **hasher** - The hash function to use. hasher(message) must return 32 bytes.
 
 * Returns: ``bytes``. 71 <= len(signature) <= 72
 
+``sign_recoverable(message, hasher=sha256)``
 
+* Parameters:
 
+  - **message** (``bytes``) - The message to sign.
+  - **hasher** - The hash function to use. hasher(message) must return 32 bytes.
 
+* Returns: ``bytes``
+
+``add(scalar, update=False)``
+
+* Parameters:
+
+  - **scalar** (``bytes``) - The scalar to add.
+  - **update** - If ``True``, will update and return ``self``.
+
+* Returns: ``coincurve.PrivateKey``
+
+``multiply(scalar, update=False)``
+
+* Parameters:
+
+  - **scalar** (``bytes``) - The scalar to multiply.
+  - **update** - If ``True``, will update and return ``self``.
+
+* Returns: ``coincurve.PrivateKey``
+
+``to_int()``
+``to_pem()``
+``to_der()``
+*classmethod* ``from_int(num, context=GLOBAL_CONTEXT)``
+*classmethod* ``from_pem(pem, context=GLOBAL_CONTEXT)``
+*classmethod* ``from_der(der, context=GLOBAL_CONTEXT)``
 
 
 

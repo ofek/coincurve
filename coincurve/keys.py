@@ -58,7 +58,7 @@ class PrivateKey:
 
         return recoverable_to_der(signature, self.context)
 
-    def ecdh(self, public_key, update=False):
+    def ecdh(self, public_key):
         secret = ffi.new('unsigned char [32]')
 
         lib.secp256k1_ecdh(

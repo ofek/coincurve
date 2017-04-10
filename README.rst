@@ -108,14 +108,13 @@ Methods
 
 * Returns: ``bytes``
 
-``ecdh(public_key, update=False)``
+``ecdh(public_key)``
 
 Computes a Diffie-Hellman secret in constant time.
 
 * Parameters:
 
     - **public_key** (``bytes``) - Another party's public key in compressed or uncompressed form.
-    - **update** - If ``True``, will update and return ``self``.
 
 * Returns: ``bytes``
 

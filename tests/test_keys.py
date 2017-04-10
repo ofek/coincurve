@@ -102,10 +102,10 @@ class TestPublicKey:
     def test_ecdh(self):
         x = urandom(32)
         k = urandom(32)
-        a = G.multiply(x)
-        b = G.multiply(k)
+        a = PublicKey.from_secret(x)
+        b = PublicKey.from_secret(k)
 
-        assert a.multiply(k) == b.multiply(x)
+        assert a.ecdh(k) == b.ecdh(x)
 
     def test_transform(self):
         x = urandom(32)

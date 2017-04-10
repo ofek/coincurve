@@ -59,10 +59,6 @@ class PrivateKey:
         return recoverable_to_der(signature, self.context)
 
     def add(self, scalar, update=False):
-        """
-        Tweak the current private key by adding a 32 byte scalar
-        to it and return a new raw private key composed of 32 bytes.
-        """
         scalar = pad_scalar(scalar)
 
         secret = ffi.new('unsigned char [32]', self.secret)
@@ -85,10 +81,6 @@ class PrivateKey:
         return PrivateKey(secret, self.context)
 
     def multiply(self, scalar, update=False):
-        """
-        Tweak the current private key by multiplying it by a 32 byte scalar
-        and return a new raw private key composed of 32 bytes.
-        """
         scalar = validate_secret(scalar)
 
         secret = ffi.new('unsigned char [32]', self.secret)
@@ -263,10 +255,6 @@ class PublicKey:
         return bytes(ffi.buffer(secret, 32))
 
     def add(self, scalar, update=False):
-        """
-        Tweak the current public key by adding a 32 byte scalar times
-        the generator to it and return a new PublicKey instance.
-        """
         scalar = pad_scalar(scalar)
 
         new_key = ffi.new('secp256k1_pubkey *', self.public_key[0])
@@ -286,10 +274,6 @@ class PublicKey:
         return PublicKey(new_key, self.context)
 
     def multiply(self, scalar, update=False):
-        """
-        Tweak the current public key by multiplying it by a 32 byte scalar
-        and return a new PublicKey instance.
-        """
         scalar = validate_secret(scalar)
 
         new_key = ffi.new('secp256k1_pubkey *', self.public_key[0])
@@ -305,7 +289,6 @@ class PublicKey:
         return PublicKey(new_key, self.context)
 
     def combine(self, public_keys, update=False):
-        """Add a number of public keys together."""
         new_key = ffi.new('secp256k1_pubkey *')
 
         combined = lib.secp256k1_ec_pubkey_combine(

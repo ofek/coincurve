@@ -60,18 +60,24 @@ All instances have a ``public_key`` of type ``coincurve.PublicKey``
 
 * Parameters:
 
-  - **secret** (``bytes``) - The secret to use.
-  - **context** (``coincurve.Context``)
+    - **secret** (``bytes``) - The secret to use.
+    - **context** (``coincurve.Context``)
 
 Methods
 ~~~~~~~
+
+*classmethod* ``from_int(num, context=GLOBAL_CONTEXT)``
+
+*classmethod* ``from_pem(pem, context=GLOBAL_CONTEXT)``
+
+*classmethod* ``from_der(der, context=GLOBAL_CONTEXT)``
 
 ``sign(message, hasher=sha256)``
 
 * Parameters:
 
-  - **message** (``bytes``) - The message to sign.
-  - **hasher** - The hash function to use. hasher(message) must return 32 bytes.
+    - **message** (``bytes``) - The message to sign.
+    - **hasher** - The hash function to use. hasher(message) must return 32 bytes.
 
 * Returns: ``bytes``. 71 <= len(signature) <= 72
 
@@ -79,8 +85,8 @@ Methods
 
 * Parameters:
 
-  - **message** (``bytes``) - The message to sign.
-  - **hasher** - The hash function to use. hasher(message) must return 32 bytes.
+    - **message** (``bytes``) - The message to sign.
+    - **hasher** - The hash function to use. hasher(message) must return 32 bytes.
 
 * Returns: ``bytes``
 
@@ -88,8 +94,8 @@ Methods
 
 * Parameters:
 
-  - **scalar** (``bytes``) - The scalar to add.
-  - **update** - If ``True``, will update and return ``self``.
+    - **scalar** (``bytes``) - The scalar to add.
+    - **update** - If ``True``, will update and return ``self``.
 
 * Returns: ``coincurve.PrivateKey``
 
@@ -97,8 +103,8 @@ Methods
 
 * Parameters:
 
-  - **scalar** (``bytes``) - The scalar to multiply.
-  - **update** - If ``True``, will update and return ``self``.
+    - **scalar** (``bytes``) - The scalar to multiply.
+    - **update** - If ``True``, will update and return ``self``.
 
 * Returns: ``coincurve.PrivateKey``
 
@@ -108,11 +114,67 @@ Methods
 
 ``to_der()``
 
-*classmethod* ``from_int(num, context=GLOBAL_CONTEXT)``
+coincurve.PublicKey
+^^^^^^^^^^^^^^^^^^^
 
-*classmethod* ``from_pem(pem, context=GLOBAL_CONTEXT)``
+``PublicKey(data, context=GLOBAL_CONTEXT)``
 
-*classmethod* ``from_der(der, context=GLOBAL_CONTEXT)``
+* Parameters:
+
+    - **data** (``bytes``) - The public key in compressed or uncompressed form.
+    - **context** (``coincurve.Context``)
+
+*classmethod* ``from_secret(secret, context=GLOBAL_CONTEXT)``
+
+*classmethod* ``from_valid_secret(secret, context=GLOBAL_CONTEXT)``
+
+*classmethod* ``from_point(x, y, context=GLOBAL_CONTEXT)``
+
+``format(compressed=True)``
+
+* Parameters:
+
+    - **compressed** (``bool``)
+
+* Returns: The public key serialized to ``bytes``.
+
+``point()``
+
+* Returns: (x, y)
+
+``verify(signature, message, hasher=sha256)``
+
+Verifies some message was signed by the owner of this public key.
+
+* Parameters:
+
+    - **signature** (``bytes``) - The signature to verify.
+    - **message** (``bytes``) - The message that was supposedly signed.
+    - **hasher** - The hash function to use. hasher(message) must return 32 bytes.
+
+* Returns: The public key serialized to ``bytes``.
+
+``add(scalar, update=False)``
+
+* Parameters:
+
+    - **scalar** (``bytes``) - The scalar to add.
+    - **update** - If ``True``, will update and return ``self``.
+
+* Returns: ``coincurve.PublicKey``
+
+``multiply(scalar, update=False)``
+
+* Parameters:
+
+    - **scalar** (``bytes``) - The scalar to multiply.
+    - **update** - If ``True``, will update and return ``self``.
+
+* Returns: ``coincurve.PublicKey``
+
+
+
+
 
 
 

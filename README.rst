@@ -24,6 +24,7 @@ Coincurve replaces `secp256k1-py <https://github.com/ludbb/secp256k1-py>`_.
 
 New features include:
 
+- Uses newest version of `libsecp256k1 <https://github.com/bitcoin-core/secp256k1>`_
 - Support for Windows
 - Linux, macOS, and Windows all have binary packages for both 64 and 32-bit architectures
 - Linux & macOS use GMP for faster computation
@@ -31,11 +32,10 @@ New features include:
 - A global context is used by default, drastically increasing performance
 - Fixed ECDH
 - A fix to remove CFFI warnings
-- Each release uses newest version of `libsecp256k1 <https://github.com/bitcoin-core/secp256k1>`_
 - Implements a fix for `<https://bugs.python.org/issue28150>`_ to support Python 3.6+ on macOS
 
-**To retain backward compatibility with secp256k1-py, use coincurve version 2.1.1 specifically!**
-Anything after that has a modified (cleaner :) API.
+**To retain backward compatibility with secp256k1-py, use coincurve==2.1.1 specifically!**
+Anything after that has a modified (cleaner :) API and only supports newest versions of Python.
 
 Installation
 ------------
@@ -51,6 +51,23 @@ API
 ---
 
 Coincurve provides a simple API.
+
+coincurve.verify_signature
+^^^^^^^^^^^^^^^^^^^^^^^^^^
+
+``verify_signature(signature, message, public_key, hasher=sha256, context=GLOBAL_CONTEXT)``
+
+Verifies some message was signed by the owner of a public key.
+
+* Parameters:
+
+    - **signature** (``bytes``) - The signature to verify.
+    - **message** (``bytes``) - The message that was supposedly signed.
+    - **public_key** (``bytes``) - A public key in compressed or uncompressed form.
+    - **hasher** - The hash function to use. hasher(message) must return 32 bytes.
+    - **context** (``coincurve.Context``)
+
+* Returns: ``bool``
 
 coincurve.PrivateKey
 ^^^^^^^^^^^^^^^^^^^^
@@ -97,7 +114,7 @@ Computes a Diffie-Hellman secret in constant time.
 
 * Parameters:
 
-    - **public_key** (``bytes``) - Another party's public key.
+    - **public_key** (``bytes``) - Another party's public key in compressed or uncompressed form.
     - **update** - If ``True``, will update and return ``self``.
 
 * Returns: ``bytes``
@@ -164,7 +181,7 @@ Verifies some message was signed by the owner of this public key.
     - **message** (``bytes``) - The message that was supposedly signed.
     - **hasher** - The hash function to use. hasher(message) must return 32 bytes.
 
-* Returns: The public key serialized to ``bytes``.
+* Returns: ``bool``
 
 ``add(scalar, update=False)``
 

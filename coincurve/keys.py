@@ -58,6 +58,23 @@ class PrivateKey:
 
         return recoverable_to_der(signature, self.context)
 
+    def ecdh(self, public_key, update=False):
+        secret = ffi.new('unsigned char [32]')
+
+        lib.secp256k1_ecdh(
+            self.context.ctx, secret, PublicKey(public_key).public_key,
+            self.secret
+        )
+
+        secret = bytes(ffi.buffer(secret, 32))
+
+        if update:
+            self.secret = secret
+            self._update_public_key()
+            return self
+
+        return PrivateKey(secret, self.context)
+
     def add(self, scalar, update=False):
         scalar = pad_scalar(scalar)
 
@@ -239,20 +256,6 @@ class PublicKey:
 
         # A performance hack to avoid global bool() lookup.
         return not not verified
-
-    def ecdh(self, scalar):
-        scalar = pad_scalar(scalar)
-
-        secret = ffi.new('unsigned char [32]')
-
-        success = lib.secp256k1_ecdh(
-            self.context.ctx, secret, self.public_key, scalar
-        )
-
-        if not success:
-            raise ValueError('Scalar was invalid (zero or overflow).')
-
-        return bytes(ffi.buffer(secret, 32))
 
     def add(self, scalar, update=False):
         scalar = pad_scalar(scalar)

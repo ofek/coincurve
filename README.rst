@@ -90,6 +90,15 @@ Methods
 
 * Returns: ``bytes``
 
+``ecdh(public_key, update=False)``
+
+* Parameters:
+
+    - **public_key** (``bytes``) - The other party's public key.
+    - **update** - If ``True``, will update and return ``self``.
+
+* Returns: ``coincurve.PrivateKey``
+
 ``add(scalar, update=False)``
 
 * Parameters:

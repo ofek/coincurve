@@ -58,6 +58,12 @@ class TestPrivateKey:
     def test_from_der(self):
         assert PrivateKey.from_der(PRIVATE_KEY_DER).secret == PRIVATE_KEY_BYTES
 
+    def test_ecdh(self):
+        a = PrivateKey()
+        b = PrivateKey()
+
+        assert a.ecdh(b.public_key.format()) == b.ecdh(a.public_key.format())
+
     def test_add(self):
         assert PrivateKey(b'\x01').add(b'\x09').to_int() == 10
 
@@ -98,14 +104,6 @@ class TestPublicKey:
     def test_verify(self):
         public_key = PublicKey(PUBLIC_KEY_COMPRESSED)
         assert public_key.verify(SIGNATURE, MESSAGE)
-
-    def test_ecdh(self):
-        x = urandom(32)
-        k = urandom(32)
-        a = PublicKey.from_secret(x)
-        b = PublicKey.from_secret(k)
-
-        assert a.ecdh(k) == b.ecdh(x)
 
     def test_transform(self):
         x = urandom(32)

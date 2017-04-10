@@ -153,6 +153,9 @@ coincurve.PublicKey
     - **data** (``bytes``) - The public key in compressed or uncompressed form.
     - **context** (``coincurve.Context``)
 
+Methods
+~~~~~~~
+
 *classmethod* ``from_secret(secret, context=GLOBAL_CONTEXT)``
 
 *classmethod* ``from_valid_secret(secret, context=GLOBAL_CONTEXT)``

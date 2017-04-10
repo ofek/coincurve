@@ -66,14 +66,7 @@ class PrivateKey:
             self.secret
         )
 
-        secret = bytes(ffi.buffer(secret, 32))
-
-        if update:
-            self.secret = secret
-            self._update_public_key()
-            return self
-
-        return PrivateKey(secret, self.context)
+        return bytes(ffi.buffer(secret, 32))
 
     def add(self, scalar, update=False):
         scalar = pad_scalar(scalar)

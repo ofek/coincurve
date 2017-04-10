@@ -29,6 +29,7 @@ New features include:
 - Linux & macOS use GMP for faster computation
 - Endomorphism optimization is enabled
 - A global context is used by default, drastically increasing performance
+- Fixed ECDH
 - A fix to remove CFFI warnings
 - Each release uses newest version of `libsecp256k1 <https://github.com/bitcoin-core/secp256k1>`_
 - Implements a fix for `<https://bugs.python.org/issue28150>`_ to support Python 3.6+ on macOS
@@ -92,12 +93,14 @@ Methods
 
 ``ecdh(public_key, update=False)``
 
+Computes a Diffie-Hellman secret in constant time.
+
 * Parameters:
 
-    - **public_key** (``bytes``) - The other party's public key.
+    - **public_key** (``bytes``) - Another party's public key.
     - **update** - If ``True``, will update and return ``self``.
 
-* Returns: ``coincurve.PrivateKey``
+* Returns: ``bytes``
 
 ``add(scalar, update=False)``
 

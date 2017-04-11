@@ -7,8 +7,8 @@ from coincurve.context import GLOBAL_CONTEXT
 from coincurve.ecdsa import cdata_to_der, der_to_cdata, recoverable_to_der
 from coincurve.flags import EC_COMPRESSED, EC_UNCOMPRESSED
 from coincurve.utils import (
-    bytes_to_int, der_to_pem, ensure_unicode, get_valid_secret, int_to_bytes,
-    pad_scalar, pem_to_der, sha256, validate_secret
+    bytes_to_hex, bytes_to_int, der_to_pem, ensure_unicode, get_valid_secret,
+    hex_to_bytes, int_to_bytes, pad_scalar, pem_to_der, sha256, validate_secret
 )
 from ._libsecp256k1 import ffi, lib
 
@@ -108,6 +108,9 @@ class PrivateKey:
 
         return PrivateKey(secret, self.context)
 
+    def to_hex(self):
+        return bytes_to_hex(self.secret)
+
     def to_int(self):
         return bytes_to_int(self.secret)
 
@@ -133,6 +136,10 @@ class PrivateKey:
                 )}),
             'private_key': pk
         }).dump()
+
+    @classmethod
+    def from_hex(cls, hexed, context=GLOBAL_CONTEXT):
+        return PrivateKey(hex_to_bytes(hexed), context)
 
     @classmethod
     def from_int(cls, num, context=GLOBAL_CONTEXT):

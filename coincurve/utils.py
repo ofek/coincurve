@@ -1,5 +1,5 @@
 from base64 import b64decode, b64encode
-from binascii import unhexlify
+from binascii import hexlify, unhexlify
 from hashlib import sha256 as _sha256
 from os import urandom
 
@@ -21,6 +21,11 @@ def ensure_unicode(s):
     return s
 
 
+def pad_hex(hexed):
+    # Pad odd-length hex strings.
+    return hexed if not len(hexed) & 1 else '0' + hexed
+
+
 if hasattr(int, "from_bytes"):
     def bytes_to_int(bytestr):
         return int.from_bytes(bytestr, 'big')
@@ -36,13 +41,23 @@ if hasattr(int, "to_bytes"):
         )
 else:
     def int_to_bytes(num):
-        hexed = '%x' % num
+        return pad_scalar(unhexlify(pad_hex('%x' % num)))
 
-        # Handle odd-length hex strings.
-        if len(hexed) & 1:
-            hexed = '0' + hexed
 
-        return pad_scalar(unhexlify(hexed))
+if hasattr(bytes, "hex"):
+    def bytes_to_hex(bytestr):
+        return bytestr.hex()
+else:
+    def bytes_to_hex(bytestr):
+        return ensure_unicode(hexlify(bytestr))
+
+
+if hasattr(bytes, "fromhex"):
+    def hex_to_bytes(hexed):
+        return pad_scalar(bytes.fromhex(pad_hex(hexed)))
+else:
+    def hex_to_bytes(hexed):
+        return pad_scalar(unhexlify(pad_hex(hexed)))
 
 
 def sha256(bytestr):

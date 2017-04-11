@@ -6,9 +6,9 @@ import pytest
 from coincurve.keys import PrivateKey, PublicKey
 from coincurve.utils import bytes_to_int, int_to_bytes, verify_signature
 from .samples import (
-    PRIVATE_KEY_BYTES, PRIVATE_KEY_DER, PRIVATE_KEY_NUM, PRIVATE_KEY_PEM,
-    PUBLIC_KEY_COMPRESSED, PUBLIC_KEY_UNCOMPRESSED, PUBLIC_KEY_X,
-    PUBLIC_KEY_Y, MESSAGE, SIGNATURE
+    PRIVATE_KEY_BYTES, PRIVATE_KEY_DER, PRIVATE_KEY_HEX, PRIVATE_KEY_NUM,
+    PRIVATE_KEY_PEM, PUBLIC_KEY_COMPRESSED, PUBLIC_KEY_UNCOMPRESSED,
+    PUBLIC_KEY_X, PUBLIC_KEY_Y, MESSAGE, SIGNATURE
 )
 
 
@@ -40,6 +40,9 @@ class TestPrivateKey:
         with pytest.raises(ValueError):
             PrivateKey().sign(MESSAGE, lambda x: sha512(x).digest())
 
+    def test_to_hex(self):
+        assert PrivateKey(PRIVATE_KEY_BYTES).to_hex() == PRIVATE_KEY_HEX
+
     def test_to_int(self):
         assert PrivateKey(PRIVATE_KEY_BYTES).to_int() == PRIVATE_KEY_NUM
 
@@ -48,6 +51,9 @@ class TestPrivateKey:
 
     def test_to_der(self):
         assert PrivateKey(PRIVATE_KEY_BYTES).to_der() == PRIVATE_KEY_DER
+
+    def test_from_hex(self):
+        assert PrivateKey.from_hex(PRIVATE_KEY_HEX).secret == PRIVATE_KEY_BYTES
 
     def test_from_int(self):
         assert PrivateKey.from_int(PRIVATE_KEY_NUM).secret == PRIVATE_KEY_BYTES

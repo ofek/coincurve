@@ -3,8 +3,9 @@ from os import urandom
 import pytest
 
 from coincurve.utils import (
-    GROUP_ORDER, ZERO, bytes_to_int, chunk_data, der_to_pem, get_valid_secret,
-    int_to_bytes, pad_scalar, pem_to_der, validate_secret, verify_signature
+    GROUP_ORDER, ZERO, bytes_to_hex, bytes_to_int, chunk_data, der_to_pem,
+    get_valid_secret, hex_to_bytes, int_to_bytes, pad_scalar, pem_to_der,
+    validate_secret, verify_signature
 )
 from .samples import (
     MESSAGE, PRIVATE_KEY_DER, PUBLIC_KEY_COMPRESSED, PUBLIC_KEY_UNCOMPRESSED,
@@ -42,9 +43,14 @@ class TestValidateSecret:
             validate_secret(GROUP_ORDER)
 
 
-def test_bytes_conversion():
-    n = b'\x00' + urandom(31)
-    assert int_to_bytes(bytes_to_int(n)) == n
+def test_bytes_hex_conversion():
+    bytestr = b'\x00' + urandom(31)
+    assert hex_to_bytes(bytes_to_hex(bytestr)) == bytestr
+
+
+def test_bytes_int_conversion():
+    bytestr = b'\x00' + urandom(31)
+    assert int_to_bytes(bytes_to_int(bytestr)) == bytestr
 
 
 def test_der_conversion():

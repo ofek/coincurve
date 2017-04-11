@@ -84,6 +84,8 @@ All instances have a ``public_key`` of type ``coincurve.PublicKey``
 Methods
 ~~~~~~~
 
+*classmethod* ``from_hex(hexed, context=GLOBAL_CONTEXT)``
+
 *classmethod* ``from_int(num, context=GLOBAL_CONTEXT)``
 
 *classmethod* ``from_pem(pem, context=GLOBAL_CONTEXT)``
@@ -135,6 +137,8 @@ Computes a Diffie-Hellman secret in constant time.
     - **update** - If ``True``, will update and return ``self``.
 
 * Returns: ``coincurve.PrivateKey``
+
+``to_hex()``
 
 ``to_int()``
 

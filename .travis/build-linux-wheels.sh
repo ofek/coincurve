@@ -7,7 +7,7 @@ set -x
 yum install -y pkg-config libffi libffi-devel
 
 # Use updated GMP
-wget -q https://gmplib.org/download/gmp/gmp-6.1.2.tar.bz2 && tar -xjpf gmp-*.tar.bz2 && cd gmp* && ./configure > /dev/null && make > /dev/null && make check > /dev/null && make install > /dev/null && cd ..
+wget -q https://gmplib.org/download/gmp/gmp-6.1.2.tar.bz2 && tar -xjpf gmp-*.tar.bz2 && cd gmp* && ./config.guess # && ./configure > /dev/null && make > /dev/null && make check > /dev/null && make install > /dev/null && cd ..
 
 # Compile wheels
 for PYBIN in /opt/python/*/bin; do

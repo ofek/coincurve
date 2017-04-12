@@ -24,6 +24,7 @@ Coincurve replaces `secp256k1-py <https://github.com/ludbb/secp256k1-py>`_.
 
 New features include:
 
+- Cleaner API
 - Uses newest version of `libsecp256k1 <https://github.com/bitcoin-core/secp256k1>`_
 - Support for Windows
 - Linux, macOS, and Windows all have binary packages for both 64 and 32-bit architectures

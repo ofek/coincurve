@@ -34,9 +34,6 @@ New features include:
 - A fix to remove CFFI warnings
 - Implements a fix for `<https://bugs.python.org/issue28150>`_ to support Python 3.6+ on macOS
 
-**To retain backward compatibility with secp256k1-py, use coincurve==2.1.1 specifically!**
-Anything after that has a modified (cleaner :) API and only supports newest versions of Python.
-
 Installation
 ------------
 

@@ -36,11 +36,19 @@ else:
 
 if hasattr(int, "to_bytes"):
     def int_to_bytes(num):
+        return num.to_bytes((num.bit_length() + 7) // 8 or 1, 'big')
+
+
+    def int_to_bytes_padded(num):
         return pad_scalar(
             num.to_bytes((num.bit_length() + 7) // 8 or 1, 'big')
         )
 else:
     def int_to_bytes(num):
+        return unhexlify(pad_hex('%x' % num))
+
+
+    def int_to_bytes_padded(num):
         return pad_scalar(unhexlify(pad_hex('%x' % num)))
 
 

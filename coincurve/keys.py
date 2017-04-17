@@ -4,11 +4,15 @@ from asn1crypto.keys import (
 )
 
 from coincurve.context import GLOBAL_CONTEXT
-from coincurve.ecdsa import cdata_to_der, der_to_cdata, recoverable_to_der
+from coincurve.ecdsa import (
+    cdata_to_der, der_to_cdata, deserialize_recoverable, recover,
+    serialize_recoverable
+)
 from coincurve.flags import EC_COMPRESSED, EC_UNCOMPRESSED
 from coincurve.utils import (
     bytes_to_hex, bytes_to_int, der_to_pem, ensure_unicode, get_valid_secret,
-    hex_to_bytes, int_to_bytes, pad_scalar, pem_to_der, sha256, validate_secret
+    hex_to_bytes, int_to_bytes_padded, pad_scalar, pem_to_der, sha256,
+    validate_secret
 )
 from ._libsecp256k1 import ffi, lib
 
@@ -56,7 +60,7 @@ class PrivateKey:
             raise ValueError('The nonce generation function failed, or the '
                              'private key was invalid.')
 
-        return recoverable_to_der(signature, self.context)
+        return serialize_recoverable(signature, self.context)
 
     def ecdh(self, public_key):
         secret = ffi.new('unsigned char [32]')
@@ -143,12 +147,12 @@ class PrivateKey:
 
     @classmethod
     def from_int(cls, num, context=GLOBAL_CONTEXT):
-        return PrivateKey(int_to_bytes(num), context)
+        return PrivateKey(int_to_bytes_padded(num), context)
 
     @classmethod
     def from_pem(cls, pem, context=GLOBAL_CONTEXT):
         return PrivateKey(
-            int_to_bytes(PrivateKeyInfo.load(
+            int_to_bytes_padded(PrivateKeyInfo.load(
                 pem_to_der(pem)
             ).native['private_key']['private_key']),
             context
@@ -157,7 +161,7 @@ class PrivateKey:
     @classmethod
     def from_der(cls, der, context=GLOBAL_CONTEXT):
         return PrivateKey(
-            int_to_bytes(
+            int_to_bytes_padded(
                 PrivateKeyInfo.load(der).native['private_key']['private_key']
             ),
             context
@@ -225,9 +229,19 @@ class PublicKey:
     @classmethod
     def from_point(cls, x, y, context=GLOBAL_CONTEXT):
         return PublicKey(
-            b'\x04' + int_to_bytes(x) + int_to_bytes(y),
+            b'\x04' + int_to_bytes_padded(x) + int_to_bytes_padded(y),
             context
         )
+
+    @classmethod
+    def from_signature_and_message(cls, serialized_sig, message, hasher=sha256,
+                                   context=GLOBAL_CONTEXT):
+        return PublicKey(recover(
+            message,
+            deserialize_recoverable(serialized_sig, context=context),
+            hasher=hasher,
+            context=context
+        ))
 
     def format(self, compressed=True):
         length = 33 if compressed else 65

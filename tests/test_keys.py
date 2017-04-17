@@ -3,12 +3,13 @@ from os import urandom
 
 import pytest
 
+from coincurve.ecdsa import deserialize_recoverable, recover
 from coincurve.keys import PrivateKey, PublicKey
-from coincurve.utils import bytes_to_int, int_to_bytes, verify_signature
+from coincurve.utils import bytes_to_int, int_to_bytes_padded, verify_signature
 from .samples import (
     PRIVATE_KEY_BYTES, PRIVATE_KEY_DER, PRIVATE_KEY_HEX, PRIVATE_KEY_NUM,
     PRIVATE_KEY_PEM, PUBLIC_KEY_COMPRESSED, PUBLIC_KEY_UNCOMPRESSED,
-    PUBLIC_KEY_X, PUBLIC_KEY_Y, MESSAGE, SIGNATURE
+    PUBLIC_KEY_X, PUBLIC_KEY_Y, MESSAGE, SIGNATURE, RECOVERABLE_SIGNATURE
 )
 
 
@@ -39,6 +40,12 @@ class TestPrivateKey:
     def test_signature_invalid_hasher(self):
         with pytest.raises(ValueError):
             PrivateKey().sign(MESSAGE, lambda x: sha512(x).digest())
+
+    def test_signature_recoverable(self):
+        private_key = PrivateKey(PRIVATE_KEY_BYTES)
+        assert private_key.public_key.format() == PublicKey(
+            recover(MESSAGE, deserialize_recoverable(private_key.sign_recoverable(MESSAGE)))
+        ).format()
 
     def test_to_hex(self):
         assert PrivateKey(PRIVATE_KEY_BYTES).to_hex() == PRIVATE_KEY_HEX
@@ -98,6 +105,11 @@ class TestPublicKey:
     def test_from_point(self):
         assert PublicKey.from_point(PUBLIC_KEY_X, PUBLIC_KEY_Y).format() == PUBLIC_KEY_COMPRESSED
 
+    def test_from_signature_and_message(self):
+        assert PublicKey.from_secret(PRIVATE_KEY_BYTES).format() == PublicKey.from_signature_and_message(
+            RECOVERABLE_SIGNATURE, MESSAGE
+        ).format()
+
     def test_format(self):
         assert PublicKey(PUBLIC_KEY_UNCOMPRESSED).format(compressed=True) == PUBLIC_KEY_COMPRESSED
         assert PublicKey(PUBLIC_KEY_COMPRESSED).format(compressed=False) == PUBLIC_KEY_UNCOMPRESSED
@@ -116,6 +128,6 @@ class TestPublicKey:
         k = urandom(32)
         point = G.multiply(x)
 
-        assert point.add(k) == G.multiply(int_to_bytes(
+        assert point.add(k) == G.multiply(int_to_bytes_padded(
             (bytes_to_int(x) + bytes_to_int(k)) % n
         ))

@@ -163,6 +163,8 @@ Methods
 
 *classmethod* ``from_point(x, y, context=GLOBAL_CONTEXT)``
 
+*classmethod* ``from_signature_and_message(serialized_sig, message, hasher=sha256, context=GLOBAL_CONTEXT)``
+
 ``format(compressed=True)``
 
 * Parameters:

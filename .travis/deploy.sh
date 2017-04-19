@@ -22,8 +22,8 @@ else
 
 	if [[ "$TRAVIS_PYTHON_VERSION" == "pypy3" ]]; then
 		python -m pip install wheel
-		python3 -m pip install auditwheel
 		python setup.py bdist_wheel
+		python3 -m pip install wheel auditwheel pyelftools typing
 		auditwheel repair dist/coincurve*.whl
 		rm dist/coincurve*.whl
 		mv coincurve*.whl dist

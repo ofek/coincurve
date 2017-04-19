@@ -24,6 +24,7 @@ else
 		python -m pip install wheel
 		python setup.py bdist_wheel
 		python3 -m pip install wheel auditwheel pyelftools typing
+		git clone https://github.com/NixOS/patchelf.git && cd patchelf* && ./configure && make && make install && cd ..
 		auditwheel repair dist/coincurve*.whl
 		rm dist/coincurve*.whl
 		mv coincurve*.whl dist

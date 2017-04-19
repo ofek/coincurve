@@ -24,7 +24,7 @@ else
 		python -m pip install wheel
 		python setup.py bdist_wheel
 		python3 -m pip install wheel auditwheel pyelftools typing
-		auditwheel repair dist/coincurve*.whl
+		python3 -m auditwheel repair dist/coincurve*.whl
 		rm dist/coincurve*.whl
 		mv coincurve*.whl dist
 	fi

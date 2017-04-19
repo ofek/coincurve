@@ -55,6 +55,7 @@ addons:
     - pkg-config
     - libffi-dev
     - libgmp-dev
+    - patchelf
 before_install:
 - cd $HOME
 - mkdir bin

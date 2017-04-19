@@ -27,7 +27,7 @@ else
 		wget -q https://nixos.org/releases/patchelf/patchelf-0.9/patchelf-0.9.tar.bz2 && tar -xjpf patchelf-*.tar.bz2 && cd patchelf* && ./configure > /dev/null && sudo make install > /dev/null && cd ..
 		auditwheel repair dist/coincurve*.whl
 		rm dist/coincurve*.whl
-		mv coincurve*.whl dist
+		mv wheelhouse/coincurve*.whl dist
 	fi
 fi
 

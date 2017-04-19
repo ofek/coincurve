@@ -22,11 +22,11 @@ else
 
 	if [[ "$TRAVIS_PYTHON_VERSION" == "pypy3" ]]; then
 		python -m pip install wheel
-		python -m pip install auditwheel
+		python3 -m pip install auditwheel
 		python setup.py bdist_wheel
 		auditwheel repair dist/coincurve*.whl
 		rm dist/coincurve*.whl
-		mv coincurve*.whl dist/
+		mv coincurve*.whl dist
 	fi
 fi
 
@@ -37,6 +37,6 @@ python -m pip install twine
 # Ignore non-existing files in globs
 shopt -s nullglob
 
-twine upload --skip-existing dist/coincurve*.{whl} -u "${PYPI_USERNAME}"
+twine upload --skip-existing dist/coincurve*.{whl,gz} -u "${PYPI_USERNAME}"
 
 set +e +x

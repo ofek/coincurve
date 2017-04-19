@@ -15,7 +15,7 @@ if [[ "$TRAVIS_OS_NAME" == "linux" && ${BUILD_LINUX_WHEELS} -eq 1 ]]; then
     linux32 docker run --rm -e BUILD_GMP_CPU="i686" -v $(pwd):/io quay.io/pypa/manylinux1_i686 /io/.travis/build-linux-wheels.sh
     .travis/build_windows_wheels.sh
 else
-	if [[ "$TRAVIS_OS_NAME" == "osx" ] || [ "$TRAVIS_PYTHON_VERSION" == "pypy3" ]]; then
+	if [[ "$TRAVIS_OS_NAME" == "osx" || "$TRAVIS_PYTHON_VERSION" == "pypy3" ]]; then
 		python -m pip install wheel
 		python setup.py bdist_wheel
 	fi

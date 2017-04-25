@@ -39,11 +39,23 @@ Installation
 ------------
 
 Coincurve is distributed on PyPI and is available on Linux/macOS and Windows and
-supports Python 2.7/3.5+ and PyPy2.7-v5.7.1/PyPy3.5-v5.7.1+.
+supports Python 2.7/3.5+ and PyPy3.5-v5.7.1+.
 
 .. code-block:: bash
 
     $ pip install coincurve
+
+If you are on a system that doesn't have a precompiled binary wheel (e.g. FreeBSD)
+then pip will fetch source to build yourself. You must have the necessary packages.
+
+On Debian/Ubuntu for example the necessary packages are:
+
+- build-essential
+- automake
+- pkg-config
+- libtool
+- libffi-dev
+- libgmp-dev
 
 API
 ---

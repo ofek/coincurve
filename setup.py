@@ -1,6 +1,7 @@
 import errno
 import os
 import os.path
+import platform
 import shutil
 import subprocess
 import tarfile
@@ -33,6 +34,8 @@ from setup_support import absolute, build_flags, detect_dll, has_system_lib
 
 
 BUILDING_FOR_WINDOWS = detect_dll()
+
+MAKE = 'gmake' if platform.system() in ['FreeBSD'] else 'make'
 
 # Version of libsecp256k1 to download if none exists in the `libsecp256k1`
 # directory
@@ -194,8 +197,8 @@ class build_clib(_build_clib):
             cwd=build_temp,
         )
 
-        subprocess.check_call(['make'], cwd=build_temp)
-        subprocess.check_call(['make', 'install'], cwd=build_temp)
+        subprocess.check_call([MAKE], cwd=build_temp)
+        subprocess.check_call([MAKE, 'install'], cwd=build_temp)
 
         self.build_flags['include_dirs'].extend(build_flags('libsecp256k1', 'I', build_temp))
         self.build_flags['library_dirs'].extend(build_flags('libsecp256k1', 'L', build_temp))
@@ -262,7 +265,7 @@ else:
 
 setup(
     name='coincurve',
-    version='4.4.0',
+    version='4.4.1',
 
     description='Cross-platform Python CFFI bindings for libsecp256k1',
     long_description=open('README.rst', 'r').read(),

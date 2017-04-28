@@ -30,7 +30,7 @@ def der_to_cdata(der, context=GLOBAL_CONTEXT):
 
 
 def recover(message, recover_sig, hasher=sha256, context=GLOBAL_CONTEXT):
-    msg_hash = hasher(message)
+    msg_hash = hasher(message) if hasher is not None else message
     if len(msg_hash) != 32:
         raise ValueError('Message hash must be 32 bytes long.')
     pubkey = ffi.new('secp256k1_pubkey *')

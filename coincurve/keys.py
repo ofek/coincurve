@@ -27,7 +27,7 @@ class PrivateKey:
         )
 
     def sign(self, message, hasher=sha256):
-        msg_hash = hasher(message)
+        msg_hash = hasher(message) if hasher is not None else message
         if len(msg_hash) != 32:
             raise ValueError('Message hash must be 32 bytes long.')
 
@@ -45,7 +45,7 @@ class PrivateKey:
         return cdata_to_der(signature, self.context)
 
     def sign_recoverable(self, message, hasher=sha256):
-        msg_hash = hasher(message)
+        msg_hash = hasher(message) if hasher is not None else message
         if len(msg_hash) != 32:
             raise ValueError('Message hash must be 32 bytes long.')
 
@@ -260,7 +260,7 @@ class PublicKey:
         return bytes_to_int(public_key[1:33]), bytes_to_int(public_key[33:])
 
     def verify(self, signature, message, hasher=sha256):
-        msg_hash = hasher(message)
+        msg_hash = hasher(message) if hasher is not None else message
         if len(msg_hash) != 32:
             raise ValueError('Message hash must be 32 bytes long.')
 

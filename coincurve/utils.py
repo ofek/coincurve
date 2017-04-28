@@ -118,7 +118,7 @@ def verify_signature(signature, message, public_key, hasher=sha256, context=GLOB
     if not pubkey_parsed:
         raise ValueError('The public key could not be parsed or is invalid.')
 
-    msg_hash = hasher(message)
+    msg_hash = hasher(message) if hasher is not None else message
     if len(msg_hash) != 32:
         raise ValueError('Message hash must be 32 bytes long.')
 

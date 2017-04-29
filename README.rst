@@ -74,7 +74,7 @@ Verifies some message was signed by the owner of a public key.
     - **signature** (``bytes``) - The signature to verify.
     - **message** (``bytes``) - The message that was supposedly signed.
     - **public_key** (``bytes``) - A public key in compressed or uncompressed form.
-    - **hasher** - The hash function to use. hasher(message) must return 32 bytes.
+    - **hasher** - The hash function to use, can be ``None``. hasher(message) must return 32 bytes.
     - **context** (``coincurve.Context``)
 
 * Returns: ``bool``
@@ -107,7 +107,7 @@ Methods
 * Parameters:
 
     - **message** (``bytes``) - The message to sign.
-    - **hasher** - The hash function to use. hasher(message) must return 32 bytes.
+    - **hasher** - The hash function to use, can be ``None``. hasher(message) must return 32 bytes.
 
 * Returns: ``bytes``. 71 <= len(signature) <= 72
 
@@ -116,7 +116,7 @@ Methods
 * Parameters:
 
     - **message** (``bytes``) - The message to sign.
-    - **hasher** - The hash function to use. hasher(message) must return 32 bytes.
+    - **hasher** - The hash function to use, can be ``None``. hasher(message) must return 32 bytes.
 
 * Returns: ``bytes``
 
@@ -197,7 +197,7 @@ Verifies some message was signed by the owner of this public key.
 
     - **signature** (``bytes``) - The signature to verify.
     - **message** (``bytes``) - The message that was supposedly signed.
-    - **hasher** - The hash function to use. hasher(message) must return 32 bytes.
+    - **hasher** - The hash function to use, can be ``None``. hasher(message) must return 32 bytes.
 
 * Returns: ``bool``
 

@@ -219,12 +219,10 @@ Verifies some message was signed by the owner of this public key.
 
 * Returns: ``coincurve.PublicKey``
 
+Credits
+-------
 
-
-
-
-
-
-
-
-
+- Contributors of `libsecp256k1 <https://github.com/bitcoin-core/secp256k1>`_.
+- Contributors of `secp256k1-py <https://github.com/ludbb/secp256k1-py>`_.
+  While Coincurve is nearly a complete rewrite, much of the build system
+  provided by `<ulope https://github.com/ulope>`_ remains.

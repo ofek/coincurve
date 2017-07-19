@@ -98,8 +98,7 @@ All instances have a ``public_key`` of type ``coincurve.PublicKey``
     - **secret** (``bytes``) - The secret to use.
     - **context** (``coincurve.Context``)
 
-Methods
-~~~~~~~
+Methods:
 
 *classmethod* ``from_hex(hexed, context=GLOBAL_CONTEXT)``
 
@@ -173,8 +172,7 @@ coincurve.PublicKey
     - **data** (``bytes``) - The public key in compressed or uncompressed form.
     - **context** (``coincurve.Context``)
 
-Methods
-~~~~~~~
+Methods:
 
 *classmethod* ``from_secret(secret, context=GLOBAL_CONTEXT)``
 

@@ -251,6 +251,13 @@ Important changes are emphasized.
 ^^^^^
 
 - **Breaking:** Coincurve is now dual-licensed under the terms of MIT and Apache v2.0.
+- Performance improvements from libsecp256k1 master:
+  `1 <https://github.com/bitcoin-core/secp256k1/commit/cf12fa13cb96797d6ce356a5023051f99f915fe6>`_
+  `2 <https://github.com/bitcoin-core/secp256k1/commit/aa8499080e2a657113781921096b59a74d7bc0e7>`_
+  `3 <https://github.com/bitcoin-core/secp256k1/commit/8b7680a826498a786eca5737e0e97ee4d2e63713>`_
+  `4 <https://github.com/bitcoin-core/secp256k1/commit/465159c278cecc2cf8d934e78f640f345243eb72>`_
+  `5 <https://github.com/bitcoin-core/secp256k1/commit/4cc8f52505b2922390a115c77eeb3b251bc9af88>`_
+  `6 <https://github.com/bitcoin-core/secp256k1/commit/cbc20b8c34d44c2ef175420f3cdfe054f82e8e2c>`_
 - Improvements to documentation.
 
 4.5.1

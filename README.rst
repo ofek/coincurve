@@ -4,14 +4,14 @@ Coincurve
 .. image:: https://img.shields.io/pypi/v/coincurve.svg?style=flat-square
     :target: https://pypi.org/project/coincurve
 
-.. image:: https://img.shields.io/travis/ofek/coincurve.svg?branch=master&style=flat-square
+.. image:: https://img.shields.io/travis/ofek/coincurve/master.svg?style=flat-square
     :target: https://travis-ci.org/ofek/coincurve
 
 .. image:: https://img.shields.io/pypi/pyversions/coincurve.svg?style=flat-square
     :target: https://pypi.org/project/coincurve
 
-.. image:: https://img.shields.io/badge/license-MIT-blue.svg?style=flat-square
-    :target: https://en.wikipedia.org/wiki/MIT_License
+.. image:: https://img.shields.io/pypi/l/coincurve.svg?style=flat-square
+    :target: https://choosealicense.com/licenses
 
 -----
 
@@ -34,6 +34,13 @@ New features include:
 - Fixed ECDH
 - A fix to remove CFFI warnings
 - Implements a fix for `<https://bugs.python.org/issue28150>`_ to support Python 3.6+ on macOS
+
+Table of Contents
+~~~~~~~~~~~~~~~~~
+
+.. contents::
+    :backlinks: top
+    :local:
 
 Installation
 ------------
@@ -219,6 +226,16 @@ Verifies some message was signed by the owner of this public key.
 
 * Returns: ``coincurve.PublicKey``
 
+License
+-------
+
+Coincurve is distributed under the terms of both
+
+- `Apache License, Version 2.0 <https://choosealicense.com/licenses/apache-2.0>`_
+- `MIT License <https://choosealicense.com/licenses/mit>`_
+
+at your option.
+
 Credits
 -------
 
@@ -226,3 +243,19 @@ Credits
 - Contributors of `secp256k1-py <https://github.com/ludbb/secp256k1-py>`_.
   While Coincurve is nearly a complete rewrite, much of the build system
   provided by `ulope <https://github.com/ulope>`_ remains.
+
+Changelog
+---------
+
+Important changes are emphasized.
+
+5.0.0
+^^^^^
+
+- **Breaking:** Coincurve is now dual-licensed under the terms of MIT and Apache v2.0.
+- Improvements to documentation.
+
+4.5.1
+^^^^^
+
+- First public stable release

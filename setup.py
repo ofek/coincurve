@@ -275,7 +275,7 @@ setup(
     maintainer_email='ofekmeister@gmail.com',
     url='https://github.com/ofek/coincurve',
     download_url='https://github.com/ofek/coincurve',
-    license='MIT',
+    license='MIT/Apache-2.0',
 
     install_requires=['asn1crypto', 'cffi>=1.3.0'],
     tests_require=['pytest>=2.8.7'],

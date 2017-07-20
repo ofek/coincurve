@@ -60,6 +60,11 @@ def test_bytes_hex_conversion():
 
 def test_bytes_int_conversion():
     bytestr = b'\x00' + urandom(31)
+    assert pad_scalar(int_to_bytes(bytes_to_int(bytestr))) == bytestr
+
+
+def test_bytes_int_conversion_padded():
+    bytestr = b'\x00' + urandom(31)
     assert int_to_bytes_padded(bytes_to_int(bytestr)) == bytestr
 
 

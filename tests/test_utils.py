@@ -36,10 +36,13 @@ class TestValidateSecret:
         assert len(secret) == 32 and ZERO < secret < GROUP_ORDER
 
     def test_bytes_greater_than_group_order(self):
-        secret = validate_secret(
+        secret = (
             b'\xff\xff\xff\xff\xff\xff\xff\xff\xff\xff\xff\xff\xff'
             b'\xff\xff\xfe\xba\xae\xdc\xe6\xafH\xa0;\xbf\xd2^\x8d'
         )
+        assert secret > GROUP_ORDER
+
+        secret = validate_secret(secret)
         assert len(secret) == 32 and ZERO < secret < GROUP_ORDER
 
     def test_out_of_range(self):

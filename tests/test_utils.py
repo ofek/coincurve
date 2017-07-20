@@ -58,7 +58,7 @@ def test_bytes_hex_conversion():
     assert hex_to_bytes(bytes_to_hex(bytestr)) == bytestr
 
 
-def test_bytes_int_conversion_padded():
+def test_bytes_int_conversion():
     bytestr = b'\x00' + urandom(31)
     assert int_to_bytes_padded(bytes_to_int(bytestr)) == bytestr
 

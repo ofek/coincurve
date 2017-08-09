@@ -224,6 +224,15 @@ Verifies some message was signed by the owner of this public key.
 
 * Returns: ``coincurve.PublicKey``
 
+``combine(public_keys, update=False)``
+
+* Parameters:
+
+    - **public_keys** (``list``) - A ``list`` of ``coincurve.PublicKey`` to add.
+    - **update** - If ``True``, will update and return ``self``.
+
+* Returns: ``coincurve.PublicKey``
+
 License
 -------
 

@@ -141,7 +141,7 @@ Computes a Diffie-Hellman secret in constant time.
 * Parameters:
 
     - **scalar** (``bytes``) - The scalar to add.
-    - **update** - If ``True``, will update and return ``self``.
+    - **update** (``bool``) - If ``True``, will update and return ``self``.
 
 * Returns: ``coincurve.PrivateKey``
 
@@ -150,7 +150,7 @@ Computes a Diffie-Hellman secret in constant time.
 * Parameters:
 
     - **scalar** (``bytes``) - The scalar to multiply.
-    - **update** - If ``True``, will update and return ``self``.
+    - **update** (``bool``) - If ``True``, will update and return ``self``.
 
 * Returns: ``coincurve.PrivateKey``
 
@@ -211,7 +211,7 @@ Verifies some message was signed by the owner of this public key.
 * Parameters:
 
     - **scalar** (``bytes``) - The scalar to add.
-    - **update** - If ``True``, will update and return ``self``.
+    - **update** (``bool``) - If ``True``, will update and return ``self``.
 
 * Returns: ``coincurve.PublicKey``
 
@@ -220,7 +220,7 @@ Verifies some message was signed by the owner of this public key.
 * Parameters:
 
     - **scalar** (``bytes``) - The scalar to multiply.
-    - **update** - If ``True``, will update and return ``self``.
+    - **update** (``bool``) - If ``True``, will update and return ``self``.
 
 * Returns: ``coincurve.PublicKey``
 
@@ -229,7 +229,7 @@ Verifies some message was signed by the owner of this public key.
 * Parameters:
 
     - **public_keys** (``list``) - A ``list`` of ``coincurve.PublicKey`` to add.
-    - **update** - If ``True``, will update and return ``self``.
+    - **update** (``bool``) - If ``True``, will update and return ``self``.
 
 * Returns: ``coincurve.PublicKey``
 

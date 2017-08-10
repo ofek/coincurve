@@ -26,16 +26,21 @@ class PrivateKey:
             self.secret, self.context
         )
 
-    def sign(self, message, hasher=sha256):
+    def sign(self, message, hasher=sha256, custom_nonce=None):
         msg_hash = hasher(message) if hasher is not None else message
         if len(msg_hash) != 32:
             raise ValueError('Message hash must be 32 bytes long.')
 
         signature = ffi.new('secp256k1_ecdsa_signature *')
 
+        nonce_fn = ffi.NULL
+        nonce_data = ffi.NULL
+        if custom_nonce
+            nonce_fn, nonce_data = custom_nonce
+
         signed = lib.secp256k1_ecdsa_sign(
-            self.context.ctx, signature, msg_hash, self.secret, ffi.NULL,
-            ffi.NULL
+            self.context.ctx, signature, msg_hash, self.secret, nonce_fn,
+            nonce_data
         )
 
         if not signed:

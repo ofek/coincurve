@@ -265,6 +265,12 @@ Changelog
 
 Important changes are emphasized.
 
+5.1.0
+^^^^^
+
+- Added ``PublicKey.combine_keys`` class method.
+- Improvements to documentation.
+
 5.0.1
 ^^^^^
 

@@ -267,6 +267,13 @@ Changelog
 
 Important changes are emphasized.
 
+6.0.0
+^^^^^
+
+- Resolved `#6 <https://github.com/ofek/coincurve/issues/6>`_. You can choose
+  to use this or remain on 5.2.0. This will only be a temporary change. See
+  `<https://github.com/ofek/coincurve/commit/3e93480b3e38c6b9beb0bc2de83bc3630fc74c46>`_
+
 5.2.0
 ^^^^^
 

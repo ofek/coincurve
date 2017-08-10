@@ -29,7 +29,6 @@ New features include:
 - Support for Windows
 - Linux, macOS, and Windows all have binary packages for both 64 and 32-bit architectures
 - Linux & macOS use GMP for faster computation
-- Endomorphism optimization is enabled
 - A global context is used by default, drastically increasing performance
 - Fixed ECDH
 - A fix to remove CFFI warnings

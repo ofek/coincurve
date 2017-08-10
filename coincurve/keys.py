@@ -16,6 +16,8 @@ from coincurve.utils import (
 )
 from ._libsecp256k1 import ffi, lib
 
+DEFAULT_NONCE = (ffi.NULL, ffi.NULL)
+
 
 class PrivateKey:
     def __init__(self, secret=None, context=GLOBAL_CONTEXT):
@@ -32,11 +34,7 @@ class PrivateKey:
             raise ValueError('Message hash must be 32 bytes long.')
 
         signature = ffi.new('secp256k1_ecdsa_signature *')
-
-        nonce_fn = ffi.NULL
-        nonce_data = ffi.NULL
-        if custom_nonce:
-            nonce_fn, nonce_data = custom_nonce
+        nonce_fn, nonce_data = custom_nonce or DEFAULT_NONCE
 
         signed = lib.secp256k1_ecdsa_sign(
             self.context.ctx, signature, msg_hash, self.secret, nonce_fn,

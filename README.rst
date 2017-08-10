@@ -108,12 +108,14 @@ All instances have a ``public_key`` of type ``coincurve.PublicKey``
 
 *classmethod* ``from_der(der, context=GLOBAL_CONTEXT)``
 
-``sign(message, hasher=sha256)``
+``sign(message, hasher=sha256, custom_nonce=None)``
 
 * Parameters:
 
     - **message** (``bytes``) - The message to sign.
     - **hasher** - The hash function to use, can be ``None``. hasher(message) must return 32 bytes.
+    - **custom_nonce** - `Experimental` A tuple of arity 2 in the form of (nonce_fn, nonce_data). Refer to:
+                         `<https://github.com/bitcoin-core/secp256k1/blob/b8c26a39903de7bf1d789232e030319116b011ac/include/secp256k1.h#L449-L450>`_
 
 * Returns: ``bytes``. 71 <= len(signature) <= 72
 
@@ -264,6 +266,11 @@ Changelog
 ---------
 
 Important changes are emphasized.
+
+5.2.0
+^^^^^
+
+- Added support for supplying a custom nonce to ``PrivateKey.sign``.
 
 5.1.0
 ^^^^^

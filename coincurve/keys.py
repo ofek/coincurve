@@ -243,6 +243,20 @@ class PublicKey:
             context=context
         ))
 
+    @classmethod
+    def combine_keys(cls, public_keys, context=GLOBAL_CONTEXT):
+        public_key = ffi.new('secp256k1_pubkey *')
+
+        combined = lib.secp256k1_ec_pubkey_combine(
+            context.ctx, public_key, [pk.public_key for pk in public_keys],
+            len(public_keys)
+        )
+
+        if not combined:
+            raise ValueError('The sum of the public keys is invalid.')
+
+        return PublicKey(public_key, context)
+
     def format(self, compressed=True):
         length = 33 if compressed else 65
         serialized = ffi.new('unsigned char [%d]' % length)

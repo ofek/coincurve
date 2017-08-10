@@ -182,6 +182,15 @@ coincurve.PublicKey
 
 *classmethod* ``from_signature_and_message(serialized_sig, message, hasher=sha256, context=GLOBAL_CONTEXT)``
 
+*classmethod* ``combine_keys(public_keys, context=GLOBAL_CONTEXT)``
+
+* Parameters:
+
+    - **public_keys** (``list``) - A ``list`` of ``coincurve.PublicKey`` to add.
+    - **context** (``coincurve.Context``)
+
+* Returns: ``coincurve.PublicKey``
+
 ``format(compressed=True)``
 
 * Parameters:

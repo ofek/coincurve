@@ -266,6 +266,12 @@ Changelog
 
 Important changes are emphasized.
 
+7.0.0
+^^^^^
+
+- Improvements from libsecp256k1 master
+- Fix build script
+
 6.0.0
 ^^^^^
 

@@ -188,6 +188,7 @@ class build_clib(_build_clib):
             '--enable-experimental',
             '--enable-module-ecdh',
             '--with-bignum=gmp',
+            '--enable-benchmark=no',
             #  '--enable-endomorphism',
         ]
 

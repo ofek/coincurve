@@ -201,7 +201,7 @@ class build_clib(_build_clib):
         subprocess.check_call([MAKE, 'install'], cwd=build_temp)
 
         self.build_flags['include_dirs'].extend(build_flags('libsecp256k1', 'I', build_temp))
-        self.build_flags['include_dirs'].extend(build_flags('libsecp256k1/src', 'I', build_temp))
+        self.build_flags['include_dirs'].extend(build_flags('libsecp256k1/src/', 'I', build_temp))
         self.build_flags['library_dirs'].extend(build_flags('libsecp256k1', 'L', build_temp))
         if not has_system_lib():
             self.build_flags['define'].append(('CFFI_ENABLE_RECOVERY', None))

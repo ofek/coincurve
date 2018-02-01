@@ -116,7 +116,7 @@ All instances have a ``public_key`` of type ``coincurve.PublicKey``
     - **custom_nonce** - A tuple of arity 2 in the form of ``(nonce_fn, nonce_data)``. Refer to:
       `secp256k1.h <https://github.com/bitcoin-core/secp256k1/blob/b8c26a39903de7bf1d789232e030319116b011ac/include/secp256k1.h#L449-L450>`_
 
-* Returns: ``bytes``. 71 <= len(signature) <= 72
+* Returns: ``bytes``. 68 <= len(signature) <= 71
 
 ``sign_recoverable(message, hasher=sha256)``
 

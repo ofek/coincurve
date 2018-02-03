@@ -267,6 +267,12 @@ Changelog
 
 Important changes are emphasized.
 
+7.1.0
+^^^^^
+
+- Pin version of libsecp256k1
+- Improve docs
+
 7.0.0
 ^^^^^
 

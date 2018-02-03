@@ -129,7 +129,8 @@ All instances have a ``public_key`` of type ``coincurve.PublicKey``
 
 ``ecdh(public_key)``
 
-Computes a Diffie-Hellman secret in constant time.
+Computes a Diffie-Hellman secret in constant time. **Note:** This prevents malleability by returning
+``sha256(x)`` instead of the ``x`` coordinate directly. See `<https://github.com/ofek/coincurve/issues/9>`_.
 
 * Parameters:
 

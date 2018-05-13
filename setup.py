@@ -22,8 +22,6 @@ except ImportError:
     _bdist_wheel = None
     pass
 
-import requests
-
 
 sys.path.append(os.path.abspath(os.path.dirname(__file__)))
 from setup_support import absolute, build_flags, detect_dll, has_system_lib
@@ -56,6 +54,7 @@ def download_library(command):
     if not os.path.exists(libdir):
         command.announce('downloading libsecp256k1 source code', level=log.INFO)
         try:
+            import requests
             r = requests.get(LIB_TARBALL_URL, stream=True)
             if r.status_code == 200:
                 content = BytesIO(r.raw.read())

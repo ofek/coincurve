@@ -9,9 +9,9 @@ if [[ $TRAVIS_OS_NAME == "osx" ]]; then
 
 	# We use the official python.org installers to make sure our wheels are
 	# going to be as widely compatible as possible
-	PYTHON_PKG_27="https://www.python.org/ftp/python/2.7.12/python-2.7.15-macosx10.6.pkg"
-	PYTHON_PKG_35="https://www.python.org/ftp/python/3.5.2/python-3.5.5-macosx10.6.pkg"
-	PYTHON_PKG_36="https://www.python.org/ftp/python/3.6.1/python-3.6.5-macosx10.6.pkg"
+	PYTHON_PKG_27="https://www.python.org/ftp/python/2.7.15/python-2.7.15-macosx10.6.pkg"
+	PYTHON_PKG_35="https://www.python.org/ftp/python/3.5.5/python-3.5.5-macosx10.6.pkg"
+	PYTHON_PKG_36="https://www.python.org/ftp/python/3.6.5/python-3.6.5-macosx10.6.pkg"
 	GET_PIP="https://bootstrap.pypa.io/get-pip.py"
 
 	# update brew

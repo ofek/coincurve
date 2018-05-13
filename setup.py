@@ -250,7 +250,7 @@ else:
         def has_c_libraries(self):
             return not has_system_lib()
     setup_kwargs = dict(
-        setup_requires=['cffi>=1.3.0', 'pytest-runner>=2.6.2'],
+        setup_requires=['cffi>=1.3.0'],
         ext_package='coincurve',
         cffi_modules=['_cffi_build/build.py:ffi'],
         cmdclass={

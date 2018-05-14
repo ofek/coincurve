@@ -29,6 +29,7 @@ matrix:
     osx_image: xcode9
     python: 3.5
     env:
+    - NEED_SSL_FIX=true
     - TRAVIS_PYTHON_VERSION=3.5
   - os: osx
     language: generic
@@ -56,6 +57,7 @@ addons:
     - libffi-dev
     - libgmp-dev
 before_install:
+- if [ "${TRAVIS_PYTHON_VERSION}" == "3.5" ]; then wget -O "/Applications/Python ${TRAVIS_PYTHON_VERSION}/Install Certificates.command" https://raw.githubusercontent.com/python/cpython/dde4f63a54a75e75cdd08a40ea27e08353317e56/Mac/BuildScript/resources/install_certificates.command && chmod +x "/Applications/Python ${TRAVIS_PYTHON_VERSION}/Install Certificates.command"; fi
 - chmod +x .travis/prepare_windows_build.sh .travis/build_windows_wheels.sh
 - .travis/prepare_windows_build.sh
 - source .travis/install.sh

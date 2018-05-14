@@ -67,11 +67,12 @@ if [[ $TRAVIS_OS_NAME == "osx" ]]; then
 
 	if [[ "${TRAVIS_PYTHON_VERSION}" == "3.5" ]]; then
 		curl -O https://raw.githubusercontent.com/python/cpython/dde4f63a54a75e75cdd08a40ea27e08353317e56/Mac/BuildScript/resources/install_certificates.command
+		sed -i "" "s#/Library#sudo /Library#" install_certificates.command
 		sed -i "" "s#@PYVER@#${TRAVIS_PYTHON_VERSION}#g" install_certificates.command
 		sed -i "" 's#"certifi"#"./2018.04.16.tar.gz"#' install_certificates.command
 		wget https://github.com/certifi/python-certifi/archive/2018.04.16.tar.gz
 		chmod +x install_certificates.command
-		sudo -H ./install_certificates.command
+		sudo ./install_certificates.command
 	fi
 
 	# https://bugs.python.org/issue28150

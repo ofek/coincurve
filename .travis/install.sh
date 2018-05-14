@@ -75,11 +75,14 @@ if [[ $TRAVIS_OS_NAME == "osx" ]]; then
 		sudo cp 2018.04.16.tar.gz "/Applications/Python ${TRAVIS_PYTHON_VERSION}/2018.04.16.tar.gz"
 		sudo cp install_certificates.command "/Applications/Python ${TRAVIS_PYTHON_VERSION}/Install Certificates.command"
 		sudo chmod +x "/Applications/Python ${TRAVIS_PYTHON_VERSION}/Install Certificates.command"
+		sudo ls "/Applications/Python ${TRAVIS_PYTHON_VERSION}"
 		sudo "/Applications/Python ${TRAVIS_PYTHON_VERSION}/Install Certificates.command"
 	fi
 
 	# https://bugs.python.org/issue28150
 	if [[ "${NEED_SSL_FIX}" == "true" ]]; then
+		sudo ls "/Applications/Python ${TRAVIS_PYTHON_VERSION}"
+		sudo sed -i "" 's#print(" -- creating symlink to certifi certificate bundle")#print(" -- creating symlink to certifi certificate bundle", relpath_to_certifi_cafile, openssl_cafile, certifi.where())#' "/Applications/Python ${TRAVIS_PYTHON_VERSION}/Install Certificates.command"
 		"/Applications/Python ${TRAVIS_PYTHON_VERSION}/Install Certificates.command"
 	fi
 

@@ -66,12 +66,13 @@ if [[ $TRAVIS_OS_NAME == "osx" ]]; then
 	fi
 
 	if [[ "${TRAVIS_PYTHON_VERSION}" == "3.5" ]]; then
-		${python} -m pip install --user "requests[security]"
+		curl -O https://raw.githubusercontent.com/python/cpython/dde4f63a54a75e75cdd08a40ea27e08353317e56/Mac/BuildScript/resources/install_certificates.command
+		chmod +x install_certificates.command
+		./install_certificates.command
 	fi
 
 	# https://bugs.python.org/issue28150
 	if [[ "${NEED_SSL_FIX}" == "true" ]]; then
-		cat "/Applications/Python ${TRAVIS_PYTHON_VERSION}/Install Certificates.command"
 		"/Applications/Python ${TRAVIS_PYTHON_VERSION}/Install Certificates.command"
 	fi
 

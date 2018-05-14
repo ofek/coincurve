@@ -65,8 +65,13 @@ if [[ $TRAVIS_OS_NAME == "osx" ]]; then
 		builtin popd
 	fi
 
+	if [[ "${TRAVIS_PYTHON_VERSION}" == "3.5" ]]; then
+		${python} -m pip install --user "requests[security]"
+	fi
+
 	# https://bugs.python.org/issue28150
 	if [[ "${NEED_SSL_FIX}" == "true" ]]; then
+		cat "/Applications/Python ${TRAVIS_PYTHON_VERSION}/Install Certificates.command"
 		"/Applications/Python ${TRAVIS_PYTHON_VERSION}/Install Certificates.command"
 	fi
 

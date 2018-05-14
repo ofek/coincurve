@@ -83,7 +83,9 @@ if [[ $TRAVIS_OS_NAME == "osx" ]]; then
 	if [[ "${NEED_SSL_FIX}" == "true" ]]; then
 		sudo ls "/Applications/Python ${TRAVIS_PYTHON_VERSION}"
 		sudo sed -i "" 's#print(" -- creating symlink to certifi certificate bundle")#print(" -- creating symlink to certifi certificate bundle", relpath_to_certifi_cafile, openssl_cafile, certifi.where())#' "/Applications/Python ${TRAVIS_PYTHON_VERSION}/Install Certificates.command"
+		cat "/Applications/Python ${TRAVIS_PYTHON_VERSION}/Install Certificates.command"
 		"/Applications/Python ${TRAVIS_PYTHON_VERSION}/Install Certificates.command"
+		${python} -c "import os,ssl,certifi;print(ssl.get_default_verify_paths().openssl_cafile);print(os.path.relpath(certifi.where()))"
 	fi
 
 	mkdir ~/virtualenv

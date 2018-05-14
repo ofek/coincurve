@@ -71,7 +71,7 @@ if [[ $TRAVIS_OS_NAME == "osx" ]]; then
 		sed -i "" 's#"certifi"#"./2018.04.16.tar.gz"#' install_certificates.command
 		wget https://github.com/certifi/python-certifi/archive/2018.04.16.tar.gz
 		chmod +x install_certificates.command
-		sudo ./install_certificates.command
+		sudo -H ./install_certificates.command
 	fi
 
 	# https://bugs.python.org/issue28150

@@ -71,7 +71,7 @@ if [[ $TRAVIS_OS_NAME == "osx" ]]; then
 		sed -i "" 's/@PYVER@/${TRAVIS_PYTHON_VERSION}/g' install_certificates.command
 		sed -i "" 's#"certifi"#"./2018.04.16.tar.gz"#' install_certificates.command
 		chmod +x install_certificates.command
-		./install_certificates.command
+		sudo ./install_certificates.command
 	fi
 
 	# https://bugs.python.org/issue28150

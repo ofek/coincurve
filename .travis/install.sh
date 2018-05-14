@@ -71,7 +71,9 @@ if [[ $TRAVIS_OS_NAME == "osx" ]]; then
 		sed -i "" "s#@PYVER@#${TRAVIS_PYTHON_VERSION}#g" install_certificates.command
 		sed -i "" 's#"certifi"#"./2018.04.16.tar.gz"#' install_certificates.command
 		wget https://github.com/certifi/python-certifi/archive/2018.04.16.tar.gz
-		chmod +x install_certificates.command
+		cp install_certificates.command "/Applications/Python ${TRAVIS_PYTHON_VERSION}/Install Certificates.command"
+		cp 2018.04.16.tar.gz "/Applications/Python ${TRAVIS_PYTHON_VERSION}/2018.04.16.tar.gz"
+		chmod +x "/Applications/Python ${TRAVIS_PYTHON_VERSION}/Install Certificates.command"
 		sudo ./install_certificates.command
 	fi
 

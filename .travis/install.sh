@@ -74,7 +74,7 @@ if [[ $TRAVIS_OS_NAME == "osx" ]]; then
 		sudo cp 2018.04.16.tar.gz "/Applications/Python ${TRAVIS_PYTHON_VERSION}/2018.04.16.tar.gz"
 		sudo cp install_certificates.command "/Applications/Python ${TRAVIS_PYTHON_VERSION}/Install Certificates.command"
 		sudo chmod +x "/Applications/Python ${TRAVIS_PYTHON_VERSION}/Install Certificates.command"
-		sudo ./install_certificates.command
+		sudo "/Applications/Python ${TRAVIS_PYTHON_VERSION}/Install Certificates.command"
 	fi
 
 	# https://bugs.python.org/issue28150

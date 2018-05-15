@@ -73,7 +73,7 @@ if [[ $TRAVIS_OS_NAME == "osx" ]]; then
 		echo ${NEW_CERT}
 		echo ${OLD_CERT}
 		sudo rm ${OLD_CERT} || true
-		sudo ln -s ${OLD_CERT} ${NEW_CERT}
+		sudo ln -s ${NEW_CERT} ${OLD_CERT}
 	fi
 
 	# https://bugs.python.org/issue28150

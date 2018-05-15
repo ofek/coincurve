@@ -17,8 +17,7 @@ if [[ $TRAVIS_OS_NAME == "osx" ]]; then
 	# update brew
 	brew update || brew update
 
-	# Update openssl if necessary
-	brew outdated openssl || brew upgrade openssl
+	brew upgrade openssl
 
 	# Install packages needed to build lib-secp256k1
 	# Note we don't install gmp because we don't test that combination on macOS
@@ -63,10 +62,6 @@ if [[ $TRAVIS_OS_NAME == "osx" ]]; then
 		${python} get-pip.py
 		${python} -m pip install --user virtualenv
 		builtin popd
-	fi
-
-	if [[ "${TRAVIS_PYTHON_VERSION}" == "3.5" ]]; then
-		curl https://bootstrap.pypa.io/get-pip.py | ${python}
 	fi
 
 	# https://bugs.python.org/issue28150

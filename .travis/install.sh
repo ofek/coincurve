@@ -10,7 +10,6 @@ if [[ $TRAVIS_OS_NAME == "osx" ]]; then
 	# We use the official python.org installers to make sure our wheels are
 	# going to be as widely compatible as possible
 	PYTHON_PKG_27="https://www.python.org/ftp/python/2.7.15/python-2.7.15-macosx10.6.pkg"
-	PYTHON_PKG_35="https://www.python.org/ftp/python/3.5.4/python-3.5.4-macosx10.6.pkg"
 	PYTHON_PKG_36="https://www.python.org/ftp/python/3.6.5/python-3.6.5-macosx10.6.pkg"
 	GET_PIP="https://bootstrap.pypa.io/get-pip.py"
 
@@ -27,31 +26,39 @@ if [[ $TRAVIS_OS_NAME == "osx" ]]; then
 	done
 
 	mkdir -p ~/.cache/python-dl
-	# Travis has some funky cd hooks that fuck shit up
-	builtin pushd ~/.cache/python-dl
-	ls -l
 
-	py_pkg=PYTHON_PKG_${TRAVIS_PYTHON_VERSION//./}
-	py_pkg=${!py_pkg}
+	if [[ "${TRAVIS_PYTHON_VERSION}" == "3.5" ]]; then
+		brew install pyenv
+		pyenv install 3.5.5
+		pyenv global 3.5.5
+	else
+		builtin pushd ~/.cache/python-dl
+		ls -l
 
-	installer_pkg=$(basename ${py_pkg})
+		py_pkg=PYTHON_PKG_${TRAVIS_PYTHON_VERSION//./}
+		py_pkg=${!py_pkg}
 
-	# The package might have been cached from a previous run
-	if [[ ! -f ${installer_pkg} ]]; then
-		curl -LO ${py_pkg}
+		installer_pkg=$(basename ${py_pkg})
+
+		# The package might have been cached from a previous run
+		if [[ ! -f ${installer_pkg} ]]; then
+			curl -LO ${py_pkg}
+		fi
+
+		sudo installer -pkg ${installer_pkg} -target /
+		builtin popd
 	fi
-
-	sudo installer -pkg ${installer_pkg} -target /
-
-	builtin popd
 
 	case "${TRAVIS_PYTHON_VERSION}" in
 		2.7)
 			python=/Library/Frameworks/Python.framework/Versions/${TRAVIS_PYTHON_VERSION}/bin/python
 			virtualenv=virtualenv
 			;;
-		3.5|3.6)
+		3.6)
 			python=/Library/Frameworks/Python.framework/Versions/${TRAVIS_PYTHON_VERSION}/bin/python3
+			virtualenv=venv
+			;;
+		3.5)
 			virtualenv=venv
 			;;
 	esac
@@ -64,17 +71,6 @@ if [[ $TRAVIS_OS_NAME == "osx" ]]; then
 		builtin popd
 	fi
 
-	if [[ "${TRAVIS_PYTHON_VERSION}" == "3.5" ]]; then
-		wget https://github.com/certifi/python-certifi/archive/2018.04.16.tar.gz
-		${python} -E -s -m pip install --upgrade ./2018.04.16.tar.gz
-		NEW_CERT="$(${python} -c 'import sys,certifi;sys.stdout.write(certifi.where())')"
-		OLD_CERT="/System/Library/OpenSSL/cert.pem"
-		echo ${NEW_CERT}
-		echo ${OLD_CERT}
-		sudo rm ${OLD_CERT} || true
-		#sudo ln -s ${NEW_CERT} ${OLD_CERT}
-	fi
-
 	# https://bugs.python.org/issue28150
 	if [[ "${NEED_SSL_FIX}" == "true" ]]; then
 		"/Applications/Python ${TRAVIS_PYTHON_VERSION}/Install Certificates.command"
@@ -85,9 +81,7 @@ if [[ $TRAVIS_OS_NAME == "osx" ]]; then
 	source ~/virtualenv/python${TRAVIS_PYTHON_VERSION}/bin/activate
 fi
 
-python --version
-openssl version
 # Install necessary packages
-# python -m pip install -U cffi pytest coverage
+python -m pip install -U cffi pytest coverage
 
 set +x +e

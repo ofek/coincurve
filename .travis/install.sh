@@ -70,7 +70,7 @@ if [[ $TRAVIS_OS_NAME == "osx" ]]; then
 		sed -i "" "s#/Library#sudo /Library#" install_certificates.command
 		sed -i "" "s#@PYVER@#${TRAVIS_PYTHON_VERSION}#g" install_certificates.command
 		sed -i "" 's#"certifi"#"./2018.04.16.tar.gz"#' install_certificates.command
-		sed -i "" 's#print(" -- creating symlink to certifi certificate bundle")#print(" -- creating symlink to certifi certificate bundle", relpath_to_certifi_cafile, openssl_cafile, openssl_dir#' install_certificates.command
+		sed -i "" 's#print(" -- creating symlink to certifi certificate bundle")#print(" -- creating symlink to certifi certificate bundle", relpath_to_certifi_cafile, openssl_cafile, openssl_dir)#' install_certificates.command
 		sed -i "" 's#os.path.relpath(certifi.where())#os.path.relpath(certifi.where(), openssl_dir)#' install_certificates.command
 		wget https://github.com/certifi/python-certifi/archive/2018.04.16.tar.gz
 		sudo cp 2018.04.16.tar.gz "/Applications/Python ${TRAVIS_PYTHON_VERSION}/2018.04.16.tar.gz"

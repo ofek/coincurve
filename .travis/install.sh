@@ -28,9 +28,10 @@ if [[ $TRAVIS_OS_NAME == "osx" ]]; then
 	mkdir -p ~/.cache/python-dl
 
 	if [[ "${TRAVIS_PYTHON_VERSION}" == "3.5" ]]; then
+		PYVERSION="${TRAVIS_PYTHON_VERSION}.5"
 		brew outdated pyenv || brew upgrade pyenv
-		pyenv install 3.5.5
-		pyenv global 3.5.5
+		pyenv install ${PYVERSION}
+		pyenv global ${PYVERSION}
 	else
 		builtin pushd ~/.cache/python-dl
 		ls -l
@@ -59,7 +60,7 @@ if [[ $TRAVIS_OS_NAME == "osx" ]]; then
 			virtualenv=venv
 			;;
 		3.5)
-			python="$(which python)"
+			python="$(pyenv root)/versions/${PYVERSION}/bin/python"
 			virtualenv=venv
 			;;
 	esac

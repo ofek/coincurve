@@ -28,7 +28,7 @@ if [[ $TRAVIS_OS_NAME == "osx" ]]; then
 	mkdir -p ~/.cache/python-dl
 
 	if [[ "${TRAVIS_PYTHON_VERSION}" == "3.5" ]]; then
-		brew install pyenv
+		brew outdated pyenv || brew upgrade pyenv
 		pyenv install 3.5.5
 		pyenv global 3.5.5
 	else

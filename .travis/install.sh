@@ -66,14 +66,7 @@ if [[ $TRAVIS_OS_NAME == "osx" ]]; then
 	fi
 
 	if [[ "${TRAVIS_PYTHON_VERSION}" == "3.5" ]]; then
-		wget https://github.com/certifi/python-certifi/archive/2018.04.16.tar.gz
-		${python} -E -s -m pip install --upgrade ./2018.04.16.tar.gz
-		NEW_CERT="$(${python} -c 'import sys,certifi;sys.stdout.write(certifi.where())')"
-		OLD_CERT="/System/Library/OpenSSL/cert.pem"
-		echo ${NEW_CERT}
-		echo ${OLD_CERT}
-		sudo rm ${OLD_CERT} || true
-		sudo ln -s ${NEW_CERT} ${OLD_CERT}
+		curl https://bootstrap.pypa.io/get-pip.py | ${python}
 	fi
 
 	# https://bugs.python.org/issue28150

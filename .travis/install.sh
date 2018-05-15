@@ -66,27 +66,19 @@ if [[ $TRAVIS_OS_NAME == "osx" ]]; then
 	fi
 
 	if [[ "${TRAVIS_PYTHON_VERSION}" == "3.5" ]]; then
-		curl -O https://raw.githubusercontent.com/python/cpython/dde4f63a54a75e75cdd08a40ea27e08353317e56/Mac/BuildScript/resources/install_certificates.command
-		sed -i "" "s#/Library#sudo /Library#" install_certificates.command
-		sed -i "" "s#@PYVER@#${TRAVIS_PYTHON_VERSION}#g" install_certificates.command
-		sed -i "" 's#"certifi"#"./2018.04.16.tar.gz"#' install_certificates.command
-		sed -i "" 's#print(" -- creating symlink to certifi certificate bundle")#print(" -- creating symlink to certifi certificate bundle", relpath_to_certifi_cafile, openssl_cafile, openssl_dir)#' install_certificates.command
-		sed -i "" 's#os.path.relpath(certifi.where())#certifi.where()#' install_certificates.command
 		wget https://github.com/certifi/python-certifi/archive/2018.04.16.tar.gz
-		sudo cp 2018.04.16.tar.gz "/Applications/Python ${TRAVIS_PYTHON_VERSION}/2018.04.16.tar.gz"
-		sudo cp install_certificates.command "/Applications/Python ${TRAVIS_PYTHON_VERSION}/Install Certificates.command"
-		sudo chmod +x "/Applications/Python ${TRAVIS_PYTHON_VERSION}/Install Certificates.command"
-		sudo ls "/Applications/Python ${TRAVIS_PYTHON_VERSION}"
-		sudo "/Applications/Python ${TRAVIS_PYTHON_VERSION}/Install Certificates.command"
+		${python} -E -s -m pip install --upgrade ./2018.04.16.tar.gz
+		NEW_CERT="$(${python} -c 'import sys,certifi;sys.stdout.write(certifi.where())')"
+		OLD_CERT="/System/Library/OpenSSL/cert.pem"
+		echo ${NEW_CERT}
+		echo ${OLD_CERT}
+		sudo rm ${OLD_CERT}
+		sudo ln -s ${OLD_CERT} ${NEW_CERT}
 	fi
 
 	# https://bugs.python.org/issue28150
 	if [[ "${NEED_SSL_FIX}" == "true" ]]; then
-		sudo ls "/Applications/Python ${TRAVIS_PYTHON_VERSION}"
-		sudo sed -i "" 's#print(" -- creating symlink to certifi certificate bundle")#print(" -- creating symlink to certifi certificate bundle", relpath_to_certifi_cafile, openssl_cafile, openssl_dir)#' "/Applications/Python ${TRAVIS_PYTHON_VERSION}/Install Certificates.command"
-		cat "/Applications/Python ${TRAVIS_PYTHON_VERSION}/Install Certificates.command"
 		"/Applications/Python ${TRAVIS_PYTHON_VERSION}/Install Certificates.command"
-		${python} -c "import os,ssl,certifi;print(ssl.get_default_verify_paths().openssl_cafile);print(os.path.relpath(certifi.where()))"
 	fi
 
 	mkdir ~/virtualenv

@@ -72,7 +72,7 @@ if [[ $TRAVIS_OS_NAME == "osx" ]]; then
 		OLD_CERT="/System/Library/OpenSSL/cert.pem"
 		echo ${NEW_CERT}
 		echo ${OLD_CERT}
-		sudo rm ${OLD_CERT}
+		sudo rm ${OLD_CERT} || true
 		sudo ln -s ${OLD_CERT} ${NEW_CERT}
 	fi
 

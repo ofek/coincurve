@@ -17,7 +17,9 @@ if [[ $TRAVIS_OS_NAME == "osx" ]]; then
 	# update brew
 	brew update || brew update
 
-	brew upgrade openssl
+	# Update openssl if necessary
+	brew outdated openssl || brew upgrade openssl
+	PATH="/usr/local/opt/openssl/bin:$PATH"
 
 	# Install packages needed to build lib-secp256k1
 	# Note we don't install gmp because we don't test that combination on macOS
@@ -63,6 +65,17 @@ if [[ $TRAVIS_OS_NAME == "osx" ]]; then
 		${python} -m pip install --user virtualenv
 		builtin popd
 	fi
+
+	# if [[ "${TRAVIS_PYTHON_VERSION}" == "3.5" ]]; then
+	# 	wget https://github.com/certifi/python-certifi/archive/2018.04.16.tar.gz
+	# 	${python} -E -s -m pip install --upgrade ./2018.04.16.tar.gz
+	# 	NEW_CERT="$(${python} -c 'import sys,certifi;sys.stdout.write(certifi.where())')"
+	# 	OLD_CERT="/System/Library/OpenSSL/cert.pem"
+	# 	echo ${NEW_CERT}
+	# 	echo ${OLD_CERT}
+	# 	sudo rm ${OLD_CERT} || true
+	# 	sudo ln -s ${NEW_CERT} ${OLD_CERT}
+	# fi
 
 	# https://bugs.python.org/issue28150
 	if [[ "${NEED_SSL_FIX}" == "true" ]]; then

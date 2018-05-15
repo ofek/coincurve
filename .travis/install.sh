@@ -59,6 +59,7 @@ if [[ $TRAVIS_OS_NAME == "osx" ]]; then
 			virtualenv=venv
 			;;
 		3.5)
+			python="$(which python)"
 			virtualenv=venv
 			;;
 	esac

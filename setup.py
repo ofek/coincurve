@@ -22,6 +22,12 @@ except ImportError:
     _bdist_wheel = None
     pass
 
+try:
+    from urllib2 import urlopen, URLError
+except ImportError:
+    from urllib.request import urlopen
+    from urllib.error import URLError
+
 
 sys.path.append(os.path.abspath(os.path.dirname(__file__)))
 from setup_support import absolute, build_flags, detect_dll, has_system_lib
@@ -54,10 +60,9 @@ def download_library(command):
     if not os.path.exists(libdir):
         command.announce('downloading libsecp256k1 source code', level=log.INFO)
         try:
-            import requests
-            r = requests.get(LIB_TARBALL_URL, stream=True)
-            if r.status_code == 200:
-                content = BytesIO(r.raw.read())
+            r = urlopen(LIB_TARBALL_URL)
+            if r.getcode() == 200:
+                content = BytesIO(r.read())
                 content.seek(0)
                 with tarfile.open(fileobj=content) as tf:
                     dirname = tf.getnames()[0].partition('/')[0]
@@ -68,9 +73,9 @@ def download_library(command):
                     'Unable to download secp256k1 library: HTTP-Status: %d',
                     r.getcode()
                 )
-        except requests.exceptions.RequestException as e:
+        except URLError as ex:
             raise SystemExit('Unable to download secp256k1 library: %s',
-                             str(e))
+                             ex.message)
 
 
 class egg_info(_egg_info):
@@ -245,7 +250,7 @@ else:
         def has_c_libraries(self):
             return not has_system_lib()
     setup_kwargs = dict(
-        setup_requires=['cffi>=1.3.0', 'requests'],
+        setup_requires=['cffi>=1.3.0'],
         ext_package='coincurve',
         cffi_modules=['_cffi_build/build.py:ffi'],
         cmdclass={

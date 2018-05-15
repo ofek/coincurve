@@ -61,6 +61,7 @@ before_install:
 - .travis/prepare_windows_build.sh
 - source .travis/install.sh
 - if ! [ -z "$OLD_CERT" ]; then sudo ln -s ${NEW_CERT} ${OLD_CERT}; fi
+- python -m pip install -U cffi pytest coverage
 install:
 - python setup.py install
 script:

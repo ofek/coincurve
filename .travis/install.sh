@@ -88,6 +88,6 @@ fi
 python --version
 openssl version
 # Install necessary packages
-python -m pip install -U cffi pytest coverage
+# python -m pip install -U cffi pytest coverage
 
 set +x +e

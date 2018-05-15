@@ -79,6 +79,8 @@ if [[ $TRAVIS_OS_NAME == "osx" ]]; then
 	source ~/virtualenv/python${TRAVIS_PYTHON_VERSION}/bin/activate
 fi
 
+python --version
+openssl version
 # Install necessary packages
 python -m pip install -U cffi pytest coverage
 

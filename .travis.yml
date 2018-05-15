@@ -57,9 +57,9 @@ addons:
     - libffi-dev
     - libgmp-dev
 before_install:
-- chmod +x .travis/prepare_windows_build.sh .travis/build_windows_wheels.sh
+- chmod +x .travis/install.sh .travis/prepare_windows_build.sh .travis/build_windows_wheels.sh
 - .travis/prepare_windows_build.sh
-- source .travis/install.sh
+- sudo source .travis/install.sh
 install:
 - python setup.py install
 script:

@@ -59,7 +59,7 @@ addons:
 before_install:
 - chmod +x .travis/install.sh .travis/prepare_windows_build.sh .travis/build_windows_wheels.sh
 - .travis/prepare_windows_build.sh
-- sudo source .travis/install.sh
+- source .travis/install.sh
 install:
 - python setup.py install
 script:

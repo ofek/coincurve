@@ -4,7 +4,7 @@ python:
 - '2.7'
 - '3.5'
 - '3.6'
-- 'pypy3.5-5.8.0'
+- 'pypy3'
 env:
   global:
   - LD_LIBRARY_PATH=./libsecp256k1_ext/.libs
@@ -20,19 +20,19 @@ matrix:
   include:
   - os: osx
     language: generic
-    osx_image: xcode8.3
+    osx_image: xcode9
     python: 2.7
     env:
     - TRAVIS_PYTHON_VERSION=2.7
   - os: osx
     language: generic
-    osx_image: xcode8.3
+    osx_image: xcode9
     python: 3.5
     env:
     - TRAVIS_PYTHON_VERSION=3.5
   - os: osx
     language: generic
-    osx_image: xcode8.3
+    osx_image: xcode9
     python: 3.6
     env:
     - NEED_SSL_FIX=true

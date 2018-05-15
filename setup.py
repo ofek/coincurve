@@ -22,12 +22,6 @@ except ImportError:
     _bdist_wheel = None
     pass
 
-try:
-    from urllib2 import urlopen, URLError
-except ImportError:
-    from urllib.request import urlopen
-    from urllib.error import URLError
-
 
 sys.path.append(os.path.abspath(os.path.dirname(__file__)))
 from setup_support import absolute, build_flags, detect_dll, has_system_lib
@@ -39,7 +33,7 @@ MAKE = 'gmake' if platform.system() in ['FreeBSD'] else 'make'
 
 # Version of libsecp256k1 to download if none exists in the `libsecp256k1`
 # directory
-LIB_TARBALL_URL = 'https://github.com/bitcoin-core/secp256k1/archive/c95f6f1360a87bba61622cbaa0eb714c241a5d90.tar.gz'
+LIB_TARBALL_URL = 'https://github.com/bitcoin-core/secp256k1/archive/452d8e4d2a2f9f1b5be6b02e18f1ba102e5ca0b4.tar.gz'
 
 
 # We require setuptools >= 3.3
@@ -60,9 +54,10 @@ def download_library(command):
     if not os.path.exists(libdir):
         command.announce('downloading libsecp256k1 source code', level=log.INFO)
         try:
-            r = urlopen(LIB_TARBALL_URL)
-            if r.getcode() == 200:
-                content = BytesIO(r.read())
+            import requests
+            r = requests.get(LIB_TARBALL_URL, stream=True)
+            if r.status_code == 200:
+                content = BytesIO(r.raw.read())
                 content.seek(0)
                 with tarfile.open(fileobj=content) as tf:
                     dirname = tf.getnames()[0].partition('/')[0]
@@ -73,9 +68,9 @@ def download_library(command):
                     'Unable to download secp256k1 library: HTTP-Status: %d',
                     r.getcode()
                 )
-        except URLError as ex:
+        except requests.exceptions.RequestException as e:
             raise SystemExit('Unable to download secp256k1 library: %s',
-                             ex.message)
+                             str(e))
 
 
 class egg_info(_egg_info):
@@ -250,7 +245,7 @@ else:
         def has_c_libraries(self):
             return not has_system_lib()
     setup_kwargs = dict(
-        setup_requires=['cffi>=1.3.0', 'pytest-runner>=2.6.2'],
+        setup_requires=['cffi>=1.3.0', 'requests'],
         ext_package='coincurve',
         cffi_modules=['_cffi_build/build.py:ffi'],
         cmdclass={

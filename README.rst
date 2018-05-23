@@ -53,6 +53,7 @@ Users
 - `golemfactory/golem <https://github.com/golemfactory/golem/pull/1527>`_
 - `golemfactory/golem-messages <https://github.com/golemfactory/golem-messages/blob/1f72b6a6757036218cdf471c0295b8895b963266/setup.py#L39>`_
 - `PeerAssets/pypeerassets <https://github.com/PeerAssets/pypeerassets/commit/113c9a234c94499c7e591b8a93928be0a77298fa>`_
+- `bit <https://github.com/ofek/bit>`_
 - `btcrecover <https://github.com/gurnec/btcrecover/commit/f113867fa22d2f5b22175cc2b5b3892351bc1109>`_
 - `crankycoin <https://github.com/cranklin/crankycoin/blob/3d2b3482698227397a8daf30e0b80b2f2c030aec/requirements.txt#L8>`_
 

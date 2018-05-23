@@ -20,26 +20,25 @@ This library provides well-tested Python CFFI bindings for
 optimized C library used by `Bitcoin Core <https://github.com/bitcoin/bitcoin>`_
 for operations on elliptic curve secp256k1.
 
-Coincurve replaces `secp256k1-py <https://github.com/ludbb/secp256k1-py>`_.
-
-New features include:
-
-- Cleaner API
-- Uses newest version of `libsecp256k1 <https://github.com/bitcoin-core/secp256k1>`_
-- Support for Windows
-- Linux, macOS, and Windows all have binary packages for both 64 and 32-bit architectures
-- Linux & macOS use GMP for faster computation
-- A global context is used by default, drastically increasing performance
-- Fixed ECDH
-- A fix to remove CFFI warnings
-- Implements a fix for `<https://bugs.python.org/issue28150>`_ to support Python 3.6+ on macOS
-
 Table of Contents
 ~~~~~~~~~~~~~~~~~
 
 .. contents::
     :backlinks: top
     :local:
+
+Features
+--------
+
+- Fastest available implementation (more than 10x faster than OpenSSL)
+- Clean, easy to use API
+- Frequent updates from `libsecp256k1 <https://github.com/bitcoin-core/secp256k1>`_ master
+- Linux, macOS, and Windows all have binary packages for both 64 and 32-bit architectures
+- Linux & macOS use GMP for faster computation
+- Deterministic signatures via `RFC 6979 <https://tools.ietf.org/html/rfc6979>`_
+- Non-malleable signatures (lower-S form) by default
+- Secure, non-malleable `ECDH implementation <https://github.com/ofek/coincurve/issues/9#issuecomment-329235214>`_
+- Implements a fix for `<https://bugs.python.org/issue28150>`_ to support Python 3.6+ on macOS
 
 Users
 -----

@@ -56,7 +56,8 @@ def download_library(command):
         try:
             import requests
             r = requests.get(LIB_TARBALL_URL, stream=True)
-            if r.status_code == 200:
+            status_code = r.status_code
+            if status_code == 200:
                 content = BytesIO(r.raw.read())
                 content.seek(0)
                 with tarfile.open(fileobj=content) as tf:
@@ -66,7 +67,7 @@ def download_library(command):
             else:
                 raise SystemExit(
                     'Unable to download secp256k1 library: HTTP-Status: %d',
-                    r.getcode()
+                    status_code
                 )
         except requests.exceptions.RequestException as e:
             raise SystemExit('Unable to download secp256k1 library: %s',

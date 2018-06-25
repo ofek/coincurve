@@ -1,11 +1,14 @@
 *.log
 *.pyc
+*.so
 /.cache
 /.coverage
 /.eggs
 /.idea
+/.pytest_cache
 /coincurve.egg-info
 /build
 /dist
 /docs/build
+/venv
 /wheelhouse

@@ -102,7 +102,13 @@ def pad_scalar(scalar):
 
 
 def validate_secret(secret):
-    if not 0 < bytes_to_int(secret) < GROUP_ORDER_INT:
+    if isinstance(secret, int):
+        int_secret = secret
+        secret = int_to_bytes(secret)
+    else:
+        int_secret = bytes_to_int(secret)
+
+    if not 0 < int_secret < GROUP_ORDER_INT:
         raise ValueError('Secret scalar must be greater than 0 and less than '
                          '{}.'.format(GROUP_ORDER_INT))
     return pad_scalar(secret)

@@ -3,7 +3,7 @@ from os import urandom
 import pytest
 
 from coincurve.utils import (
-    GROUP_ORDER, ZERO, bytes_to_hex, bytes_to_int, chunk_data, der_to_pem,
+    GROUP_ORDER, GROUP_ORDER_INT, ZERO, bytes_to_hex, bytes_to_int, chunk_data, der_to_pem,
     get_valid_secret, hex_to_bytes, int_to_bytes, int_to_bytes_padded,
     pad_scalar, pem_to_der, validate_secret, verify_signature
 )
@@ -35,22 +35,36 @@ class TestValidateSecret:
         secret = validate_secret(b'\x01')
         assert len(secret) == 32 and ZERO < secret < GROUP_ORDER
 
+        secret = validate_secret(1)
+        assert len(secret) == 32 and ZERO < secret < GROUP_ORDER
+
+        secret = validate_secret(2**255)
+        assert len(secret) == 32 and ZERO < secret < GROUP_ORDER
+
+
     def test_bytes_greater_than_group_order(self):
         secret = (
             b'\xff\xff\xff\xff\xff\xff\xff\xff\xff\xff\xff\xff\xff'
             b'\xff\xff\xfe\xba\xae\xdc\xe6\xafH\xa0;\xbf\xd2^\x8d'
         )
-        assert secret > GROUP_ORDER
+        assert secret > GROUP_ORDER and bytes_to_int(secret) < GROUP_ORDER_INT
 
+        secret_from_int = validate_secret(bytes_to_int(secret))
         secret = validate_secret(secret)
-        assert len(secret) == 32 and ZERO < secret < GROUP_ORDER
+        assert secret_from_int == secret and len(secret) == 32
+        assert ZERO < secret < GROUP_ORDER
+
 
     def test_out_of_range(self):
         with pytest.raises(ValueError):
             validate_secret(ZERO)
+            validate_secret(bytes_to_int(ZERO))
 
         with pytest.raises(ValueError):
             validate_secret(GROUP_ORDER)
+            validate_secret(bytes_to_int(GROUP_ORDER))
+            validate_secret(GROUP_ORDER_INT)
+            validate_secret(2**256)
 
 
 def test_bytes_hex_conversion():

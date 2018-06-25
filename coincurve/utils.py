@@ -1,3 +1,4 @@
+import sys
 from base64 import b64decode, b64encode
 from binascii import hexlify, unhexlify
 from hashlib import sha256 as _sha256
@@ -5,6 +6,10 @@ from os import urandom
 
 from coincurve.context import GLOBAL_CONTEXT
 from ._libsecp256k1 import ffi, lib
+
+PY3 = sys.version_info[0] == 3
+if PY3:
+    long = int
 
 GROUP_ORDER = (b'\xff\xff\xff\xff\xff\xff\xff\xff\xff\xff\xff\xff\xff\xff\xff'
                b'\xfe\xba\xae\xdc\xe6\xafH\xa0;\xbf\xd2^\x8c\xd06AA')
@@ -38,7 +43,6 @@ if hasattr(int, "to_bytes"):
     def int_to_bytes(num):
         return num.to_bytes((num.bit_length() + 7) // 8 or 1, 'big')
 
-
     def int_to_bytes_padded(num):
         return pad_scalar(
             num.to_bytes((num.bit_length() + 7) // 8 or 1, 'big')
@@ -46,7 +50,6 @@ if hasattr(int, "to_bytes"):
 else:
     def int_to_bytes(num):
         return unhexlify(pad_hex('%x' % num))
-
 
     def int_to_bytes_padded(num):
         return pad_scalar(unhexlify(pad_hex('%x' % num)))
@@ -102,7 +105,7 @@ def pad_scalar(scalar):
 
 
 def validate_secret(secret):
-    if isinstance(secret, int):
+    if isinstance(secret, (int, long)):
         int_secret = secret
         secret = int_to_bytes(secret)
     else:

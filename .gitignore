@@ -5,6 +5,7 @@
 /.coverage
 /.eggs
 /.idea
+/.mypy_cache
 /.pytest_cache
 /coincurve.egg-info
 /build

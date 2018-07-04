@@ -79,7 +79,6 @@ script:
 - mv _coincurve coincurve
 - coverage combine
 
-
 # Need two providers:
 # https://github.com/travis-ci/travis-ci/issues/7780#issuecomment-302389370
 deploy:

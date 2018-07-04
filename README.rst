@@ -283,6 +283,15 @@ History
 
 Important changes are emphasized.
 
+8.0.0
+^^^^^
+
+- **New:** Binary wheels for Python 3.7!
+- **Changed:** Binary wheels on macOS for Python 3.5 now use Homebrew
+  Python for compilation due to new security requirements
+- Make build system support new GitHub & PyPI security requirements
+- Improvements from libsecp256k1 master
+
 7.1.0
 ^^^^^
 

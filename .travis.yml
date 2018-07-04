@@ -79,9 +79,17 @@ script:
 - mv _coincurve coincurve
 - coverage combine
 
+
+# Need two providers:
+# https://github.com/travis-ci/travis-ci/issues/7780#issuecomment-302389370
 deploy:
-  provider: script
-  skip_cleanup: true
-  script: chmod +x .travis/deploy.sh && chmod +x .travis/build-linux-wheels.sh && .travis/deploy.sh
-  on:
-    tags: master
+  - provider: script
+    skip_cleanup: true
+    script: chmod +x .travis/deploy.sh && chmod +x .travis/build-linux-wheels.sh && .travis/deploy.sh
+    on:
+      tags: "master"
+  - provider: script
+    skip_cleanup: true
+    script: chmod +x .travis/deploy.sh && chmod +x .travis/build-linux-wheels.sh && .travis/deploy.sh
+    on:
+      tags: true

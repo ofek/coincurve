@@ -84,5 +84,4 @@ deploy:
   skip_cleanup: true
   script: chmod +x .travis/deploy.sh && chmod +x .travis/build-linux-wheels.sh && .travis/deploy.sh
   on:
-    tags: true
-    all_branches: true
+    tags: master

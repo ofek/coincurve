@@ -43,6 +43,13 @@ matrix:
     env:
     - NEED_SSL_FIX=true
     - TRAVIS_PYTHON_VERSION=3.6
+  - os: osx
+    language: generic
+    osx_image: xcode9
+    python: 3.7
+    env:
+    - NEED_SSL_FIX=true
+    - TRAVIS_PYTHON_VERSION=3.7
   - os: linux
     language: python
     python: 3.5

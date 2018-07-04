@@ -11,6 +11,7 @@ if [[ $TRAVIS_OS_NAME == "osx" ]]; then
 	# going to be as widely compatible as possible
 	PYTHON_PKG_27="https://www.python.org/ftp/python/2.7.15/python-2.7.15-macosx10.6.pkg"
 	PYTHON_PKG_36="https://www.python.org/ftp/python/3.6.5/python-3.6.5-macosx10.6.pkg"
+	PYTHON_PKG_37="https://www.python.org/ftp/python/3.7.0/python-3.7.0-macosx10.6.pkg"
 	GET_PIP="https://bootstrap.pypa.io/get-pip.py"
 
 	# update brew
@@ -55,7 +56,7 @@ if [[ $TRAVIS_OS_NAME == "osx" ]]; then
 			python=/Library/Frameworks/Python.framework/Versions/${TRAVIS_PYTHON_VERSION}/bin/python
 			virtualenv=virtualenv
 			;;
-		3.6)
+		3.6|3.7)
 			python=/Library/Frameworks/Python.framework/Versions/${TRAVIS_PYTHON_VERSION}/bin/python3
 			virtualenv=venv
 			;;

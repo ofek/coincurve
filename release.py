@@ -19,13 +19,6 @@ def main():
     except:
         git_path = None
 
-    # Assume Windows portable Git
-    if git_path is None:
-        github_dir = os.path.join(appdirs.user_data_dir(), 'GitHub')
-        for d in os.listdir(github_dir):
-            if d.startswith('PortableGit'):
-                git_path = os.path.join(github_dir, d, 'cmd', 'git.exe')
-
     if git_path is None:
         raise OSError('Unable to find git executable.')
 

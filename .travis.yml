@@ -5,6 +5,9 @@ python:
 - '3.5'
 - '3.6'
 - 'pypy3'
+branches:
+  only:
+    - master
 env:
   global:
   - LD_LIBRARY_PATH=./libsecp256k1_ext/.libs

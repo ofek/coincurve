@@ -18,6 +18,9 @@ cache:
   - $HOME/.cache/python-dl
 matrix:
   include:
+  - python: 3.7
+    dist: xenial
+    sudo: true
   - os: osx
     language: generic
     osx_image: xcode9

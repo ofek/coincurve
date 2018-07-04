@@ -11,7 +11,7 @@ wget -q https://ftp.gnu.org/gnu/gmp/gmp-6.1.2.tar.bz2 && tar -xjpf gmp-*.tar.bz2
 
 # Compile wheels
 for PYBIN in /opt/python/*/bin; do
-	if [[ ${PYBIN} =~ (cp27|cp35|cp36) ]]; then
+	if [[ ${PYBIN} =~ (cp27|cp35|cp36|cp37) ]]; then
 	${PYBIN}/pip wheel /io/ -w wheelhouse/
     fi
 done

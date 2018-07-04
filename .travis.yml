@@ -8,6 +8,7 @@ python:
 branches:
   only:
     - master
+    - /^[0-9]+\.[0-9]+\.[0-9]+$/
 env:
   global:
   - LD_LIBRARY_PATH=./libsecp256k1_ext/.libs
@@ -84,5 +85,5 @@ deploy:
     skip_cleanup: true
     script: chmod +x .travis/deploy.sh && chmod +x .travis/build-linux-wheels.sh && .travis/deploy.sh
     on:
-      all_branches: true
-      condition: $TRAVIS_TAG =~ ^v[0-9]+\.[0-9]+\.[0-9]+
+      repo: ofek/coincurve
+      tags: true

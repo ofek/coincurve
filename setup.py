@@ -277,7 +277,7 @@ setup(
     install_requires=['asn1crypto', 'cffi>=1.3.0'],
     tests_require=['pytest>=2.8.7'],
 
-    packages=find_packages(exclude=('_cffi_build', '_cffi_build.*', 'libsecp256k1')),
+    packages=find_packages(exclude=('_cffi_build', '_cffi_build.*', 'libsecp256k1', 'tests')),
 
     distclass=Distribution,
     zip_safe=False,

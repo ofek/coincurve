@@ -283,7 +283,7 @@ History
 
 Important changes are emphasized.
 
-8.0.1
+8.0.2
 ^^^^^
 
 - No longer package tests

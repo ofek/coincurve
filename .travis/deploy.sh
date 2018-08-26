@@ -38,7 +38,7 @@ else
     if [[ "$TRAVIS_PYTHON_VERSION" == "pypy3" ]]; then
         python -m pip install wheel
         python setup.py bdist_wheel
-        python3 -m pip install wheel auditwheel pyelftools typing
+        python3 -m pip install wheel auditwheel==1.9.0 pyelftools typing
         wget -q https://nixos.org/releases/patchelf/patchelf-0.9/patchelf-0.9.tar.bz2 && tar -xjpf patchelf-*.tar.bz2 && cd patchelf* && ./configure > /dev/null && sudo make install > /dev/null && cd ..
         auditwheel repair dist/coincurve*.whl
         rm dist/coincurve*.whl

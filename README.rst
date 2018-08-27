@@ -283,6 +283,11 @@ History
 
 Important changes are emphasized.
 
+9.0.0
+^^^^^
+
+- **Breaking:** Drop support for 32-bit macOS
+
 8.0.2
 ^^^^^
 

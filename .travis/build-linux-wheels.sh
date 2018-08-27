@@ -14,11 +14,11 @@ mkdir out
 if [[ "$BUILD_GMP_CPU" == "amd64" ]]; then
     curl -L -O https://bitbucket.org/squeaky/portable-pypy/downloads/pypy3.5-6.0.0-linux_x86_64-portable.tar.bz2
     tar -xjpf pypy3.5-6.0.0-linux_x86_64-portable.tar.bz2
-    pypy3.5-6.0.0-linux_x86_64-portable/bin/python -m pip install wheel pyelftools typing
-    pypy3.5-6.0.0-linux_x86_64-portable/bin/python -m pip wheel /io/ -w wheelhouse/
-    pypy3.5-6.0.0-linux_x86_64-portable/bin/python -m pip install -e git://github.com/pypa/auditwheel.git@fb6f76d4262dbb76a6ea068000e71fdfe6fd06ee#egg=auditwheel
+    pypy3.5-6.0.0-linux_x86_64-portable/bin/pypy3 -m pip install wheel pyelftools typing
+    pypy3.5-6.0.0-linux_x86_64-portable/bin/pypy3 -m pip wheel /io/ -w wheelhouse/
+    pypy3.5-6.0.0-linux_x86_64-portable/bin/pypy3 -m pip install -e git://github.com/pypa/auditwheel.git@fb6f76d4262dbb76a6ea068000e71fdfe6fd06ee#egg=auditwheel
     curl -O https://nixos.org/releases/patchelf/patchelf-0.9/patchelf-0.9.tar.bz2 && tar -xjpf patchelf-*.tar.bz2 && cd patchelf* && ./configure > /dev/null && sudo make install > /dev/null && cd ..
-    pypy3.5-6.0.0-linux_x86_64-portable/bin/python -m auditwheel repair wheelhouse/coincurve*.whl -w out
+    pypy3.5-6.0.0-linux_x86_64-portable/bin/pypy3 -m auditwheel repair wheelhouse/coincurve*.whl -w out
 fi
 
 # Compile wheels

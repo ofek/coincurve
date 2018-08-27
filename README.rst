@@ -286,6 +286,7 @@ Important changes are emphasized.
 9.0.0
 ^^^^^
 
+- Fixed wheels for macOS
 - **Breaking:** Drop support for 32-bit macOS
 
 8.0.2
@@ -307,18 +308,5 @@ Important changes are emphasized.
 
 - Pin version of libsecp256k1
 - Improve docs
-
-7.0.0
-^^^^^
-
-- Improvements from libsecp256k1 master
-- Fix build script
-
-6.0.0
-^^^^^
-
-- Resolved `#6 <https://github.com/ofek/coincurve/issues/6>`_. You can choose
-  to use this or remain on 5.2.0. This will only be a temporary change. See
-  `<https://github.com/ofek/coincurve/commit/3e93480b3e38c6b9beb0bc2de83bc3630fc74c46>`_
 
 View `all history <https://github.com/ofek/coincurve/blob/master/HISTORY.rst>`_

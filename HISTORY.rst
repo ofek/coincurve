@@ -6,6 +6,17 @@ Important changes are emphasized.
 master
 ^^^^^^
 
+9.0.0
+^^^^^
+
+- Fixed wheels for macOS
+- **Breaking:** Drop support for 32-bit macOS
+
+8.0.2
+^^^^^
+
+- No longer package tests
+
 8.0.0
 ^^^^^
 

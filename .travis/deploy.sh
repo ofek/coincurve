@@ -34,16 +34,6 @@ else
         # Clean up build directories.
         rm -fr dist_wheels/ fixed_wheels/
     fi
-
-    if [[ "$TRAVIS_PYTHON_VERSION" == "pypy3" ]]; then
-        python -m pip install wheel
-        python setup.py bdist_wheel
-        python3 -m pip install wheel auditwheel pyelftools typing
-        wget -q https://nixos.org/releases/patchelf/patchelf-0.9/patchelf-0.9.tar.bz2 && tar -xjpf patchelf-*.tar.bz2 && cd patchelf* && ./configure > /dev/null && sudo make install > /dev/null && cd ..
-        auditwheel repair dist/coincurve*.whl
-        rm dist/coincurve*.whl
-        mv wheelhouse/coincurve*.whl dist
-    fi
 fi
 
 ls -l dist

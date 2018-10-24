@@ -4,6 +4,7 @@
 /.coverage
 /.eggs
 /.idea
+/.tox
 /coincurve.egg-info
 /build
 /dist

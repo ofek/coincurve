@@ -1,5 +1,6 @@
 from hashlib import sha512
 from os import urandom
+from pickle import dumps, loads
 
 import pytest
 
@@ -109,6 +110,15 @@ class TestPrivateKey:
         assert new_private_key.to_int() == 25
         assert private_key is new_private_key
 
+    def test_pickle(self):
+        private_key = PrivateKey(PRIVATE_KEY_BYTES)
+        serialized = dumps(private_key)
+        deserialized = loads(serialized)
+        assert private_key.public_key.verify(
+            deserialized.sign(MESSAGE),
+            MESSAGE,
+        )
+
 
 class TestPublicKey:
     def test_from_secret(self):
@@ -140,3 +150,9 @@ class TestPublicKey:
         point = G.multiply(x)
 
         assert point.add(k) == G.multiply(int_to_bytes_padded((bytes_to_int(x) + bytes_to_int(k)) % n))
+
+    def test_pickle(self):
+        public_key = PublicKey(PUBLIC_KEY_COMPRESSED)
+        serialized = dumps(public_key)
+        deserialized = loads(serialized)
+        assert deserialized.verify(SIGNATURE, MESSAGE)

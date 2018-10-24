@@ -21,7 +21,7 @@ from ._libsecp256k1 import ffi, lib
 DEFAULT_NONCE = (ffi.NULL, ffi.NULL)
 
 
-class PrivateKey:
+class PrivateKey(object):
     def __init__(self, secret=None, context=GLOBAL_CONTEXT):
         self.secret = validate_secret(secret) if secret is not None else get_valid_secret()
         self.context = context
@@ -158,8 +158,10 @@ class PrivateKey:
     def __eq__(self, other):
         return self.secret == other.secret
 
+    def __reduce__(self):
+        return type(self), (hex_to_bytes(self.to_hex()),)
 
-class PublicKey:
+class PublicKey(object):
     def __init__(self, data, context=GLOBAL_CONTEXT):
         if not isinstance(data, bytes):
             self.public_key = data
@@ -296,3 +298,6 @@ class PublicKey:
 
     def __eq__(self, other):
         return self.format(compressed=False) == other.format(compressed=False)
+
+    def __reduce__(self):
+        return type(self), (self.format(),)

@@ -183,7 +183,6 @@ class build_clib(_build_clib):
             os.path.abspath(self.build_clib),
             '--enable-experimental',
             '--enable-module-ecdh',
-            '--with-bignum=gmp',
             '--enable-benchmark=no',
             #  '--enable-endomorphism',
         ]

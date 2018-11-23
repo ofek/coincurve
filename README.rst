@@ -52,6 +52,7 @@ Users
 - `raiden-network/raiden-contracts <https://github.com/raiden-network/raiden-contracts/blob/f251c01015564a2b91401692234aa5ed1ea67ebc/requirements.txt#L3>`_
 - `golemfactory/golem <https://github.com/golemfactory/golem/pull/1527>`_
 - `golemfactory/golem-messages <https://github.com/golemfactory/golem-messages/blob/1f72b6a6757036218cdf471c0295b8895b963266/setup.py#L39>`_
+- `JoinMarket <https://github.com/JoinMarket-Org/joinmarket-clientserver/pull/223>`_
 - `PeerAssets/pypeerassets <https://github.com/PeerAssets/pypeerassets/commit/113c9a234c94499c7e591b8a93928be0a77298fa>`_
 - `bit <https://github.com/ofek/bit>`_
 - `btcrecover <https://github.com/gurnec/btcrecover/commit/f113867fa22d2f5b22175cc2b5b3892351bc1109>`_

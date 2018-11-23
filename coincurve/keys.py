@@ -70,7 +70,7 @@ class PrivateKey:
 
         lib.secp256k1_ecdh(
             self.context.ctx, secret, PublicKey(public_key).public_key,
-            self.secret
+            self.secret, ffi.NULL, ffi.NULL
         )
 
         return bytes(ffi.buffer(secret, 32))

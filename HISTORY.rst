@@ -6,6 +6,13 @@ Important changes are emphasized.
 master
 ^^^^^^
 
+10.0.0
+^^^^^^
+
+- Support tox for testing
+- Compatibility with latest libsecp256k1 ECDH API
+- Make libgmp optional when building from source
+
 9.0.0
 ^^^^^
 

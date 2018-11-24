@@ -284,6 +284,13 @@ History
 
 Important changes are emphasized.
 
+10.0.0
+^^^^^^
+
+- Support tox for testing
+- Compatibility with latest libsecp256k1 ECDH API
+- Make libgmp optional when building from source
+
 9.0.0
 ^^^^^
 
@@ -303,11 +310,5 @@ Important changes are emphasized.
   Python for compilation due to new security requirements
 - Make build system support new GitHub & PyPI security requirements
 - Improvements from libsecp256k1 master
-
-7.1.0
-^^^^^
-
-- Pin version of libsecp256k1
-- Improve docs
 
 View `all history <https://github.com/ofek/coincurve/blob/master/HISTORY.rst>`_

@@ -29,26 +29,26 @@ matrix:
     sudo: true
   - os: osx
     language: generic
-    osx_image: xcode10
+    osx_image: xcode10.1
     python: 2.7
     env:
     - TRAVIS_PYTHON_VERSION=2.7
   - os: osx
     language: generic
-    osx_image: xcode10
+    osx_image: xcode10.1
     python: 3.5
     env:
     - TRAVIS_PYTHON_VERSION=3.5
   - os: osx
     language: generic
-    osx_image: xcode10
+    osx_image: xcode10.1
     python: 3.6
     env:
     - NEED_SSL_FIX=true
     - TRAVIS_PYTHON_VERSION=3.6
   - os: osx
     language: generic
-    osx_image: xcode10
+    osx_image: xcode10.1
     python: 3.7
     env:
     - TRAVIS_PYTHON_VERSION=3.7

@@ -68,13 +68,13 @@ def build_flags(library, type_, path):
 
 
 def _find_lib():
+    if 'COINCURVE_IGNORE_SYSTEM_LIB' in os.environ:
+        return False
+
     from cffi import FFI
     ffi = FFI()
     try:
-        if "COINCURVE_IGNORE_SYSTEM_LIB" in os.environ:
-            return False
-        else:
-            ffi.dlopen("secp256k1")
+        ffi.dlopen("secp256k1")
     except OSError:
         if 'LIB_DIR' in os.environ:
             for path in glob.glob(os.path.join(os.environ['LIB_DIR'], "*secp256k1*")):

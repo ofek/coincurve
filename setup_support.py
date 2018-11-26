@@ -71,7 +71,10 @@ def _find_lib():
     from cffi import FFI
     ffi = FFI()
     try:
-        ffi.dlopen("secp256k1")
+        if "_COINCURVE_IGNORE_SYSTEM_LIBSECP" in os.environ:
+            return False
+        else:
+            ffi.dlopen("secp256k1")
     except OSError:
         if 'LIB_DIR' in os.environ:
             for path in glob.glob(os.path.join(os.environ['LIB_DIR'], "*secp256k1*")):

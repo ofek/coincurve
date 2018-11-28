@@ -213,9 +213,7 @@ class build_ext(_build_ext):
             )
             self.include_dirs.extend(_build_clib.build_flags['include_dirs'])
 
-            self.library_dirs.append(
-                os.path.join(_build_clib.build_clib, 'lib'),
-            )
+            self.library_dirs.insert(0, os.path.join(_build_clib.build_clib, 'lib'))
             self.library_dirs.extend(_build_clib.build_flags['library_dirs'])
 
             self.define = _build_clib.build_flags['define']

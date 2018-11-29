@@ -35,6 +35,8 @@ matrix:
     - python: 3.7
       env: TOXENV=py37
     - python: pypy3
+      # PyPy3 isn't yet available for Xenial
+      dist: trusty
       env: TOXENV=pypy3
     - os: osx
       language: generic

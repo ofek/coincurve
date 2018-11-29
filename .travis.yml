@@ -24,8 +24,8 @@ env:
 
 matrix:
   include:
-    - python: 3.7
-      env: TOXENV=style
+    # - python: 3.7
+    #   env: TOXENV=style
     - python: 2.7
       env: TOXENV=py27
     - python: 3.5

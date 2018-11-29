@@ -78,7 +78,6 @@ before_install:
   - .travis/prepare_windows_build.sh
   - source .travis/install.sh
 install:
-  - python setup.py install
   - pip install tox
 script:
   - tox

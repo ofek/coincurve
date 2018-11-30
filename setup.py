@@ -13,6 +13,7 @@ from io import BytesIO
 import sys
 
 from setuptools import Distribution as _Distribution, setup, find_packages, __version__ as setuptools_version
+from setuptools.command.develop import develop as _develop
 from setuptools.command.egg_info import egg_info as _egg_info
 from setuptools.command.sdist import sdist as _sdist
 try:
@@ -220,6 +221,15 @@ class build_ext(_build_ext):
         return _build_ext.run(self)
 
 
+class develop(_develop):
+    def run(self):
+        if not has_system_lib():
+            raise DistutilsError(
+                "This library is not usable in 'develop' mode when using the "
+                'bundled libsecp256k1. See README for details.')
+        _develop.run(self)
+
+
 if BUILDING_FOR_WINDOWS:
     class Distribution(_Distribution):
         def is_pure(self):
@@ -239,6 +249,7 @@ else:
         cmdclass={
             'build_clib': build_clib,
             'build_ext': build_ext,
+            'develop': develop,
             'egg_info': egg_info,
             'sdist': sdist,
             'bdist_wheel': bdist_wheel

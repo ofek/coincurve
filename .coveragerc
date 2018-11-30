@@ -1,10 +1,23 @@
 [run]
+branch = True
 source =
     coincurve
     tests
-branch = True
+
+[paths]
+source =
+   coincurve
+   .tox/*/lib/python*/site-packages/coincurve
+   .tox/pypy/site-packages/coincurve
 
 [report]
 exclude_lines =
-    pragma: no cover
+    no cov
+    no qa
+
+    # Ignore missing debug-only code
+    def __repr__
+    if self\.debug
+
+    # Ignore non-runnable code
     if __name__ == .__main__.:

@@ -22,6 +22,17 @@ env:
     - INCLUDE_DIR=./libsecp256k1_ext/include
     - PYPI_USERNAME=Ofekmeister
 
+addons:
+  apt:
+    packages:
+      - autoconf
+      - automake
+      - git
+      - libffi-dev
+      - libgmp-dev
+      - libtool
+      - pkg-config
+
 matrix:
   include:
     # - python: 3.7
@@ -35,9 +46,9 @@ matrix:
     - python: 3.7
       env: TOXENV=py37
     - python: pypy3
+      env: TOXENV=pypy3
       # PyPy3 isn't yet available for Xenial
       dist: trusty
-      env: TOXENV=pypy3
     - os: osx
       language: generic
       osx_image: xcode10.1
@@ -65,16 +76,7 @@ matrix:
       services:
         - docker
       env: TOXENV=py35 BUILD_LINUX_WHEELS=1
-addons:
-  apt:
-    packages:
-      - git
-      - libtool
-      - autoconf
-      - automake
-      - pkg-config
-      - libffi-dev
-      - libgmp-dev
+
 before_install:
   - chmod +x .travis/prepare_windows_build.sh .travis/build_windows_wheels.sh
   - .travis/prepare_windows_build.sh

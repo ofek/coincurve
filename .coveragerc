@@ -2,11 +2,11 @@
 branch = True
 source =
     coincurve
-    tests
+    tests/
 
 [paths]
 source =
-   coincurve
+   coincurve/
    .tox/*/lib/python*/site-packages/coincurve
    .tox/pypy/site-packages/coincurve
 

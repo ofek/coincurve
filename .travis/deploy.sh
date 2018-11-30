@@ -8,6 +8,7 @@ echo "deploy"
 rm -rf build dist
 mkdir dist
 
+python setup.py install
 python setup.py sdist
 
 if [[ "$TRAVIS_OS_NAME" == "linux" && ${BUILD_LINUX_WHEELS} -eq 1 ]]; then

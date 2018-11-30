@@ -3,14 +3,14 @@ branch = True
 
 source =
     coincurve
-    tests/
+    tests
 
 omit =
     */_windows_libsecp256k1.py
 
 [paths]
 source =
-   coincurve/
+   coincurve
    .tox/*/lib/python*/site-packages/coincurve
    .tox/pypy/site-packages/coincurve
 

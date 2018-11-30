@@ -4,11 +4,12 @@ set -e -x
 
 echo "deploy"
 
-# remove left over files from previous steps
+python setup.py install
+
+# remove any left over files from previous steps
 rm -rf build dist
 mkdir dist
 
-python setup.py install
 python setup.py sdist
 
 if [[ "$TRAVIS_OS_NAME" == "linux" && ${BUILD_LINUX_WHEELS} -eq 1 ]]; then

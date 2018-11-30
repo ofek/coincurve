@@ -1,8 +1,12 @@
 [run]
 branch = True
+
 source =
     coincurve
     tests/
+
+omit =
+    */_windows_libsecp256k1.py
 
 [paths]
 source =

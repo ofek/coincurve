@@ -15,7 +15,7 @@ python setup.py sdist
 if [[ "$TRAVIS_OS_NAME" == "linux" && ${BUILD_LINUX_WHEELS} -eq 1 ]]; then
     docker run --rm -e BUILD_GMP_CPU="amd64" -v $(pwd):/io quay.io/pypa/manylinux1_x86_64 /io/.travis/build-linux-wheels.sh
     linux32 docker run --rm -e BUILD_GMP_CPU="i686" -v $(pwd):/io quay.io/pypa/manylinux1_i686 /io/.travis/build-linux-wheels.sh
-    ./.travis/build_windows_wheels.sh
+    .travis/build_windows_wheels.sh
 else
     if [[ "$TRAVIS_OS_NAME" == "osx" ]]; then
         # Make sure we can build and "fix" the wheel.

@@ -74,11 +74,14 @@ matrix:
       services: docker
 
 before_install:
-  - ./.travis/prepare_windows_build.sh
-  - source .travis/install.sh
+  - chmod +x .travis/build-linux-wheels.sh
+  - chmod +x .travis/build_windows_wheels.sh
+  - chmod +x .travis/deploy.sh
+  - chmod +x .travis/prepare_windows_build.sh
 
 install:
-  - pip install tox
+  - .travis/prepare_windows_build.sh
+  - source .travis/install.sh
 
 script:
   - tox
@@ -86,7 +89,7 @@ script:
 deploy:
   - provider: script
     skip_cleanup: true
-    script: ./.travis/deploy.sh
+    script: .travis/deploy.sh
     on:
       repo: ofek/coincurve
       tags: true

@@ -85,6 +85,6 @@ if [[ $TRAVIS_OS_NAME == "osx" ]]; then
 fi
 
 # Install necessary packages
-python -m pip install -U cffi pytest coverage
+python -m pip install -U cffi tox
 
 set +x +e

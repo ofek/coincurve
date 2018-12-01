@@ -69,27 +69,24 @@ matrix:
       osx_image: xcode10.1
       python: 3.7
       env: TOXENV=py37 TRAVIS_PYTHON_VERSION=3.7
-    - os: linux
-      language: python
-      python: 3.5
-      sudo: required
-      services:
-        - docker
-      env: TOXENV=py35 BUILD_LINUX_WHEELS=1
+    - python: 3.6
+      env: TOXENV=py36 BUILD_LINUX_WHEELS=1
+      services: docker
 
 before_install:
-  - chmod +x .travis/prepare_windows_build.sh .travis/build_windows_wheels.sh
   - .travis/prepare_windows_build.sh
   - source .travis/install.sh
+
 install:
   - pip install tox
+
 script:
   - tox
 
 deploy:
   - provider: script
     skip_cleanup: true
-    script: chmod +x .travis/deploy.sh && chmod +x .travis/build-linux-wheels.sh && .travis/deploy.sh
+    script: .travis/deploy.sh
     on:
       repo: ofek/coincurve
       tags: true

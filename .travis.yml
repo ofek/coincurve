@@ -74,7 +74,7 @@ matrix:
       services: docker
 
 before_install:
-  - .travis/prepare_windows_build.sh
+  - ./.travis/prepare_windows_build.sh
   - source .travis/install.sh
 
 install:
@@ -86,7 +86,7 @@ script:
 deploy:
   - provider: script
     skip_cleanup: true
-    script: .travis/deploy.sh
+    script: ./.travis/deploy.sh
     on:
       repo: ofek/coincurve
       tags: true

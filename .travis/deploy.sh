@@ -4,7 +4,9 @@ set -e -x
 
 echo "deploy"
 
-# remove left over files from previous steps
+python setup.py install
+
+# remove any left over files from previous steps
 rm -rf build dist
 mkdir dist
 

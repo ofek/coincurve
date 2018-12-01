@@ -1,86 +1,90 @@
 sudo: true
+dist: xenial
 language: python
-python:
-- '2.7'
-- '3.5'
-- '3.6'
-- 'pypy3'
+
+cache:
+  directories:
+    - $HOME/.cache/pip
+
+# Only build master, release branches, and version tags (which are considered
+# branches by Travis, see https://github.com/travis-ci/travis-ci/issues/8518)
 branches:
   only:
     - master
     - /^release.+$/
-    # https://github.com/travis-ci/travis-ci/issues/8518
     - /^[0-9]+\.[0-9]+\.[0-9]+.*$/
+
 env:
   global:
-  - LD_LIBRARY_PATH=./libsecp256k1_ext/.libs
-  - DYLD_FALLBACK_LIBRARY_PATH=./libsecp256k1_ext/.libs
-  - LIB_DIR=./libsecp256k1_ext/.libs
-  - INCLUDE_DIR=./libsecp256k1_ext/include
-  - PYPI_USERNAME=Ofekmeister
-cache:
-  directories:
-  - $HOME/.cache/pip
-  - $HOME/.cache/python-dl
-matrix:
-  include:
-  - python: 3.7
-    dist: xenial
-    sudo: true
-  - os: osx
-    language: generic
-    osx_image: xcode10.1
-    python: 2.7
-    env:
-    - TRAVIS_PYTHON_VERSION=2.7
-  - os: osx
-    language: generic
-    osx_image: xcode10.1
-    python: 3.5
-    env:
-    - TRAVIS_PYTHON_VERSION=3.5
-  - os: osx
-    language: generic
-    osx_image: xcode10.1
-    python: 3.6
-    env:
-    - NEED_SSL_FIX=true
-    - TRAVIS_PYTHON_VERSION=3.6
-  - os: osx
-    language: generic
-    osx_image: xcode10.1
-    python: 3.7
-    env:
-    - TRAVIS_PYTHON_VERSION=3.7
-  - os: linux
-    language: python
-    python: 3.5
-    sudo: required
-    services:
-    - docker
-    env:
-    - BUILD_LINUX_WHEELS=1
+    - LD_LIBRARY_PATH=./libsecp256k1_ext/.libs
+    - DYLD_FALLBACK_LIBRARY_PATH=./libsecp256k1_ext/.libs
+    - LIB_DIR=./libsecp256k1_ext/.libs
+    - INCLUDE_DIR=./libsecp256k1_ext/include
+    - PYPI_USERNAME=Ofekmeister
+
 addons:
   apt:
     packages:
-    - git
-    - libtool
-    - autoconf
-    - automake
-    - pkg-config
-    - libffi-dev
-    - libgmp-dev
+      - autoconf
+      - automake
+      - git
+      - libffi-dev
+      - libgmp-dev
+      - libtool
+      - pkg-config
+
+matrix:
+  include:
+    # - python: 3.7
+    #   env: TOXENV=style
+    - python: 2.7
+      env: TOXENV=py27
+    - python: 3.5
+      env: TOXENV=py35
+    - python: 3.6
+      env: TOXENV=py36
+    - python: 3.7
+      env: TOXENV=py37
+    - python: pypy3
+      env: TOXENV=pypy3
+      # PyPy3 isn't yet available for Xenial
+      dist: trusty
+    - os: osx
+      language: generic
+      osx_image: xcode10.1
+      python: 2.7
+      env: TOXENV=py27 TRAVIS_PYTHON_VERSION=2.7
+    - os: osx
+      language: generic
+      osx_image: xcode10.1
+      python: 3.5
+      env: TOXENV=py35 TRAVIS_PYTHON_VERSION=3.5
+    - os: osx
+      language: generic
+      osx_image: xcode10.1
+      python: 3.6
+      env: TOXENV=py36 TRAVIS_PYTHON_VERSION=3.6 NEED_SSL_FIX=true
+    - os: osx
+      language: generic
+      osx_image: xcode10.1
+      python: 3.7
+      env: TOXENV=py37 TRAVIS_PYTHON_VERSION=3.7
+    - os: linux
+      language: python
+      python: 3.5
+      sudo: required
+      services:
+        - docker
+      env: TOXENV=py35 BUILD_LINUX_WHEELS=1
+
 before_install:
-- chmod +x .travis/prepare_windows_build.sh .travis/build_windows_wheels.sh
-- .travis/prepare_windows_build.sh
-- source .travis/install.sh
+  - chmod +x .travis/prepare_windows_build.sh .travis/build_windows_wheels.sh
+  - .travis/prepare_windows_build.sh
+  - source .travis/install.sh
 install:
-- python setup.py install
+  - pip install tox
 script:
-- mv coincurve _coincurve
-- coverage run --parallel --include="*/site-packages/*.egg/coincurve/*" -m py.test
-- mv _coincurve coincurve
-- coverage combine
+  - tox
 
 deploy:
   - provider: script

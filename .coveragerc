@@ -13,7 +13,7 @@ omit =
 source =
    coincurve
    .tox/*/lib/python*/site-packages/coincurve
-   .tox/pypy/site-packages/coincurve
+   .tox/pypy*/site-packages/coincurve
 
 [report]
 exclude_lines =

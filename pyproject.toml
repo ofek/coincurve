@@ -16,6 +16,10 @@ exclude = '''
   | _cffi_build
   | build
   | dist
-  | _libsecp256k1\.py$
 )/
+  |
+(
+    setup\.py$
+  | _libsecp256k1\.py$
+)
 '''

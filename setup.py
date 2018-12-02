@@ -251,6 +251,7 @@ else:
 setup(
     name='coincurve',
     version='10.0.0',
+
     description='Cross-platform Python CFFI bindings for libsecp256k1',
     long_description=open('README.rst', 'r').read(),
     author='Ofek Lev',
@@ -260,12 +261,22 @@ setup(
     url='https://github.com/ofek/coincurve',
     download_url='https://github.com/ofek/coincurve',
     license='MIT/Apache-2.0',
+
     install_requires=['asn1crypto', 'cffi>=1.3.0'],
-    tests_require=['pytest>=2.8.7'],
+
     packages=find_packages(exclude=('_cffi_build', '_cffi_build.*', 'libsecp256k1', 'tests')),
+
     distclass=Distribution,
     zip_safe=False,
-    keywords=('secp256k1', 'crypto', 'elliptic curves', 'bitcoin', 'ethereum', 'cryptocurrency'),
+
+    keywords=(
+        'secp256k1',
+        'crypto',
+        'elliptic curves',
+        'bitcoin',
+        'ethereum',
+        'cryptocurrency',
+    ),
     classifiers=[
         'Development Status :: 5 - Production/Stable',
         'Intended Audience :: Developers',

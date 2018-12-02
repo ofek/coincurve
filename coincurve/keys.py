@@ -38,7 +38,7 @@ class PrivateKey:
         signed = lib.secp256k1_ecdsa_sign(self.context.ctx, signature, msg_hash, self.secret, nonce_fn, nonce_data)
 
         if not signed:
-            raise ValueError('The nonce generation function failed, or the ' 'private key was invalid.')
+            raise ValueError('The nonce generation function failed, or the private key was invalid.')
 
         return cdata_to_der(signature, self.context)
 
@@ -54,7 +54,7 @@ class PrivateKey:
         )
 
         if not signed:
-            raise ValueError('The nonce generation function failed, or the ' 'private key was invalid.')
+            raise ValueError('The nonce generation function failed, or the private key was invalid.')
 
         return serialize_recoverable(signature, self.context)
 
@@ -73,7 +73,7 @@ class PrivateKey:
         success = lib.secp256k1_ec_privkey_tweak_add(self.context.ctx, secret, scalar)
 
         if not success:
-            raise ValueError('The tweak was out of range, or the resulting ' 'private key is invalid.')
+            raise ValueError('The tweak was out of range, or the resulting private key is invalid.')
 
         secret = bytes(ffi.buffer(secret, 32))
 
@@ -257,7 +257,7 @@ class PublicKey:
         success = lib.secp256k1_ec_pubkey_tweak_add(self.context.ctx, new_key, scalar)
 
         if not success:
-            raise ValueError('The tweak was out of range, or the resulting ' 'public key is invalid.')
+            raise ValueError('The tweak was out of range, or the resulting public key is invalid.')
 
         if update:
             self.public_key = new_key

@@ -8,7 +8,7 @@ if [ -n "${TOXENV}" ]; then
         style);;
         ^bench$);;
         *)
-            codecov
+            codecov -X gcov
             ;;
     esac
 fi

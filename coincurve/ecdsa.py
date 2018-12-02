@@ -70,7 +70,7 @@ Warning:
 """
 
 
-def serialize_compact(raw_sig, context=GLOBAL_CONTEXT):
+def serialize_compact(raw_sig, context=GLOBAL_CONTEXT):  # no cov
     output = ffi.new('unsigned char[%d]' % CDATA_SIG_LENGTH)
 
     res = lib.secp256k1_ecdsa_signature_serialize_compact(context.ctx, output, raw_sig)
@@ -79,7 +79,7 @@ def serialize_compact(raw_sig, context=GLOBAL_CONTEXT):
     return bytes(ffi.buffer(output, CDATA_SIG_LENGTH))
 
 
-def deserialize_compact(ser_sig, context=GLOBAL_CONTEXT):
+def deserialize_compact(ser_sig, context=GLOBAL_CONTEXT):  # no cov
     if len(ser_sig) != 64:
         raise Exception("invalid signature length")
 
@@ -90,7 +90,7 @@ def deserialize_compact(ser_sig, context=GLOBAL_CONTEXT):
     return raw_sig
 
 
-def signature_normalize(raw_sig, context=GLOBAL_CONTEXT):
+def signature_normalize(raw_sig, context=GLOBAL_CONTEXT):  # no cov
     """
     Check and optionally convert a signature to a normalized lower-S form.
     If check_only is True then the normalized signature is not returned.
@@ -107,7 +107,7 @@ def signature_normalize(raw_sig, context=GLOBAL_CONTEXT):
     return not not res, sigout
 
 
-def recoverable_convert(recover_sig, context=GLOBAL_CONTEXT):
+def recoverable_convert(recover_sig, context=GLOBAL_CONTEXT):  # no cov
     normal_sig = ffi.new('secp256k1_ecdsa_signature *')
 
     lib.secp256k1_ecdsa_recoverable_signature_convert(context.ctx, normal_sig, recover_sig)

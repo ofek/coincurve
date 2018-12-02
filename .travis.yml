@@ -76,10 +76,14 @@ before_install:
   - chmod +x .travis/build_windows_wheels.sh
   - chmod +x .travis/deploy.sh
   - chmod +x .travis/prepare_windows_build.sh
+  - chmod +x .travis/upload_coverage.sh
 
 install:
   - .travis/prepare_windows_build.sh
   - source .travis/install.sh
+
+after_success:
+    - .travis/upload_coverage.sh
 
 script:
   - tox

@@ -1,0 +1,18 @@
+comment:
+  layout: "diff, files"
+  behavior: default
+  branches: null
+
+
+coverage:
+  range: 50..100
+  round: down
+  precision: 2
+
+  status:
+    project:
+      default:
+        target: '70'
+    patch:
+      default:
+        target: '70'

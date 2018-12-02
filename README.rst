@@ -7,6 +7,9 @@ Coincurve
 .. image:: https://img.shields.io/travis/ofek/coincurve/master.svg?style=flat-square
     :target: https://travis-ci.org/ofek/coincurve
 
+.. image:: https://codecov.io/github/ofek/coincurve/coverage.svg?branch=master
+    :target: https://codecov.io/github/ofek/coincurve?branch=master
+
 .. image:: https://img.shields.io/pypi/pyversions/coincurve.svg?style=flat-square
     :target: https://pypi.org/project/coincurve
 

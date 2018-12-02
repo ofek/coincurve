@@ -16,6 +16,7 @@ from setuptools import Distribution as _Distribution, setup, find_packages, __ve
 from setuptools.command.develop import develop as _develop
 from setuptools.command.egg_info import egg_info as _egg_info
 from setuptools.command.sdist import sdist as _sdist
+
 try:
     from wheel.bdist_wheel import bdist_wheel as _bdist_wheel
 except ImportError:
@@ -55,6 +56,7 @@ def download_library(command):
         command.announce('downloading libsecp256k1 source code', level=log.INFO)
         try:
             import requests
+
             r = requests.get(LIB_TARBALL_URL, stream=True)
             status_code = r.status_code
             if status_code == 200:
@@ -65,13 +67,9 @@ def download_library(command):
                     tf.extractall()
                 shutil.move(dirname, libdir)
             else:
-                raise SystemExit(
-                    'Unable to download secp256k1 library: HTTP-Status: %d',
-                    status_code
-                )
+                raise SystemExit('Unable to download secp256k1 library: HTTP-Status: %d', status_code)
         except requests.exceptions.RequestException as e:
-            raise SystemExit('Unable to download secp256k1 library: %s',
-                             str(e))
+            raise SystemExit('Unable to download secp256k1 library: %s', str(e))
 
 
 class egg_info(_egg_info):
@@ -89,10 +87,13 @@ class sdist(_sdist):
 
 
 if _bdist_wheel:
+
     class bdist_wheel(_bdist_wheel):
         def run(self):
             download_library(self)
             _bdist_wheel.run(self)
+
+
 else:
     bdist_wheel = None
 
@@ -105,11 +106,7 @@ class build_clib(_build_clib):
     def finalize_options(self):
         _build_clib.finalize_options(self)
         if self.build_flags is None:
-            self.build_flags = {
-                'include_dirs': [],
-                'library_dirs': [],
-                'define': [],
-            }
+            self.build_flags = {'include_dirs': [], 'library_dirs': [], 'define': []}
 
     def get_source_files(self):
         # Ensure library has been downloaded (sdist might have been skipped)
@@ -147,10 +144,7 @@ class build_clib(_build_clib):
             # configure script hasn't been generated yet
             autogen = absolute('libsecp256k1/autogen.sh')
             os.chmod(absolute(autogen), 0o755)
-            subprocess.check_call(
-                [autogen],
-                cwd=absolute('libsecp256k1'),
-            )
+            subprocess.check_call([autogen], cwd=absolute('libsecp256k1'))
 
         for filename in [
             'libsecp256k1/configure',
@@ -188,10 +182,7 @@ class build_clib(_build_clib):
         ]
 
         log.debug('Running configure: {}'.format(' '.join(cmd)))
-        subprocess.check_call(
-            cmd,
-            cwd=build_temp,
-        )
+        subprocess.check_call(cmd, cwd=build_temp)
 
         subprocess.check_call([MAKE], cwd=build_temp)
         subprocess.check_call([MAKE, 'install'], cwd=build_temp)
@@ -208,9 +199,7 @@ class build_ext(_build_ext):
     def run(self):
         if self.distribution.has_c_libraries():
             _build_clib = self.get_finalized_command('build_clib')
-            self.include_dirs.append(
-                os.path.join(_build_clib.build_clib, 'include'),
-            )
+            self.include_dirs.append(os.path.join(_build_clib.build_clib, 'include'))
             self.include_dirs.extend(_build_clib.build_flags['include_dirs'])
 
             self.library_dirs.insert(0, os.path.join(_build_clib.build_clib, 'lib'))
@@ -226,22 +215,24 @@ class develop(_develop):
         if not has_system_lib():
             raise DistutilsError(
                 "This library is not usable in 'develop' mode when using the "
-                'bundled libsecp256k1. See README for details.')
+                'bundled libsecp256k1. See README for details.'
+            )
         _develop.run(self)
 
 
 if BUILDING_FOR_WINDOWS:
+
     class Distribution(_Distribution):
         def is_pure(self):
             return False
-    setup_kwargs = dict(
-        package_data={'coincurve': ['*.dll']},
-        include_package_data=True,
-    )
+
+    setup_kwargs = dict(package_data={'coincurve': ['*.dll']}, include_package_data=True)
 else:
+
     class Distribution(_Distribution):
         def has_c_libraries(self):
             return not has_system_lib()
+
     setup_kwargs = dict(
         setup_requires=['cffi>=1.3.0', 'requests'],
         ext_package='coincurve',
@@ -252,8 +243,8 @@ else:
             'develop': develop,
             'egg_info': egg_info,
             'sdist': sdist,
-            'bdist_wheel': bdist_wheel
-        }
+            'bdist_wheel': bdist_wheel,
+        },
     )
 
 
@@ -272,7 +263,6 @@ setup(
     license='MIT/Apache-2.0',
 
     install_requires=['asn1crypto', 'cffi>=1.3.0'],
-    tests_require=['pytest>=2.8.7'],
 
     packages=find_packages(exclude=('_cffi_build', '_cffi_build.*', 'libsecp256k1', 'tests')),
 
@@ -285,9 +275,8 @@ setup(
         'elliptic curves',
         'bitcoin',
         'ethereum',
-        'cryptocurrency'
+        'cryptocurrency',
     ),
-
     classifiers=[
         'Development Status :: 5 - Production/Stable',
         'Intended Audience :: Developers',
@@ -303,7 +292,7 @@ setup(
         'Programming Language :: Python :: Implementation :: CPython',
         'Programming Language :: Python :: Implementation :: PyPy',
         'Topic :: Software Development :: Libraries',
-        'Topic :: Security :: Cryptography'
+        'Topic :: Security :: Cryptography',
     ],
     **setup_kwargs
 )

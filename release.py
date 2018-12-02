@@ -22,10 +22,7 @@ def main():
     if git_path is None:
         raise OSError('Unable to find git executable.')
 
-    cmds = [
-        '{0} tag -a {1} -m "Version {1}"'.format(git_path, version),
-        '{} push origin {}'.format(git_path, version)
-    ]
+    cmds = ['{0} tag -a {1} -m "Version {1}"'.format(git_path, version), '{} push origin {}'.format(git_path, version)]
     delete_cmd = '{} tag -d {}'.format(git_path, version)
 
     if delete:

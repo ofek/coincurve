@@ -13,6 +13,9 @@ Coincurve
 .. image:: https://img.shields.io/pypi/l/coincurve.svg?style=flat-square
     :target: https://choosealicense.com/licenses
 
+.. image:: https://img.shields.io/badge/code%20style-black-000000.svg
+    :target: https://github.com/ambv/black
+
 -----
 
 This library provides well-tested Python CFFI bindings for

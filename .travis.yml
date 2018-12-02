@@ -35,8 +35,9 @@ addons:
 
 matrix:
   include:
-    # - python: 3.7
-    #   env: TOXENV=style
+    - python: 3.6
+      env: TOXENV=style BUILD_LINUX_WHEELS=1
+      services: docker
     - python: 2.7
       env: TOXENV=py27
     - python: 3.5
@@ -69,9 +70,6 @@ matrix:
       osx_image: xcode10.1
       python: 3.7
       env: TOXENV=py37 TRAVIS_PYTHON_VERSION=3.7
-    - python: 3.6
-      env: TOXENV=py36 BUILD_LINUX_WHEELS=1
-      services: docker
 
 before_install:
   - chmod +x .travis/build-linux-wheels.sh

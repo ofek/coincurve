@@ -13,7 +13,13 @@ exclude = '''
   | \.tox
   | \.venv
   | _build
+  | _cffi_build
   | build
   | dist
 )/
+  |
+(
+    setup\.py$
+  | _libsecp256k1\.py$
+)
 '''

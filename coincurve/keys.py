@@ -169,7 +169,7 @@ class PublicKey:
             parsed = lib.secp256k1_ec_pubkey_parse(context.ctx, public_key, data, len(data))
 
             if not parsed:
-                raise ValueError('The public key could not be parsed or is ' 'invalid.')
+                raise ValueError('The public key could not be parsed or is invalid.')
 
             self.public_key = public_key
 
@@ -181,7 +181,7 @@ class PublicKey:
 
         created = lib.secp256k1_ec_pubkey_create(context.ctx, public_key, validate_secret(secret))
 
-        if not created:
+        if not created:  # no cov
             raise ValueError(
                 'Somehow an invalid secret was used. Please '
                 'submit this as an issue here: '

@@ -39,37 +39,37 @@ matrix:
       env: TOXENV=style BUILD_LINUX_WHEELS=1
       services: docker
     - python: 2.7
-      env: TOXENV=py27,bench
+      env: TOXENV=py27
     - python: 3.5
-      env: TOXENV=py35,bench
+      env: TOXENV=py35
     - python: 3.6
-      env: TOXENV=py36,bench
+      env: TOXENV=py36
     - python: 3.7
-      env: TOXENV=py37,bench
+      env: TOXENV=py37
     - python: pypy3
-      env: TOXENV=pypy3,bench
+      env: TOXENV=pypy3
       # PyPy3 isn't yet available for Xenial
       dist: trusty
     - os: osx
       language: generic
-      osx_image: xcode10.1
       python: 2.7
-      env: TOXENV=py27,bench TRAVIS_PYTHON_VERSION=2.7
+      osx_image: xcode10.1
+      env: TOXENV=py27 TRAVIS_PYTHON_VERSION=2.7
     - os: osx
       language: generic
-      osx_image: xcode10.1
       python: 3.5
-      env: TOXENV=py35,bench TRAVIS_PYTHON_VERSION=3.5
+      osx_image: xcode10.1
+      env: TOXENV=py35 TRAVIS_PYTHON_VERSION=3.5
     - os: osx
       language: generic
-      osx_image: xcode10.1
       python: 3.6
-      env: TOXENV=py36,bench TRAVIS_PYTHON_VERSION=3.6 NEED_SSL_FIX=true
+      osx_image: xcode10.1
+      env: TOXENV=py36 TRAVIS_PYTHON_VERSION=3.6 NEED_SSL_FIX=true
     - os: osx
       language: generic
-      osx_image: xcode10.1
       python: 3.7
-      env: TOXENV=py37,bench TRAVIS_PYTHON_VERSION=3.7
+      osx_image: xcode10.1
+      env: TOXENV=py37 TRAVIS_PYTHON_VERSION=3.7
 
 before_install:
   - chmod +x .travis/build-linux-wheels.sh
@@ -82,11 +82,11 @@ install:
   - .travis/prepare_windows_build.sh
   - source .travis/install.sh
 
-after_success:
-    - .travis/upload_coverage.sh
-
 script:
   - tox
+
+after_success:
+  - .travis/upload_coverage.sh
 
 deploy:
   - provider: script

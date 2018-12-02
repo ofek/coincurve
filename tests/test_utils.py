@@ -3,14 +3,22 @@ from os import urandom
 import pytest
 
 from coincurve.utils import (
-    GROUP_ORDER, ZERO, bytes_to_hex, bytes_to_int, chunk_data, der_to_pem,
-    get_valid_secret, hex_to_bytes, int_to_bytes, int_to_bytes_padded,
-    pad_scalar, pem_to_der, validate_secret, verify_signature
+    GROUP_ORDER,
+    ZERO,
+    bytes_to_hex,
+    bytes_to_int,
+    chunk_data,
+    der_to_pem,
+    get_valid_secret,
+    hex_to_bytes,
+    int_to_bytes,
+    int_to_bytes_padded,
+    pad_scalar,
+    pem_to_der,
+    validate_secret,
+    verify_signature,
 )
-from .samples import (
-    MESSAGE, PRIVATE_KEY_DER, PUBLIC_KEY_COMPRESSED, PUBLIC_KEY_UNCOMPRESSED,
-    SIGNATURE
-)
+from .samples import MESSAGE, PRIVATE_KEY_DER, PUBLIC_KEY_COMPRESSED, PUBLIC_KEY_UNCOMPRESSED, SIGNATURE
 
 
 class TestPadScalar:
@@ -79,6 +87,26 @@ def test_verify_signature():
 
 def test_chunk_data():
     assert list(chunk_data('4fadd1977328c11efc1c1d8a781aa6b9677984d3e0b', 2)) == [
-        '4f', 'ad', 'd1', '97', '73', '28', 'c1', '1e', 'fc', '1c', '1d',
-        '8a', '78', '1a', 'a6', 'b9', '67', '79', '84', 'd3', 'e0', 'b'
+        '4f',
+        'ad',
+        'd1',
+        '97',
+        '73',
+        '28',
+        'c1',
+        '1e',
+        'fc',
+        '1c',
+        '1d',
+        '8a',
+        '78',
+        '1a',
+        'a6',
+        'b9',
+        '67',
+        '79',
+        '84',
+        'd3',
+        'e0',
+        'b',
     ]

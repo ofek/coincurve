@@ -48,22 +48,15 @@ def build_flags(library, type_, path):
         pkg_config_path.append(os.environ['LIB_DIR'])
         pkg_config_path.append(os.path.join(os.environ['LIB_DIR'], "pkgconfig"))
 
-    options = [
-        "--static",
-        {
-            'I': "--cflags-only-I",
-            'L': "--libs-only-L",
-            'l': "--libs-only-l"
-        }[type_]
-    ]
+    options = ["--static", {'I': "--cflags-only-I", 'L': "--libs-only-L", 'l': "--libs-only-l"}[type_]]
 
     return [
         flag.strip("-{}".format(type_))
-        for flag
-        in subprocess.check_output(
-            ["pkg-config"] + options + [library],
-            env=dict(os.environ, PKG_CONFIG_PATH=":".join(pkg_config_path))
-        ).decode("UTF-8").split()
+        for flag in subprocess.check_output(
+            ["pkg-config"] + options + [library], env=dict(os.environ, PKG_CONFIG_PATH=":".join(pkg_config_path))
+        )
+        .decode("UTF-8")
+        .split()
     ]
 
 
@@ -72,6 +65,7 @@ def _find_lib():
         return False
 
     from cffi import FFI
+
     ffi = FFI()
     try:
         ffi.dlopen("secp256k1")

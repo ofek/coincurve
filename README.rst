@@ -1,23 +1,33 @@
 Coincurve
 =========
 
-.. image:: https://img.shields.io/pypi/v/coincurve.svg?style=flat-square
-    :target: https://pypi.org/project/coincurve
-
-.. image:: https://img.shields.io/travis/ofek/coincurve/master.svg?style=flat-square
+.. image:: https://travis-ci.org/ofek/coincurve.svg?branch=master
     :target: https://travis-ci.org/ofek/coincurve
+    :alt: Travis CI
 
 .. image:: https://codecov.io/github/ofek/coincurve/coverage.svg?branch=master
     :target: https://codecov.io/github/ofek/coincurve?branch=master
+    :alt: Codecov
 
-.. image:: https://img.shields.io/pypi/pyversions/coincurve.svg?style=flat-square
+.. image:: https://img.shields.io/pypi/status/coverage.svg
     :target: https://pypi.org/project/coincurve
+    :alt: PyPI - Status
 
-.. image:: https://img.shields.io/pypi/l/coincurve.svg?style=flat-square
+.. image:: https://img.shields.io/pypi/v/coincurve.svg
+    :target: https://pypi.org/project/coincurve
+    :alt: PyPI - Version
+
+.. image:: https://pepy.tech/badge/coincurve
+    :target: https://pepy.tech/project/coincurve
+    :alt: PyPI - Downloads
+
+.. image:: https://img.shields.io/badge/license-MIT%2FApache--2.0-9400d3.svg
     :target: https://choosealicense.com/licenses
+    :alt: License: MIT/Apache-2.0
 
 .. image:: https://img.shields.io/badge/code%20style-black-000000.svg
     :target: https://github.com/ambv/black
+    :alt: Code style: black
 
 -----
 
@@ -84,7 +94,7 @@ On Debian/Ubuntu for example the necessary packages are:
 - pkg-config
 - libtool
 - libffi-dev
-- libgmp-dev
+- libgmp-dev (optional)
 
 API
 ---

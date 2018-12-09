@@ -6,6 +6,15 @@ Important changes are emphasized.
 master
 ^^^^^^
 
+11.0.0
+^^^^^^
+
+- Fix some linking scenarios by placing bundled libsecp256k1 dir first in path
+- Allow override of system libsecp256k1 with environment variable
+- Add benchmarks
+- Use Codecov to track coverage
+- Use black for code formatting
+
 10.0.0
 ^^^^^^
 

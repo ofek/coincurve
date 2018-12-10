@@ -1,0 +1,38 @@
+Users
+-----
+
+- `AnyLedger <https://github.com/AnyLedger/anyledger-backend/blob/cb9e277ef4ba775384a1eb80ff1577418f88684e/requirements.in#L5>`_
+- `Ark Ecosystem <https://github.com/ArkEcosystem/python-crypto/blob/a7c739c070ce17f8aa64155b95b698e7465ab373/setup.py#L9>`_
+- `Augur Project <https://github.com/AugurProject/augur/blob/95177dfaee7d978608543523f180609c582c1ff9/packages/augur-core/requirements.txt#L9>`_
+- `bit <https://github.com/ofek/bit>`_
+- `btcrecover <https://github.com/gurnec/btcrecover/commit/f113867fa22d2f5b22175cc2b5b3892351bc1109>`_
+- `crankycoin <https://github.com/cranklin/crankycoin/blob/3d2b3482698227397a8daf30e0b80b2f2c030aec/requirements.txt#L8>`_
+- `eciespy <https://github.com/kigawas/eciespy/blob/c8dd8134eec12c565f6fa870663d04f0da6df6d0/requirements.txt#L3>`_
+- `Enigma <https://github.com/enigmampc/surface/blob/40ca2056bce32d0d479e4809ac8cd5ded102b3f0/etc/requirements.txt#L8>`_
+- `ethereum/eth-keys <https://github.com/ethereum/eth-keys/commit/81755dfda714d77c1f8a092810ca31e570d84425>`_
+- `ethereum/eth-tester <https://github.com/ethereum/eth-tester/blob/96e4e69de46acca387f2a946920e4c3e3f35605f/tox.ini#L17>`_
+- `ethereum/py-evm <https://github.com/ethereum/py-evm/pull/31>`_
+- `ethereum/pydevp2p <https://github.com/ethereum/pydevp2p/pull/80>`_
+- `ethereum/pyethereum <https://github.com/ethereum/pyethereum/pull/777>`_
+- `ethereum/vyper <https://github.com/ethereum/vyper/blob/9491bcde0f87fd04d19d0a40a6c901b1bc0a718b/Dockerfile#L15>`_
+- `EtherollApp <https://github.com/AndreMiras/EtherollApp/commit/2966c0850156364e46412da2331cee146b490e57>`_
+- `ForkDelta <https://github.com/forkdelta/backend-replacement/blob/45517f48579f3270dc47da2075d8e0efc2e9ecb8/requirements.txt#L46>`_
+- `golemfactory/golem <https://github.com/golemfactory/golem/pull/1527>`_
+- `golemfactory/golem-messages <https://github.com/golemfactory/golem-messages/blob/1f72b6a6757036218cdf471c0295b8895b963266/setup.py#L39>`_
+- `HoneyBadgerBFT <https://github.com/initc3/HoneyBadgerBFT-Python/blob/048d6afb3c7184db670b96119aa99a6a5b0dafa6/setup.py#L31>`_
+- `JoinMarket <https://github.com/JoinMarket-Org/joinmarket-clientserver/pull/223>`_
+- `lbryio/lbry <https://github.com/lbryio/lbry/blob/d64916a06115920aaa9eaab67704a0b2d34aae20/CHANGELOG.md#security-1>`_
+- `lbryio/torba <https://github.com/lbryio/torba/pull/13>`_
+- `minichain <https://github.com/kigawas/minichain/blob/8c1fd9499954bcdbc7e0f77f6fa6d9af3328f64c/requirements.txt#L3>`_
+- `Nekoyume <https://github.com/nekoyume/nekoyume/pull/67>`_
+- `NuCypher <https://github.com/nucypher/nucypher/pull/592>`_
+- `OmiseGO <https://github.com/omisego/fee-burner/blob/984f75362ca193680ecb4dc43c7d2e13f3be68bd/contracts/requirements.txt#L9>`_
+- `PeerAssets <https://github.com/PeerAssets/pypeerassets/commit/113c9a234c94499c7e591b8a93928be0a77298fa>`_
+- `Planetarium <https://github.com/planetarium/coincurve-stubs>`_
+- `python-idex <https://github.com/sammchardy/python-idex/blob/3b698533e290a0fe884961ce69c4b2e699378b8d/requirements.txt#L2>`_
+- `PyWallet <https://github.com/AndreMiras/PyWallet/commit/69f2f240b39f332123d347c72bc75f0b199813c1>`_
+- `QuarkChain <https://github.com/QuarkChain/pyquarkchain/blob/4c002d4b535174704ce39f3954e4026f23d520bb/requirements.txt#L4>`_
+- `raiden-network/microraiden <https://github.com/raiden-network/microraiden/blob/8d5f1d86818f01c8cafe9366da1cecdef0e8b0f4/requirements.txt#L5>`_
+- `raiden-network/raiden <https://github.com/raiden-network/raiden/pull/534>`_
+- `raiden-network/raiden-contracts <https://github.com/raiden-network/raiden-contracts/blob/f251c01015564a2b91401692234aa5ed1ea67ebc/requirements.txt#L3>`_
+- `raiden-network/raiden-libs <https://github.com/raiden-network/raiden-libs/blob/e88586e6d40e2b49d19efbdffafdaa2a86f84c86/requirements.txt#L1>`_

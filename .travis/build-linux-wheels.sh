@@ -15,7 +15,7 @@ mkdir out
 if [[ "$PLAT" == "manylinux2010_x86_64" ]]; then
     mkdir /opt/python/pypy3
     curl -LO https://bitbucket.org/squeaky/portable-pypy/downloads/pypy3.6-7.1.1-beta-linux_x86_64-portable.tar.bz2
-    tar -xjpf -C /opt/python/pypy3 --strip-components=1 pypy3.6-7.1.1-beta-linux_x86_64-portable.tar.bz2
+    tar -xjpf pypy3.6-7.1.1-beta-linux_x86_64-portable.tar.bz2 -C /opt/python/pypy3 --strip-components=1
     curl -sSL https://raw.githubusercontent.com/pypa/get-pip/master/get-pip.py | /opt/python/pypy3/bin/pypy
 fi
 

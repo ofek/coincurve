@@ -11,24 +11,17 @@ curl -O https://ftp.gnu.org/gnu/gmp/gmp-6.1.2.tar.bz2 && tar -xjpf gmp-*.tar.bz2
 
 mkdir out
 
+# PyPy
 if [[ "$PLAT" == "manylinux2010_x86_64" ]]; then
-    curl -O https://nixos.org/releases/patchelf/patchelf-0.10/patchelf-0.10.tar.bz2 && tar -xjpf patchelf-*.tar.bz2 && cd patchelf* && ./configure > /dev/null && make install > /dev/null && cd ..
+    mkdir /opt/python/pypy3
     curl -LO https://bitbucket.org/squeaky/portable-pypy/downloads/pypy3.6-7.1.1-beta-linux_x86_64-portable.tar.bz2
-    tar -xjpf pypy3.6-7.1.1-beta-linux_x86_64-portable.tar.bz2
-    pypy3.6-7.1.1-beta-linux_x86_64-portable/bin/virtualenv-pypy pypy-build-env
-    source pypy-build-env/bin/activate
-    pypy -m pip install typing
-    pypy -m pip install wheel
-    pypy -m pip install pyelftools
-    pypy -m pip install auditwheel
-    pypy -m pip wheel /io/ -w wheelhouse/
-    pypy -m auditwheel repair wheelhouse/coincurve*.whl -w out
-    source pypy-build-env/bin/deactivate
+    tar -xjpf -C /opt/python/pypy3 --strip-components=1 pypy3.6-7.1.1-beta-linux_x86_64-portable.tar.bz2
+    curl -sSL https://raw.githubusercontent.com/pypa/get-pip/master/get-pip.py | /opt/python/pypy3/bin/pypy
 fi
 
 # Compile wheels
 for PYBIN in /opt/python/*/bin; do
-	if [[ ${PYBIN} =~ (cp27|cp35|cp36|cp37|cp38) ]]; then
+	if [[ ${PYBIN} =~ (cp27|cp35|cp36|cp37|cp38|pypy) ]]; then
 	    ${PYBIN}/pip wheel /io/ -w wheelhouse/
     fi
 done

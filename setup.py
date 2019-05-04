@@ -249,7 +249,7 @@ else:
 
 setup(
     name='coincurve',
-    version='12.0.0-rc.1',
+    version='12.0.0-rc.2',
 
     description='Cross-platform Python CFFI bindings for libsecp256k1',
     long_description=open('README.rst', 'r').read(),

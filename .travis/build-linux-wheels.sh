@@ -32,7 +32,7 @@ done
 
 # Adjust wheel tags
 for whl in wheelhouse/coincurve*.whl; do
-    auditwheel repair $whl -w out
+    auditwheel repair "$whl" --plat $PLAT -w out
 done
 
 cp out/*.whl /io/dist

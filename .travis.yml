@@ -46,10 +46,12 @@ matrix:
       env: TOXENV=py36,bench
     - python: 3.7
       env: TOXENV=py37,bench
+    - python: 3.8-dev
+      env: TOXENV=py38,bench
     - python: pypy3
       env: TOXENV=pypy3k,bench
-      # PyPy3 isn't yet available for Xenial
-      dist: trusty
+      # # PyPy3 isn't yet available for Xenial
+      # dist: trusty
     - os: osx
       language: generic
       python: 2.7
@@ -70,6 +72,11 @@ matrix:
       python: 3.7
       osx_image: xcode10.1
       env: TOXENV=py37,bench TRAVIS_PYTHON_VERSION=3.7
+    - os: osx
+      language: generic
+      python: 3.8
+      osx_image: xcode10.1
+      env: TOXENV=py38,bench TRAVIS_PYTHON_VERSION=3.8
 
 before_install:
   - chmod +x .travis/build-linux-wheels.sh

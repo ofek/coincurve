@@ -12,7 +12,8 @@ curl -O https://ftp.gnu.org/gnu/gmp/gmp-6.1.2.tar.bz2 && tar -xjpf gmp-*.tar.bz2
 mkdir out
 
 if [[ "$PLAT" == "manylinux2010_x86_64" ]]; then
-    curl -O https://nixos.org/releases/patchelf/patchelf-0.10/patchelf-0.10.tar.bz2 && tar -xjpf patchelf-*.tar.bz2 && cd patchelf* && ./configure > /dev/null && sudo make install > /dev/null && cd ..
+    yum update curl
+    curl -O https://nixos.org/releases/patchelf/patchelf-0.10/patchelf-0.10.tar.bz2 && tar -xjpf patchelf-*.tar.bz2 && cd patchelf* && ./configure > /dev/null && make install > /dev/null && cd ..
     curl -LO https://bitbucket.org/squeaky/portable-pypy/downloads/pypy3.6-7.1.1-beta-linux_x86_64-portable.tar.bz2
     tar -xjpf pypy3.6-7.1.1-beta-linux_x86_64-portable.tar.bz2
     pypy3.6-7.1.1-beta-linux_x86_64-portable/bin/pypy3 -m pip install typing

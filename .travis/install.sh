@@ -9,9 +9,10 @@ if [[ $TRAVIS_OS_NAME == "osx" ]]; then
 
     # We use the official python.org installers to make sure our wheels are
     # going to be as widely compatible as possible
-    PYTHON_PKG_27="https://www.python.org/ftp/python/2.7.15/python-2.7.15-macosx10.9.pkg"
-    PYTHON_PKG_36="https://www.python.org/ftp/python/3.6.6/python-3.6.6-macosx10.9.pkg"
-    PYTHON_PKG_37="https://www.python.org/ftp/python/3.7.0/python-3.7.0-macosx10.9.pkg"
+    PYTHON_PKG_27="https://www.python.org/ftp/python/2.7.16/python-2.7.16-macosx10.9.pkg"
+    PYTHON_PKG_36="https://www.python.org/ftp/python/3.6.8/python-3.6.8-macosx10.9.pkg"
+    PYTHON_PKG_37="https://www.python.org/ftp/python/3.7.3/python-3.7.3-macosx10.9.pkg"
+    PYTHON_PKG_38="https://www.python.org/ftp/python/3.8.0/python-3.8.0a3-macosx10.9.pkg"
     GET_PIP="https://bootstrap.pypa.io/get-pip.py"
 
     # update brew
@@ -56,7 +57,7 @@ if [[ $TRAVIS_OS_NAME == "osx" ]]; then
             python=/Library/Frameworks/Python.framework/Versions/${TRAVIS_PYTHON_VERSION}/bin/python
             virtualenv=virtualenv
             ;;
-        3.6|3.7)
+        3.6|3.7|3.8)
             python=/Library/Frameworks/Python.framework/Versions/${TRAVIS_PYTHON_VERSION}/bin/python3
             virtualenv=venv
             ;;

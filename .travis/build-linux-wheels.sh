@@ -15,13 +15,15 @@ if [[ "$PLAT" == "manylinux2010_x86_64" ]]; then
     curl -O https://nixos.org/releases/patchelf/patchelf-0.10/patchelf-0.10.tar.bz2 && tar -xjpf patchelf-*.tar.bz2 && cd patchelf* && ./configure > /dev/null && make install > /dev/null && cd ..
     curl -LO https://bitbucket.org/squeaky/portable-pypy/downloads/pypy3.6-7.1.1-beta-linux_x86_64-portable.tar.bz2
     tar -xjpf pypy3.6-7.1.1-beta-linux_x86_64-portable.tar.bz2
-    ls pypy3.6-7.1.1-beta-linux_x86_64-portable/bin
-    pypy3.6-7.1.1-beta-linux_x86_64-portable/bin/pypy3 -m pip3 install typing
-    pypy3.6-7.1.1-beta-linux_x86_64-portable/bin/pypy3 -m pip3 install wheel
-    pypy3.6-7.1.1-beta-linux_x86_64-portable/bin/pypy3 -m pip3 install pyelftools
-    pypy3.6-7.1.1-beta-linux_x86_64-portable/bin/pypy3 -m pip3 install auditwheel
-    pypy3.6-7.1.1-beta-linux_x86_64-portable/bin/pypy3 -m pip3 wheel /io/ -w wheelhouse/
-    pypy3.6-7.1.1-beta-linux_x86_64-portable/bin/pypy3 -m auditwheel repair wheelhouse/coincurve*.whl -w out
+    pypy3.6-7.1.1-beta-linux_x86_64-portable/bin/virtualenv-pypy pypy-build-env
+    source pypy-build-env/bin/activate
+    pypy -m pip install typing
+    pypy -m pip install wheel
+    pypy -m pip install pyelftools
+    pypy -m pip install auditwheel
+    pypy -m pip wheel /io/ -w wheelhouse/
+    pypy -m auditwheel repair wheelhouse/coincurve*.whl -w out
+    source pypy-build-env/bin/deactivate
 fi
 
 # Compile wheels

@@ -11,28 +11,24 @@ curl -O https://ftp.gnu.org/gnu/gmp/gmp-6.1.2.tar.bz2 && tar -xjpf gmp-*.tar.bz2
 
 mkdir out
 
-# if [[ "$BUILD_GMP_CPU" == "amd64" ]]; then
-#     curl -L -O https://bitbucket.org/squeaky/portable-pypy/downloads/pypy3.5-6.0.0-linux_x86_64-portable.tar.bz2
-#     tar -xjpf pypy3.5-6.0.0-linux_x86_64-portable.tar.bz2
-#     pypy3.5-6.0.0-linux_x86_64-portable/bin/pypy3 -m pip install typing
-#     pypy3.5-6.0.0-linux_x86_64-portable/bin/pypy3 -m pip install wheel
-#     pypy3.5-6.0.0-linux_x86_64-portable/bin/pypy3 -m pip install pyelftools
-#     pypy3.5-6.0.0-linux_x86_64-portable/bin/pypy3 -m pip wheel /io/ -w wheelhouse/
-#     pypy3.5-6.0.0-linux_x86_64-portable/bin/pypy3 -m pip install -e git://github.com/pypa/auditwheel.git@fb6f76d4262dbb76a6ea068000e71fdfe6fd06ee#egg=auditwheel
-#     curl -O https://nixos.org/releases/patchelf/patchelf-0.9/patchelf-0.9.tar.bz2 && tar -xjpf patchelf-*.tar.bz2 && cd patchelf* && ./configure > /dev/null && sudo make install > /dev/null && cd ..
-#     pypy3.5-6.0.0-linux_x86_64-portable/bin/pypy3 -m auditwheel repair wheelhouse/coincurve*.whl -w out
-# fi
+# PyPy
+if [[ "$PLAT" == "manylinux2010_x86_64" ]]; then
+    mkdir /opt/python/pypy3
+    curl -LO https://bitbucket.org/squeaky/portable-pypy/downloads/pypy3.6-7.1.1-beta-linux_x86_64-portable.tar.bz2
+    tar -xjpf pypy3.6-7.1.1-beta-linux_x86_64-portable.tar.bz2 -C /opt/python/pypy3 --strip-components=1
+    curl -sSL https://raw.githubusercontent.com/pypa/get-pip/master/get-pip.py | /opt/python/pypy3/bin/pypy
+fi
 
 # Compile wheels
 for PYBIN in /opt/python/*/bin; do
-	if [[ ${PYBIN} =~ (cp27|cp35|cp36|cp37) ]]; then
+	if [[ ${PYBIN} =~ (cp27|cp35|cp36|cp37|cp38|pypy) ]]; then
 	    ${PYBIN}/pip wheel /io/ -w wheelhouse/
     fi
 done
 
 # Adjust wheel tags
 for whl in wheelhouse/coincurve*.whl; do
-    auditwheel repair $whl -w out
+    auditwheel repair "$whl" --plat $PLAT -w out
 done
 
 cp out/*.whl /io/dist

@@ -6,6 +6,12 @@ Important changes are emphasized.
 master
 ^^^^^^
 
+12.0.0
+^^^^^^
+
+- **New:** Binary wheels for Python 3.8!
+- Improvements from libsecp256k1 master
+
 11.0.0
 ^^^^^^
 

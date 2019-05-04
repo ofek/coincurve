@@ -50,8 +50,6 @@ matrix:
       env: TOXENV=py38,bench
     - python: pypy3
       env: TOXENV=pypy3k,bench
-      # # PyPy3 isn't yet available for Xenial
-      # dist: trusty
     - os: osx
       language: generic
       python: 2.7

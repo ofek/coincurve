@@ -305,6 +305,14 @@ History
 
 Important changes are emphasized.
 
+12.0.0
+^^^^^^
+
+- **New:** Binary wheels on Linux for PyPy3.6 v7.1.1-beta!
+- **New:** Binary wheels on macOS for Python 3.8.0-alpha.3!
+- **New:** Binary wheels on Linux are now also built with the new `manylinux2010 <https://www.python.org/dev/peps/pep-0571>`_ spec for 64-bit platforms!
+- Improvements from libsecp256k1 master
+
 11.0.0
 ^^^^^^
 

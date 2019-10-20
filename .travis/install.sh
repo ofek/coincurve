@@ -29,21 +29,28 @@ if [[ $TRAVIS_OS_NAME == "osx" ]]; then
 
     mkdir -p ~/.cache/python-dl
 
-    builtin pushd ~/.cache/python-dl
-    ls -l
+    if [[ "${TRAVIS_PYTHON_VERSION}" == "3.5" ]]; then
+        PYVERSION="${TRAVIS_PYTHON_VERSION}.5"
+        brew outdated pyenv || brew upgrade pyenv
+        pyenv install ${PYVERSION}
+        pyenv global ${PYVERSION}
+    else
+        builtin pushd ~/.cache/python-dl
+        ls -l
 
-    py_pkg=PYTHON_PKG_${TRAVIS_PYTHON_VERSION//./}
-    py_pkg=${!py_pkg}
+        py_pkg=PYTHON_PKG_${TRAVIS_PYTHON_VERSION//./}
+        py_pkg=${!py_pkg}
 
-    installer_pkg=$(basename ${py_pkg})
+        installer_pkg=$(basename ${py_pkg})
 
-    # The package might have been cached from a previous run
-    if [[ ! -f ${installer_pkg} ]]; then
-        curl -LO ${py_pkg}
+        # The package might have been cached from a previous run
+        if [[ ! -f ${installer_pkg} ]]; then
+            curl -LO ${py_pkg}
+        fi
+
+        sudo installer -pkg ${installer_pkg} -target /
+        builtin popd
     fi
-
-    sudo installer -pkg ${installer_pkg} -target /
-    builtin popd
 
     case "${TRAVIS_PYTHON_VERSION}" in
         2.7)
@@ -52,6 +59,10 @@ if [[ $TRAVIS_OS_NAME == "osx" ]]; then
             ;;
         3.6|3.7|3.8)
             python=/Library/Frameworks/Python.framework/Versions/${TRAVIS_PYTHON_VERSION}/bin/python3
+            virtualenv=venv
+            ;;
+        3.5)
+            python="$(pyenv root)/versions/${PYVERSION}/bin/python"
             virtualenv=venv
             ;;
     esac

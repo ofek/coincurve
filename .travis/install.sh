@@ -12,7 +12,7 @@ if [[ $TRAVIS_OS_NAME == "osx" ]]; then
     PYTHON_PKG_27="https://www.python.org/ftp/python/2.7.16/python-2.7.16-macosx10.9.pkg"
     PYTHON_PKG_36="https://www.python.org/ftp/python/3.6.8/python-3.6.8-macosx10.9.pkg"
     PYTHON_PKG_37="https://www.python.org/ftp/python/3.7.3/python-3.7.3-macosx10.9.pkg"
-    PYTHON_PKG_38="https://www.python.org/ftp/python/3.8.0/python-3.8.0rc1-macosx10.9.pkg"
+    PYTHON_PKG_38="https://www.python.org/ftp/python/3.8.0/python-3.8.0-macosx10.9.pkg"
     GET_PIP="https://bootstrap.pypa.io/get-pip.py"
 
     # update brew

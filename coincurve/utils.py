@@ -95,7 +95,7 @@ def der_to_pem(der):
 
 
 def pem_to_der(pem):
-    return b64decode(pem.strip()[28:-25].replace(b'\n', b''))
+    return b64decode(b''.join(pem.strip().splitlines()[1:-1]))
 
 
 def get_valid_secret():

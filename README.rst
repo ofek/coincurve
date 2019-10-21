@@ -61,6 +61,8 @@ Users
 
 - `<https://www.ethereum.org>`_
 - `<https://lbry.io>`_
+- `<https://libp2p.io>`_
+- `<https://zeronet.io>`_
 - `<https://ark.io>`_
 - `<https://www.augur.net>`_
 - `<https://www.nucypher.com>`_

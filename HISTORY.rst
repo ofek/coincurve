@@ -6,6 +6,15 @@ Important changes are emphasized.
 master
 ^^^^^^
 
+13.0.0
+^^^^^^
+
+- **New:** Binary wheels for Python 3.8!
+- Support building on OpenBSD
+- Improve handling of PEM private key deserialization
+- Improve ECDH documentation
+- Improvements from libsecp256k1 master
+
 12.0.0
 ^^^^^^
 

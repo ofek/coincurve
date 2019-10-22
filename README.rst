@@ -307,6 +307,15 @@ History
 
 Important changes are emphasized.
 
+13.0.0
+^^^^^^
+
+- **New:** Binary wheels for Python 3.8!
+- Support building on OpenBSD
+- Improve handling of PEM private key deserialization
+- Improve ECDH documentation
+- Improvements from libsecp256k1 master
+
 12.0.0
 ^^^^^^
 
@@ -336,19 +345,5 @@ Important changes are emphasized.
 
 - Fixed wheels for macOS
 - **Breaking:** Drop support for 32-bit macOS
-
-8.0.2
-^^^^^
-
-- No longer package tests
-
-8.0.0
-^^^^^
-
-- **New:** Binary wheels for Python 3.7!
-- **Changed:** Binary wheels on macOS for Python 3.5 now use Homebrew
-  Python for compilation due to new security requirements
-- Make build system support new GitHub & PyPI security requirements
-- Improvements from libsecp256k1 master
 
 View `all history <https://github.com/ofek/coincurve/blob/master/HISTORY.rst>`_

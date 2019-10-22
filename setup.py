@@ -249,7 +249,7 @@ else:
 
 setup(
     name='coincurve',
-    version='12.0.0',
+    version='13.0.0',
 
     description='Cross-platform Python CFFI bindings for libsecp256k1',
     long_description=open('README.rst', 'r').read(),
@@ -259,7 +259,7 @@ setup(
     maintainer_email='ofekmeister@gmail.com',
     url='https://github.com/ofek/coincurve',
     download_url='https://github.com/ofek/coincurve',
-    license='MIT/Apache-2.0',
+    license='MIT or Apache-2.0',
 
     install_requires=['asn1crypto', 'cffi>=1.3.0'],
 

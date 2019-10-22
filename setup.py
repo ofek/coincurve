@@ -33,7 +33,7 @@ BUILDING_FOR_WINDOWS = detect_dll()
 MAKE = 'gmake' if platform.system() in ['FreeBSD', 'OpenBSD'] else 'make'
 
 # Version of libsecp256k1 to download if none exists in the `libsecp256k1` directory
-LIB_TARBALL_URL = 'https://github.com/bitcoin-core/secp256k1/archive/b19c000063be11018b4d1a6b0a85871ab9d0bdcf.tar.gz'
+LIB_TARBALL_URL = 'https://github.com/bitcoin-core/secp256k1/archive/0d9540b13ffcd7cd44cc361b8744b93d88aa76ba.tar.gz'
 
 
 # We require setuptools >= 3.3

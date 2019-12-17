@@ -69,6 +69,11 @@ def _find_lib():
     ffi = FFI()
     try:
         ffi.dlopen("secp256k1")
+        if os.path.exists('/usr/include/secp256k1_ecdh.h'):
+            return True
+        else:
+            # The system library lacks the ecdh module
+            return False
     except OSError:
         if 'LIB_DIR' in os.environ:
             for path in glob.glob(os.path.join(os.environ['LIB_DIR'], "*secp256k1*")):

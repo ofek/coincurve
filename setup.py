@@ -268,14 +268,14 @@ setup(
     distclass=Distribution,
     zip_safe=False,
 
-    keywords=(
+    keywords=[
         'secp256k1',
         'crypto',
         'elliptic curves',
         'bitcoin',
         'ethereum',
         'cryptocurrency',
-    ),
+    ],
     classifiers=[
         'Development Status :: 5 - Production/Stable',
         'Intended Audience :: Developers',

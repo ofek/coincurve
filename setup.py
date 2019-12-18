@@ -139,6 +139,10 @@ class build_clib(_build_clib):
             if e.errno != errno.EEXIST:
                 raise
 
+        if not os.path.exists(absolute('libsecp256k1')):
+            # library needs to be downloaded
+            self.get_source_files()
+
         if not os.path.exists(absolute('libsecp256k1/configure')):
             # configure script hasn't been generated yet
             autogen = absolute('libsecp256k1/autogen.sh')

@@ -21,7 +21,7 @@ fi
 
 # Compile wheels
 for PYBIN in /opt/python/*/bin; do
-	if [[ ${PYBIN} =~ (cp27|cp35|cp36|cp37|cp38|pypy) ]]; then
+	if [[ ${PYBIN} =~ (cp27|cp36|cp37|cp38|cp39|pypy) ]]; then
 	    ${PYBIN}/pip wheel /io/ -w wheelhouse/
     fi
 done

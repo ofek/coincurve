@@ -10,12 +10,12 @@ on:
 
 jobs:
   test:
-    name: "${{ matrix.python-version }} | ${{ startsWith(matrix.os, 'ubuntu-') && 'Ubuntu' || 'macOS' }}"
+    name: "${{ !startsWith(matrix.python-version, 'pypy') && 'Python ' || '' }}matrix.python-version on ${{ startsWith(matrix.os, 'ubuntu-') && 'Ubuntu' || 'macOS' }}"
     runs-on: ${{ matrix.os }}
     strategy:
       fail-fast: false
       matrix:
-        python-version: [2.7, 3.6, 3.7, 3.8, 3.9]
+        python-version: ["2.7", "3.6", "3.7", "3.8", "3.9", "pypy3"]
         os: [ubuntu-18.04, macos-10.15]
 
     steps:

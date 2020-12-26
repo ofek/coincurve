@@ -13,6 +13,7 @@ if [[ $TRAVIS_OS_NAME == "osx" ]]; then
     PYTHON_PKG_36="https://www.python.org/ftp/python/3.6.8/python-3.6.8-macosx10.9.pkg"
     PYTHON_PKG_37="https://www.python.org/ftp/python/3.7.3/python-3.7.3-macosx10.9.pkg"
     PYTHON_PKG_38="https://www.python.org/ftp/python/3.8.0/python-3.8.0-macosx10.9.pkg"
+    PYTHON_PKG_39="https://www.python.org/ftp/python/3.9.0/python-3.9.0-macosx10.9.pkg"
     GET_PIP="https://bootstrap.pypa.io/get-pip.py"
 
     # update brew
@@ -29,40 +30,29 @@ if [[ $TRAVIS_OS_NAME == "osx" ]]; then
 
     mkdir -p ~/.cache/python-dl
 
-    if [[ "${TRAVIS_PYTHON_VERSION}" == "3.5" ]]; then
-        PYVERSION="${TRAVIS_PYTHON_VERSION}.5"
-        brew outdated pyenv || brew upgrade pyenv
-        pyenv install ${PYVERSION}
-        pyenv global ${PYVERSION}
-    else
-        builtin pushd ~/.cache/python-dl
-        ls -l
+    builtin pushd ~/.cache/python-dl
+    ls -l
 
-        py_pkg=PYTHON_PKG_${TRAVIS_PYTHON_VERSION//./}
-        py_pkg=${!py_pkg}
+    py_pkg=PYTHON_PKG_${TRAVIS_PYTHON_VERSION//./}
+    py_pkg=${!py_pkg}
 
-        installer_pkg=$(basename ${py_pkg})
+    installer_pkg=$(basename ${py_pkg})
 
-        # The package might have been cached from a previous run
-        if [[ ! -f ${installer_pkg} ]]; then
-            curl -LO ${py_pkg}
-        fi
-
-        sudo installer -pkg ${installer_pkg} -target /
-        builtin popd
+    # The package might have been cached from a previous run
+    if [[ ! -f ${installer_pkg} ]]; then
+        curl -LO ${py_pkg}
     fi
+
+    sudo installer -pkg ${installer_pkg} -target /
+    builtin popd
 
     case "${TRAVIS_PYTHON_VERSION}" in
         2.7)
             python=/Library/Frameworks/Python.framework/Versions/${TRAVIS_PYTHON_VERSION}/bin/python
             virtualenv=virtualenv
             ;;
-        3.6|3.7|3.8)
+        3.6|3.7|3.8|3.9)
             python=/Library/Frameworks/Python.framework/Versions/${TRAVIS_PYTHON_VERSION}/bin/python3
-            virtualenv=venv
-            ;;
-        3.5)
-            python="$(pyenv root)/versions/${PYVERSION}/bin/python"
             virtualenv=venv
             ;;
     esac

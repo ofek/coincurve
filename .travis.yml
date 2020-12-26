@@ -40,14 +40,14 @@ matrix:
       services: docker
     - python: 2.7
       env: TOXENV=py27,bench
-    - python: 3.5
-      env: TOXENV=py35,bench
     - python: 3.6
       env: TOXENV=py36,bench
     - python: 3.7
       env: TOXENV=py37,bench
     - python: 3.8
       env: TOXENV=py38,bench
+    - python: 3.9
+      env: TOXENV=py39,bench
     - python: pypy3
       env: TOXENV=pypy3k,bench
     - os: osx
@@ -55,11 +55,6 @@ matrix:
       python: 2.7
       osx_image: xcode10.1
       env: TOXENV=py27,bench TRAVIS_PYTHON_VERSION=2.7
-    - os: osx
-      language: generic
-      python: 3.5
-      osx_image: xcode10.1
-      env: TOXENV=py35,bench TRAVIS_PYTHON_VERSION=3.5
     - os: osx
       language: generic
       python: 3.6
@@ -75,6 +70,11 @@ matrix:
       python: 3.8
       osx_image: xcode10.1
       env: TOXENV=py38,bench TRAVIS_PYTHON_VERSION=3.8
+    - os: osx
+      language: generic
+      python: 3.9
+      osx_image: xcode10.1
+      env: TOXENV=py39,bench TRAVIS_PYTHON_VERSION=3.9
 
 before_install:
   - chmod +x .travis/build-linux-wheels.sh

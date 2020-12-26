@@ -10,7 +10,7 @@ on:
 
 jobs:
   test:
-    name: "${{ !startsWith(matrix.python-version, 'pypy') && 'Python ' || '' }}matrix.python-version on ${{ startsWith(matrix.os, 'ubuntu-') && 'Ubuntu' || 'macOS' }}"
+    name: "${{ !startsWith(matrix.python-version, 'pypy') && 'Python ' || '' }}${{ matrix.python-version }} on ${{ startsWith(matrix.os, 'ubuntu-') && 'Ubuntu' || 'macOS' }}"
     runs-on: ${{ matrix.os }}
     strategy:
       fail-fast: false

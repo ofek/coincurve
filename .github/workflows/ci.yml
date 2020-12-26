@@ -22,9 +22,9 @@ jobs:
       fail-fast: false
       matrix:
         os: [ubuntu-18.04, macos-10.15]
-        python-version: ['2.7', '3.6', '3.7', '3.8', '3.9']
-        include:
-          - os: ubuntu-18.04
+        python-version: ['2.7', '3.6', '3.7', '3.8', '3.9', 'pypy3']
+        exclude:
+          - os: macos-10.15
             python-version: pypy3
 
     steps:

@@ -8,9 +8,15 @@ on:
     branches:
     - master
 
+env:
+  LD_LIBRARY_PATH: ./libsecp256k1_ext/.libs
+  DYLD_FALLBACK_LIBRARY_PATH: ./libsecp256k1_ext/.libs
+  LIB_DIR: ./libsecp256k1_ext/.libs
+  INCLUDE_DIR: ./libsecp256k1_ext/include
+
 jobs:
   test:
-    name: "${{ !startsWith(matrix.python-version, 'pypy') && 'Python ' || '' }}${{ matrix.python-version }} on ${{ startsWith(matrix.os, 'ubuntu-') && 'Ubuntu' || 'macOS' }}"
+    name: "Test ${{ !startsWith(matrix.python-version, 'pypy') && 'Python ' || '' }}${{ matrix.python-version }} on ${{ startsWith(matrix.os, 'ubuntu-') && 'Ubuntu' || 'macOS' }}"
     runs-on: ${{ matrix.os }}
     strategy:
       fail-fast: false

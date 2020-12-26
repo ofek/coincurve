@@ -16,7 +16,7 @@ env:
 
 jobs:
   test:
-    name: "Test ${{ !startsWith(matrix.python-version, 'pypy') && 'Python ' || '' }}${{ matrix.python-version }} on ${{ startsWith(matrix.os, 'ubuntu-') && 'Ubuntu' || 'macOS' }}"
+    name: "Test ${{ !startsWith(matrix.python-version, 'pypy') && 'Python ' || '' }}${{ startsWith(matrix.python-version, 'pypy') && 'PyPy' || matrix.python-version }} on ${{ startsWith(matrix.os, 'ubuntu-') && 'Ubuntu' || 'macOS' }}"
     runs-on: ${{ matrix.os }}
     strategy:
       fail-fast: false

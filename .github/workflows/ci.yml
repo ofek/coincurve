@@ -26,6 +26,9 @@ jobs:
         include:
           - os: ubuntu-18.04
             python-version: pypy3
+    env:
+      PYTHON_VERSION: ${{ matrix.python-version }}
+      OS_NAME: ${{ matrix.os }}
 
     steps:
     - uses: actions/checkout@v2
@@ -42,3 +45,9 @@ jobs:
       run: |
         python --version
         pip --version
+
+    - name: Install development packages
+      run: pip install --upgrade cffi tox codecov
+
+    - name: Run tests
+      run: tox -e ${PYTHON_VERSION},bench

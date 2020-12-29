@@ -50,4 +50,4 @@ jobs:
       run: pip install --upgrade cffi tox codecov
 
     - name: Run tests
-      run: tox -e ${PYTHON_VERSION},bench
+      run: tox -e py${PYTHON_VERSION},bench

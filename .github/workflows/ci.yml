@@ -50,4 +50,4 @@ jobs:
       run: ./.github/scripts/install_deps.sh
 
     - name: Run tests
-      run: tox -e py${PYTHON_VERSION},bench
+      run: tox -e ${PYTHON_VERSION},bench

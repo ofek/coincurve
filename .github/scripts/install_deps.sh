@@ -3,7 +3,7 @@
 set -e
 set -x
 
-if [[ $OS_NAME ~= "macos-" ]]; then
+if [[ "$OS_NAME" =~ "macos-" ]]; then
 
     # update brew
     brew update || brew update

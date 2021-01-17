@@ -72,7 +72,7 @@ jobs:
         python-version: ['2.7', '3.6', '3.7', '3.8', '3.9']
         include:
           - os: ubuntu-18.04
-            python-version: '3.9'
+            python-version: pypy3
     env:
       PYTHON_VERSION: ${{ matrix.python-version }}
       OS_NAME: ${{ matrix.os }}
@@ -99,3 +99,9 @@ jobs:
     - name: Prepare for cross-platform Windows build
       if: startsWith(matrix.os, 'ubuntu-') && matrix.python-version == '3.9'
       run: ./.github/scripts/prepare-windows-build.sh
+
+    - uses: actions/upload-artifact@v2
+      if: ${{ always() }}
+      with:
+        name: artifacts
+        path: dist/*

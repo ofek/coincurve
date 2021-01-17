@@ -47,7 +47,55 @@ jobs:
         pip --version
 
     - name: Install build dependencies
-      run: ./.github/scripts/install_deps.sh
+      run: ./.github/scripts/install-deps.sh
+
+    - name: Install test dependencies
+      run: python -m pip install -U tox codecov
 
     - name: Run tests
       run: tox -e ${PYTHON_VERSION},bench
+
+    # - name: Lint
+    #   if: startsWith(matrix.os, 'ubuntu-') && matrix.python-version == '3.9' && always()
+    #   run: tox -e lint
+
+    - name: Upload coverage
+      run: codecov -X gcov
+
+  build:
+    name: "Build ${{ !startsWith(matrix.python-version, 'pypy') && 'Python ' || '' }}${{ startsWith(matrix.python-version, 'pypy') && 'PyPy' || matrix.python-version }} ${{ startsWith(matrix.os, 'ubuntu-') && 'manylinux2010' || 'on' }} ${{ startsWith(matrix.os, 'ubuntu-') && 'wheels' || 'macOS' }}"
+    runs-on: ${{ matrix.os }}
+    strategy:
+      fail-fast: false
+      matrix:
+        os: [ubuntu-18.04, macos-10.15]
+        python-version: ['2.7', '3.6', '3.7', '3.8', '3.9']
+        include:
+          - os: ubuntu-18.04
+            python-version: '3.9'
+    env:
+      PYTHON_VERSION: ${{ matrix.python-version }}
+      OS_NAME: ${{ matrix.os }}
+
+    steps:
+    - uses: actions/checkout@v2
+
+    - name: Set up Python ${{ matrix.python-version }}
+      uses: actions/setup-python@v2
+      with:
+        python-version: ${{ matrix.python-version }}
+
+    - name: Upgrade Python packaging tools
+      run: pip install --upgrade pip setuptools wheel
+
+    - name: Show runner information
+      run: |
+        python --version
+        pip --version
+
+    - name: Install build dependencies
+      run: ./.github/scripts/install-deps.sh
+
+    - name: Prepare for cross-platform Windows build
+      if: startsWith(matrix.os, 'ubuntu-') && matrix.python-version == '3.9'
+      run: ./.github/scripts/prepare-windows-build.sh

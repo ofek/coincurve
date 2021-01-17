@@ -19,6 +19,6 @@ if [[ "$OS_NAME" =~ "macos-" ]]; then
 fi
 
 # Install necessary packages
-python -m pip install -U cffi tox codecov
+python -m pip install -U cffi
 
 set +x +e

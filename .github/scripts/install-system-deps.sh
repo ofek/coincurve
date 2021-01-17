@@ -18,7 +18,4 @@ if [[ "$OS_NAME" =~ "macos-" ]]; then
     done
 fi
 
-# Install necessary packages
-python -m pip install -U cffi
-
 set +x +e

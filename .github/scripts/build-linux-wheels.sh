@@ -11,17 +11,9 @@ curl -O https://ftp.gnu.org/gnu/gmp/gmp-6.1.2.tar.bz2 && tar -xjpf gmp-*.tar.bz2
 
 mkdir out
 
-# PyPy
-if [[ "$PLAT" == "manylinux2010_x86_64" ]]; then
-    mkdir /opt/python/pypy3
-    curl -LO https://bitbucket.org/squeaky/portable-pypy/downloads/pypy3.6-7.1.1-beta-linux_x86_64-portable.tar.bz2
-    tar -xjpf pypy3.6-7.1.1-beta-linux_x86_64-portable.tar.bz2 -C /opt/python/pypy3 --strip-components=1
-    curl -sSL https://raw.githubusercontent.com/pypa/get-pip/master/get-pip.py | /opt/python/pypy3/bin/pypy
-fi
-
 # Compile wheels
 for PYBIN in /opt/python/*/bin; do
-	if [[ ${PYBIN} =~ (cp27|cp36|cp37|cp38|cp39|pypy) ]]; then
+	if [[ ${PYBIN} =~ (cp27|cp36|cp37|cp38|cp39|pypy_73) ]]; then
 	    ${PYBIN}/pip wheel /io/ -w wheelhouse/
     fi
 done

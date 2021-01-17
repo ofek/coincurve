@@ -3,6 +3,8 @@
 set -e
 set -x
 
+mkdir dist
+
 if [[ "$OS_NAME" =~ "ubuntu-" ]]; then
     docker run --rm -e PLAT="manylinux2010_x86_64" -e BUILD_GMP_CPU="amd64" -v $(pwd):/io quay.io/pypa/manylinux2010_x86_64 /io/.github/scripts/build-linux-wheels.sh
     docker run --rm -e PLAT="manylinux1_x86_64" -e BUILD_GMP_CPU="amd64" -v $(pwd):/io quay.io/pypa/manylinux1_x86_64 /io/.github/scripts/build-linux-wheels.sh

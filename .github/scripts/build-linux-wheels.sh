@@ -14,7 +14,7 @@ mkdir out
 python_version="$PYTHON_VERSION"
 
 if [[ "$python_version" =~ "pypy" ]]; then
-    python_version="pypy_73"
+    python_version="pp36-pypy36_pp73|pp37-pypy37_pp73"
 else
     python_version=${python_version/./}
     python_version="cp$python_version"

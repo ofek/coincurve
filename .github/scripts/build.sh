@@ -4,6 +4,7 @@ set -e
 set -x
 
 mkdir dist
+mv coincurve/_windows_libsecp256k1.py /tmp/_windows_libsecp256k1.py
 
 if [[ "$OS_NAME" =~ "ubuntu-" ]]; then
     if [[ "$PYTHON_VERSION" =~ "pypy" ]]; then
@@ -18,7 +19,9 @@ if [[ "$OS_NAME" =~ "ubuntu-" ]]; then
             python setup.py sdist
 
             # Build the wheels for Windows
+            mv /tmp/_windows_libsecp256k1.py coincurve/_windows_libsecp256k1.py
             .github/scripts/build-windows-wheels.sh
+            mv coincurve/_windows_libsecp256k1.py /tmp/_windows_libsecp256k1.py
         fi
     fi
 else

@@ -28,6 +28,7 @@ jobs:
             python-version: pypy3
     env:
       PYTHON_VERSION: ${{ matrix.python-version }}
+      OS_NAME: ${{ matrix.os }}
 
     steps:
     - uses: actions/checkout@v2

@@ -3,7 +3,7 @@
 set -e
 set -x
 
-# Install a system package required by our library
+# Install system packages required by our library
 yum install -y pkg-config libffi libffi-devel
 
 # Use updated GMP
@@ -11,17 +11,20 @@ curl -O https://ftp.gnu.org/gnu/gmp/gmp-6.1.2.tar.bz2 && tar -xjpf gmp-*.tar.bz2
 
 mkdir out
 
-# PyPy
-if [[ "$PLAT" == "manylinux2010_x86_64" ]]; then
-    mkdir /opt/python/pypy3
-    curl -LO https://bitbucket.org/squeaky/portable-pypy/downloads/pypy3.6-7.1.1-beta-linux_x86_64-portable.tar.bz2
-    tar -xjpf pypy3.6-7.1.1-beta-linux_x86_64-portable.tar.bz2 -C /opt/python/pypy3 --strip-components=1
-    curl -sSL https://raw.githubusercontent.com/pypa/get-pip/master/get-pip.py | /opt/python/pypy3/bin/pypy
+python_version="$PYTHON_VERSION"
+
+if [[ "$python_version" =~ "pypy" ]]; then
+    python_version="pypy_73"
+else
+    python_version=${python_version/./}
+    python_version="cp$python_version"
 fi
+
+echo "Looking for Python version pattern: $python_version"
 
 # Compile wheels
 for PYBIN in /opt/python/*/bin; do
-	if [[ ${PYBIN} =~ (cp27|cp36|cp37|cp38|cp39|pypy) ]]; then
+	if [[ ${PYBIN} =~ $python_version ]]; then
 	    ${PYBIN}/pip wheel /io/ -w wheelhouse/
     fi
 done

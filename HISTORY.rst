@@ -6,12 +6,15 @@ Important changes are emphasized.
 master
 ^^^^^^
 
+- Build binary wheels for PyPy3.6 7.3.3 & PyPy3.7 7.3.3
+
 14.0.0
 ^^^^^^
 
 **IMPORTANT: This will be the final release that supports Python 2.**
 
 - **New:** Binary wheels for Python 3.9!
+- **Breaking:** Drop support for Python 3.5
 - Fetch libsecp256k1 source if the system installation lacks ECDH support
 - Fix innocuous ``setuptools`` warning when building from source
 - Switch CI/CD to GitHub Actions

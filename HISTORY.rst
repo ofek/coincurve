@@ -6,6 +6,16 @@ Important changes are emphasized.
 master
 ^^^^^^
 
+14.0.0
+^^^^^^
+
+**IMPORTANT: This will be the final release that supports Python 2.**
+
+- **New:** Binary wheels for Python 3.9!
+- Fetch libsecp256k1 source if the system installation lacks ECDH support
+- Fix innocuous ``setuptools`` warning when building from source
+- Switch CI/CD to GitHub Actions
+
 13.0.0
 ^^^^^^
 

@@ -6,6 +6,7 @@ Important changes are emphasized.
 master
 ^^^^^^
 
+- **Breaking:** Drop support for Python 2
 - Build binary wheels for PyPy3.6 7.3.3 & PyPy3.7 7.3.3
 
 14.0.0

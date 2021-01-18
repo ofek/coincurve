@@ -5,12 +5,10 @@ import pytest
 from coincurve.utils import (
     GROUP_ORDER,
     ZERO,
-    bytes_to_hex,
     bytes_to_int,
     chunk_data,
     der_to_pem,
     get_valid_secret,
-    hex_to_bytes,
     int_to_bytes,
     int_to_bytes_padded,
     pad_scalar,
@@ -59,11 +57,6 @@ class TestValidateSecret:
 
         with pytest.raises(ValueError):
             validate_secret(GROUP_ORDER)
-
-
-def test_bytes_hex_conversion():
-    bytestr = b'\x00' + urandom(31)
-    assert hex_to_bytes(bytes_to_hex(bytestr)) == bytestr
 
 
 def test_bytes_int_conversion():

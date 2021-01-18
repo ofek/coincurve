@@ -1,8 +1,8 @@
 Coincurve
 =========
 
-.. image:: https://github.com/ofek/coincurve/actions?query=workflow%3Amain
-    :target: https://github.com/ofek/coincurve/workflows/main/badge.svg
+.. image:: https://github.com/ofek/coincurve/workflows/build/badge.svg
+    :target: https://github.com/ofek/coincurve/actions?query=workflow%3Abuild
     :alt: GitHub Actions CI
 
 .. image:: https://codecov.io/github/ofek/coincurve/coverage.svg?branch=master

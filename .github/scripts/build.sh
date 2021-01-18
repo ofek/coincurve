@@ -7,7 +7,8 @@ mkdir dist
 
 if [[ "$OS_NAME" =~ "ubuntu-" ]]; then
     if [[ "$PYTHON_VERSION" =~ "pypy" ]]; then
-        docker run --rm -e PYTHON_VERSION="$PYTHON_VERSION" -e PLAT="manylinux2010_x86_64" -e BUILD_GMP_CPU="amd64" -v $(pwd):/io pypywheels/manylinux2010-pypy_x86_64 /io/.github/scripts/build-linux-wheels.sh
+        echo "..."
+        # docker run --rm -e PYTHON_VERSION="$PYTHON_VERSION" -e PLAT="manylinux2010_x86_64" -e BUILD_GMP_CPU="amd64" -v $(pwd):/io pypywheels/manylinux2010-pypy_x86_64 /io/.github/scripts/build-linux-wheels.sh
     else
         docker run --rm -e PYTHON_VERSION="$PYTHON_VERSION" -e PLAT="manylinux1_x86_64" -e BUILD_GMP_CPU="amd64" -v $(pwd):/io quay.io/pypa/manylinux1_x86_64 /io/.github/scripts/build-linux-wheels.sh
         linux32 docker run --rm -e PYTHON_VERSION="$PYTHON_VERSION" -e PLAT="manylinux1_i686" -e BUILD_GMP_CPU="i686" -v $(pwd):/io quay.io/pypa/manylinux1_i686 /io/.github/scripts/build-linux-wheels.sh

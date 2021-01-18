@@ -18,61 +18,61 @@ env:
   INCLUDE_DIR: ./libsecp256k1_ext/include
 
 jobs:
-  test:
-    name: "Test ${{ !startsWith(matrix.python-version, 'pypy') && 'Python ' || '' }}${{ startsWith(matrix.python-version, 'pypy') && 'PyPy' || matrix.python-version }} on ${{ startsWith(matrix.os, 'ubuntu-') && 'Ubuntu' || 'macOS' }}"
-    runs-on: ${{ matrix.os }}
-    strategy:
-      fail-fast: false
-      matrix:
-        os: [ubuntu-18.04, macos-10.15]
-        python-version: ['3.6', '3.7', '3.8', '3.9']
-        include:
-          - os: ubuntu-18.04
-            python-version: pypy3
-    env:
-      PYTHON_VERSION: ${{ matrix.python-version }}
-      OS_NAME: ${{ matrix.os }}
+  # test:
+  #   name: "Test ${{ !startsWith(matrix.python-version, 'pypy') && 'Python ' || '' }}${{ startsWith(matrix.python-version, 'pypy') && 'PyPy' || matrix.python-version }} on ${{ startsWith(matrix.os, 'ubuntu-') && 'Ubuntu' || 'macOS' }}"
+  #   runs-on: ${{ matrix.os }}
+  #   strategy:
+  #     fail-fast: false
+  #     matrix:
+  #       os: [ubuntu-18.04, macos-10.15]
+  #       python-version: ['3.6', '3.7', '3.8', '3.9']
+  #       include:
+  #         - os: ubuntu-18.04
+  #           python-version: pypy3
+  #   env:
+  #     PYTHON_VERSION: ${{ matrix.python-version }}
+  #     OS_NAME: ${{ matrix.os }}
 
-    steps:
-    - uses: actions/checkout@v2
+  #   steps:
+  #   - uses: actions/checkout@v2
 
-    - name: Set up Python ${{ matrix.python-version }}
-      uses: actions/setup-python@v2
-      with:
-        python-version: ${{ matrix.python-version }}
+  #   - name: Set up Python ${{ matrix.python-version }}
+  #     uses: actions/setup-python@v2
+  #     with:
+  #       python-version: ${{ matrix.python-version }}
 
-    - name: Upgrade Python packaging tools
-      run: pip install --upgrade pip setuptools wheel
+  #   - name: Upgrade Python packaging tools
+  #     run: pip install --upgrade pip setuptools wheel
 
-    - name: Show runner information
-      run: |
-        python --version
-        pip --version
+  #   - name: Show runner information
+  #     run: |
+  #       python --version
+  #       pip --version
 
-    - name: Install system dependencies
-      run: ./.github/scripts/install-system-deps.sh
+  #   - name: Install system dependencies
+  #     run: ./.github/scripts/install-system-deps.sh
 
-    - name: Install build dependencies
-      run: python -m pip install --upgrade cffi
+  #   - name: Install build dependencies
+  #     run: python -m pip install --upgrade cffi
 
-    - name: Install test dependencies
-      run: python -m pip install --upgrade tox codecov
+  #   - name: Install test dependencies
+  #     run: python -m pip install --upgrade tox codecov
 
-    - name: Run tests
-      run: tox -e ${PYTHON_VERSION},bench
+  #   - name: Run tests
+  #     run: tox -e ${PYTHON_VERSION},bench
 
-    # - name: Lint
-    #   if: startsWith(matrix.os, 'ubuntu-') && matrix.python-version == '3.9' && always()
-    #   run: tox -e lint
+  #   # - name: Lint
+  #   #   if: startsWith(matrix.os, 'ubuntu-') && matrix.python-version == '3.9' && always()
+  #   #   run: tox -e lint
 
-    - name: Upload coverage
-      run: codecov -X gcov
+  #   - name: Upload coverage
+  #     run: codecov -X gcov
 
   build:
     name: "Build ${{ !startsWith(matrix.python-version, 'pypy') && 'Python ' || '' }}${{ startsWith(matrix.python-version, 'pypy') && 'PyPy' || matrix.python-version }} ${{ startsWith(matrix.os, 'ubuntu-') && 'manylinux' || 'on' }} ${{ startsWith(matrix.os, 'ubuntu-') && 'wheels' || 'macOS' }}"
     runs-on: ${{ matrix.os }}
-    needs:
-      - test
+    # needs:
+    #   - test
     strategy:
       fail-fast: false
       matrix:

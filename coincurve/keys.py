@@ -4,10 +4,8 @@ from coincurve.context import GLOBAL_CONTEXT
 from coincurve.ecdsa import cdata_to_der, der_to_cdata, deserialize_recoverable, recover, serialize_recoverable
 from coincurve.flags import EC_COMPRESSED, EC_UNCOMPRESSED
 from coincurve.utils import (
-    bytes_to_hex,
     bytes_to_int,
     der_to_pem,
-    ensure_unicode,
     get_valid_secret,
     hex_to_bytes,
     int_to_bytes_padded,
@@ -101,7 +99,7 @@ class PrivateKey:
         return PrivateKey(secret, self.context)
 
     def to_hex(self):
-        return bytes_to_hex(self.secret)
+        return self.secret.hex()
 
     def to_int(self):
         return bytes_to_int(self.secret)
@@ -112,7 +110,7 @@ class PrivateKey:
     def to_der(self):
         pk = ECPrivateKey(
             {
-                'version': ensure_unicode('ecPrivkeyVer1'),
+                'version': 'ecPrivkeyVer1',
                 'private_key': self.to_int(),
                 'public_key': ECPointBitString(self.public_key.format(compressed=False)),
             }
@@ -123,8 +121,8 @@ class PrivateKey:
                 'version': 0,
                 'private_key_algorithm': PrivateKeyAlgorithm(
                     {
-                        'algorithm': ensure_unicode('ec'),
-                        'parameters': ECDomainParameters(name='named', value=ensure_unicode('1.3.132.0.10')),
+                        'algorithm': 'ec',
+                        'parameters': ECDomainParameters(name='named', value='1.3.132.0.10'),
                     }
                 ),
                 'private_key': pk,

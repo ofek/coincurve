@@ -1,6 +1,6 @@
 [tool.black]
 line-length = 120
-py36 = false
+py36 = true
 skip-string-normalization = true
 
 include = '\.pyi?$'

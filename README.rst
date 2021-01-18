@@ -1,9 +1,9 @@
 Coincurve
 =========
 
-.. image:: https://travis-ci.org/ofek/coincurve.svg?branch=master
-    :target: https://travis-ci.org/ofek/coincurve
-    :alt: Travis CI
+.. image:: https://github.com/ofek/coincurve/actions?workflow=CI
+    :target: https://github.com/ofek/coincurve/workflows/CI/badge.svg
+    :alt: GitHub Actions CI
 
 .. image:: https://codecov.io/github/ofek/coincurve/coverage.svg?branch=master
     :target: https://codecov.io/github/ofek/coincurve?branch=master

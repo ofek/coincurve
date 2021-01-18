@@ -1,12 +1,11 @@
 name: build
 
 on:
-  create:
-    tags:
-    - v*
   push:
     branches:
     - master
+    tags:
+    - v*
   pull_request:
     branches:
     - master
@@ -132,7 +131,7 @@ jobs:
       - build
 
     # Only publish tags
-    if: github.event_name == 'create' && github.event.ref_type == 'tag'
+    if: github.event_name == 'push' && github.event.ref_type == 'tag'
 
     steps:
     - uses: actions/download-artifact@v2

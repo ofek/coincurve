@@ -19,6 +19,9 @@ if [[ "$OS_NAME" =~ "ubuntu-" ]]; then
             # Build the wheels for Windows
             .github/scripts/build-windows-wheels.sh
         fi
+
+        docker run --rm --privileged multiarch/qemu-user-static --reset -p yes
+        docker run --rm -e PYTHON_VERSION="$PYTHON_VERSION" -e PLAT="manylinux2014_aarch64" -e BUILD_GMP_CPU="amd64" -v $(pwd):/io quay.io/pypa/manylinux2014_aarch64 /io/.github/scripts/build-linux-wheels.sh
     fi
 else
     # Make sure we can build and "fix" the wheel.

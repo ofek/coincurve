@@ -11,6 +11,7 @@ on:
     - master
 
 env:
+  COINCURVE_UPSTREAM_REF: f2d9aeae6d5a7c7fbbba8bbb38b1849b784beef7
   LD_LIBRARY_PATH: ./libsecp256k1_ext/.libs
   DYLD_FALLBACK_LIBRARY_PATH: ./libsecp256k1_ext/.libs
   LIB_DIR: ./libsecp256k1_ext/.libs

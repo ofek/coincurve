@@ -1,4 +1,4 @@
-from typing import List, Tuple
+from typing import Tuple
 
 from asn1crypto.keys import ECDomainParameters, ECPointBitString, ECPrivateKey, PrivateKeyAlgorithm, PrivateKeyInfo
 
@@ -67,7 +67,7 @@ class PrivateKey:
 
         return bytes(ffi.buffer(secret, 32))
 
-    def add(self, scalar: bytes, update=False) -> PrivateKey:
+    def add(self, scalar: bytes, update=False):
         scalar = pad_scalar(scalar)
 
         secret = ffi.new('unsigned char [32]', self.secret)
@@ -86,7 +86,7 @@ class PrivateKey:
 
         return PrivateKey(secret, self.context)
 
-    def multiply(self, scalar: bytes, update=False) -> PrivateKey:
+    def multiply(self, scalar: bytes, update=False):
         scalar = validate_secret(scalar)
 
         secret = ffi.new('unsigned char [32]', self.secret)
@@ -134,21 +134,21 @@ class PrivateKey:
         ).dump()
 
     @classmethod
-    def from_hex(cls, hexed: str, context=GLOBAL_CONTEXT) -> PrivateKey:
+    def from_hex(cls, hexed: str, context=GLOBAL_CONTEXT):
         return PrivateKey(hex_to_bytes(hexed), context)
 
     @classmethod
-    def from_int(cls, num: int, context=GLOBAL_CONTEXT) -> PrivateKey:
+    def from_int(cls, num: int, context=GLOBAL_CONTEXT):
         return PrivateKey(int_to_bytes_padded(num), context)
 
     @classmethod
-    def from_pem(cls, pem: bytes, context=GLOBAL_CONTEXT) -> PrivateKey:
+    def from_pem(cls, pem: bytes, context=GLOBAL_CONTEXT):
         return PrivateKey(
             int_to_bytes_padded(PrivateKeyInfo.load(pem_to_der(pem)).native['private_key']['private_key']), context
         )
 
     @classmethod
-    def from_der(cls, der: bytes, context=GLOBAL_CONTEXT) -> PrivateKey:
+    def from_der(cls, der: bytes, context=GLOBAL_CONTEXT):
         return PrivateKey(int_to_bytes_padded(PrivateKeyInfo.load(der).native['private_key']['private_key']), context)
 
     def _update_public_key(self):
@@ -178,7 +178,7 @@ class PublicKey:
         self.context = context
 
     @classmethod
-    def from_secret(cls, secret: bytes, context=GLOBAL_CONTEXT) -> PublicKey:
+    def from_secret(cls, secret: bytes, context=GLOBAL_CONTEXT):
         public_key = ffi.new('secp256k1_pubkey *')
 
         created = lib.secp256k1_ec_pubkey_create(context.ctx, public_key, validate_secret(secret))
@@ -193,7 +193,7 @@ class PublicKey:
         return PublicKey(public_key, context)
 
     @classmethod
-    def from_valid_secret(cls, secret: bytes, context=GLOBAL_CONTEXT) -> PublicKey:
+    def from_valid_secret(cls, secret: bytes, context=GLOBAL_CONTEXT):
         public_key = ffi.new('secp256k1_pubkey *')
 
         created = lib.secp256k1_ec_pubkey_create(context.ctx, public_key, secret)
@@ -204,19 +204,19 @@ class PublicKey:
         return PublicKey(public_key, context)
 
     @classmethod
-    def from_point(cls, x: int, y: int, context=GLOBAL_CONTEXT) -> PublicKey:
+    def from_point(cls, x: int, y: int, context=GLOBAL_CONTEXT):
         return PublicKey(b'\x04' + int_to_bytes_padded(x) + int_to_bytes_padded(y), context)
 
     @classmethod
     def from_signature_and_message(
         cls, serialized_sig: bytes, message: bytes, hasher: Hasher = sha256, context=GLOBAL_CONTEXT
-    ) -> PublicKey:
+    ):
         return PublicKey(
             recover(message, deserialize_recoverable(serialized_sig, context=context), hasher=hasher, context=context)
         )
 
     @classmethod
-    def combine_keys(cls, public_keys: List[PublicKey], context=GLOBAL_CONTEXT) -> PublicKey:
+    def combine_keys(cls, public_keys, context=GLOBAL_CONTEXT):
         public_key = ffi.new('secp256k1_pubkey *')
 
         combined = lib.secp256k1_ec_pubkey_combine(
@@ -253,7 +253,7 @@ class PublicKey:
         # A performance hack to avoid global bool() lookup.
         return not not verified
 
-    def add(self, scalar: bytes, update=False) -> PublicKey:
+    def add(self, scalar: bytes, update=False):
         scalar = pad_scalar(scalar)
 
         new_key = ffi.new('secp256k1_pubkey *', self.public_key[0])
@@ -269,7 +269,7 @@ class PublicKey:
 
         return PublicKey(new_key, self.context)
 
-    def multiply(self, scalar: bytes, update=False) -> PublicKey:
+    def multiply(self, scalar: bytes, update=False):
         scalar = validate_secret(scalar)
 
         new_key = ffi.new('secp256k1_pubkey *', self.public_key[0])
@@ -282,7 +282,7 @@ class PublicKey:
 
         return PublicKey(new_key, self.context)
 
-    def combine(self, public_keys: List[PublicKey], update=False) -> PublicKey:
+    def combine(self, public_keys, update=False):
         new_key = ffi.new('secp256k1_pubkey *')
 
         combined = lib.secp256k1_ec_pubkey_combine(

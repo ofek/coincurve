@@ -1,8 +1,11 @@
+from typing import Tuple
+
 from asn1crypto.keys import ECDomainParameters, ECPointBitString, ECPrivateKey, PrivateKeyAlgorithm, PrivateKeyInfo
 
-from coincurve.context import GLOBAL_CONTEXT
+from coincurve.context import GLOBAL_CONTEXT, Context
 from coincurve.ecdsa import cdata_to_der, der_to_cdata, deserialize_recoverable, recover, serialize_recoverable
 from coincurve.flags import EC_COMPRESSED, EC_UNCOMPRESSED
+from coincurve.types import Hasher
 from coincurve.utils import (
     bytes_to_int,
     der_to_pem,
@@ -21,12 +24,12 @@ DEFAULT_NONCE = (ffi.NULL, ffi.NULL)
 
 
 class PrivateKey:
-    def __init__(self, secret=None, context=GLOBAL_CONTEXT):
-        self.secret = validate_secret(secret) if secret is not None else get_valid_secret()
+    def __init__(self, secret: bytes = None, context: Context = GLOBAL_CONTEXT):
+        self.secret: bytes = validate_secret(secret) if secret is not None else get_valid_secret()
         self.context = context
-        self.public_key = PublicKey.from_valid_secret(self.secret, self.context)
+        self.public_key: PublicKey = PublicKey.from_valid_secret(self.secret, self.context)
 
-    def sign(self, message, hasher=sha256, custom_nonce=None):
+    def sign(self, message: bytes, hasher: Hasher = sha256, custom_nonce=None) -> bytes:
         msg_hash = hasher(message) if hasher is not None else message
         if len(msg_hash) != 32:
             raise ValueError('Message hash must be 32 bytes long.')
@@ -41,7 +44,7 @@ class PrivateKey:
 
         return cdata_to_der(signature, self.context)
 
-    def sign_recoverable(self, message, hasher=sha256):
+    def sign_recoverable(self, message, hasher: Hasher = sha256):
         msg_hash = hasher(message) if hasher is not None else message
         if len(msg_hash) != 32:
             raise ValueError('Message hash must be 32 bytes long.')
@@ -57,14 +60,14 @@ class PrivateKey:
 
         return serialize_recoverable(signature, self.context)
 
-    def ecdh(self, public_key):
+    def ecdh(self, public_key: bytes) -> bytes:
         secret = ffi.new('unsigned char [32]')
 
         lib.secp256k1_ecdh(self.context.ctx, secret, PublicKey(public_key).public_key, self.secret, ffi.NULL, ffi.NULL)
 
         return bytes(ffi.buffer(secret, 32))
 
-    def add(self, scalar, update=False):
+    def add(self, scalar: bytes, update=False):
         scalar = pad_scalar(scalar)
 
         secret = ffi.new('unsigned char [32]', self.secret)
@@ -83,7 +86,7 @@ class PrivateKey:
 
         return PrivateKey(secret, self.context)
 
-    def multiply(self, scalar, update=False):
+    def multiply(self, scalar: bytes, update=False):
         scalar = validate_secret(scalar)
 
         secret = ffi.new('unsigned char [32]', self.secret)
@@ -99,16 +102,16 @@ class PrivateKey:
 
         return PrivateKey(secret, self.context)
 
-    def to_hex(self):
+    def to_hex(self) -> str:
         return self.secret.hex()
 
-    def to_int(self):
+    def to_int(self) -> int:
         return bytes_to_int(self.secret)
 
-    def to_pem(self):
+    def to_pem(self) -> bytes:
         return der_to_pem(self.to_der())
 
-    def to_der(self):
+    def to_der(self) -> bytes:
         pk = ECPrivateKey(
             {
                 'version': 'ecPrivkeyVer1',
@@ -131,21 +134,21 @@ class PrivateKey:
         ).dump()
 
     @classmethod
-    def from_hex(cls, hexed, context=GLOBAL_CONTEXT):
+    def from_hex(cls, hexed: str, context: Context = GLOBAL_CONTEXT):
         return PrivateKey(hex_to_bytes(hexed), context)
 
     @classmethod
-    def from_int(cls, num, context=GLOBAL_CONTEXT):
+    def from_int(cls, num: int, context: Context = GLOBAL_CONTEXT):
         return PrivateKey(int_to_bytes_padded(num), context)
 
     @classmethod
-    def from_pem(cls, pem, context=GLOBAL_CONTEXT):
+    def from_pem(cls, pem: bytes, context: Context = GLOBAL_CONTEXT):
         return PrivateKey(
             int_to_bytes_padded(PrivateKeyInfo.load(pem_to_der(pem)).native['private_key']['private_key']), context
         )
 
     @classmethod
-    def from_der(cls, der, context=GLOBAL_CONTEXT):
+    def from_der(cls, der: bytes, context: Context = GLOBAL_CONTEXT):
         return PrivateKey(int_to_bytes_padded(PrivateKeyInfo.load(der).native['private_key']['private_key']), context)
 
     def _update_public_key(self):
@@ -154,12 +157,12 @@ class PrivateKey:
         if not created:
             raise ValueError('Invalid secret.')
 
-    def __eq__(self, other):
+    def __eq__(self, other) -> bool:
         return self.secret == other.secret
 
 
 class PublicKey:
-    def __init__(self, data, context=GLOBAL_CONTEXT):
+    def __init__(self, data, context: Context = GLOBAL_CONTEXT):
         if not isinstance(data, bytes):
             self.public_key = data
         else:
@@ -175,7 +178,7 @@ class PublicKey:
         self.context = context
 
     @classmethod
-    def from_secret(cls, secret, context=GLOBAL_CONTEXT):
+    def from_secret(cls, secret: bytes, context: Context = GLOBAL_CONTEXT):
         public_key = ffi.new('secp256k1_pubkey *')
 
         created = lib.secp256k1_ec_pubkey_create(context.ctx, public_key, validate_secret(secret))
@@ -190,7 +193,7 @@ class PublicKey:
         return PublicKey(public_key, context)
 
     @classmethod
-    def from_valid_secret(cls, secret, context=GLOBAL_CONTEXT):
+    def from_valid_secret(cls, secret: bytes, context: Context = GLOBAL_CONTEXT):
         public_key = ffi.new('secp256k1_pubkey *')
 
         created = lib.secp256k1_ec_pubkey_create(context.ctx, public_key, secret)
@@ -201,17 +204,19 @@ class PublicKey:
         return PublicKey(public_key, context)
 
     @classmethod
-    def from_point(cls, x, y, context=GLOBAL_CONTEXT):
+    def from_point(cls, x: int, y: int, context: Context = GLOBAL_CONTEXT):
         return PublicKey(b'\x04' + int_to_bytes_padded(x) + int_to_bytes_padded(y), context)
 
     @classmethod
-    def from_signature_and_message(cls, serialized_sig, message, hasher=sha256, context=GLOBAL_CONTEXT):
+    def from_signature_and_message(
+        cls, serialized_sig: bytes, message: bytes, hasher: Hasher = sha256, context: Context = GLOBAL_CONTEXT
+    ):
         return PublicKey(
             recover(message, deserialize_recoverable(serialized_sig, context=context), hasher=hasher, context=context)
         )
 
     @classmethod
-    def combine_keys(cls, public_keys, context=GLOBAL_CONTEXT):
+    def combine_keys(cls, public_keys, context: Context = GLOBAL_CONTEXT):
         public_key = ffi.new('secp256k1_pubkey *')
 
         combined = lib.secp256k1_ec_pubkey_combine(
@@ -223,7 +228,7 @@ class PublicKey:
 
         return PublicKey(public_key, context)
 
-    def format(self, compressed=True):
+    def format(self, compressed=True) -> bytes:
         length = 33 if compressed else 65
         serialized = ffi.new('unsigned char [%d]' % length)
         output_len = ffi.new('size_t *', length)
@@ -234,11 +239,11 @@ class PublicKey:
 
         return bytes(ffi.buffer(serialized, length))
 
-    def point(self):
+    def point(self) -> Tuple[int, int]:
         public_key = self.format(compressed=False)
         return bytes_to_int(public_key[1:33]), bytes_to_int(public_key[33:])
 
-    def verify(self, signature, message, hasher=sha256):
+    def verify(self, signature: bytes, message: bytes, hasher: Hasher = sha256) -> bool:
         msg_hash = hasher(message) if hasher is not None else message
         if len(msg_hash) != 32:
             raise ValueError('Message hash must be 32 bytes long.')
@@ -248,7 +253,7 @@ class PublicKey:
         # A performance hack to avoid global bool() lookup.
         return not not verified
 
-    def add(self, scalar, update=False):
+    def add(self, scalar: bytes, update=False):
         scalar = pad_scalar(scalar)
 
         new_key = ffi.new('secp256k1_pubkey *', self.public_key[0])
@@ -264,7 +269,7 @@ class PublicKey:
 
         return PublicKey(new_key, self.context)
 
-    def multiply(self, scalar, update=False):
+    def multiply(self, scalar: bytes, update=False):
         scalar = validate_secret(scalar)
 
         new_key = ffi.new('secp256k1_pubkey *', self.public_key[0])
@@ -293,5 +298,5 @@ class PublicKey:
 
         return PublicKey(new_key, self.context)
 
-    def __eq__(self, other):
+    def __eq__(self, other) -> bool:
         return self.format(compressed=False) == other.format(compressed=False)

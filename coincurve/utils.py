@@ -1,8 +1,10 @@
 from base64 import b64decode, b64encode
 from hashlib import sha256 as _sha256
 from os import urandom
+from typing import Generator
 
-from coincurve.context import GLOBAL_CONTEXT
+from coincurve.context import GLOBAL_CONTEXT, Context
+from coincurve.types import Hasher
 
 from ._libsecp256k1 import ffi, lib
 
@@ -17,61 +19,63 @@ PEM_HEADER = b'-----BEGIN PRIVATE KEY-----\n'
 PEM_FOOTER = b'-----END PRIVATE KEY-----\n'
 
 
-def pad_hex(hexed):
+def pad_hex(hexed: str) -> str:
     # Pad odd-length hex strings.
     return hexed if not len(hexed) & 1 else f'0{hexed}'
 
 
-def bytes_to_int(bytestr):
+def bytes_to_int(bytestr: bytes) -> int:
     return int.from_bytes(bytestr, 'big')
 
 
-def int_to_bytes(num):
+def int_to_bytes(num: int) -> bytes:
     return num.to_bytes((num.bit_length() + 7) // 8 or 1, 'big')
 
 
-def int_to_bytes_padded(num):
+def int_to_bytes_padded(num: int) -> bytes:
     return pad_scalar(num.to_bytes((num.bit_length() + 7) // 8 or 1, 'big'))
 
 
-def hex_to_bytes(hexed):
+def hex_to_bytes(hexed: str) -> bytes:
     return pad_scalar(bytes.fromhex(pad_hex(hexed)))
 
 
-def sha256(bytestr):
+def sha256(bytestr: bytes) -> bytes:
     return _sha256(bytestr).digest()
 
 
-def chunk_data(data, size):
+def chunk_data(data: bytes, size: int) -> Generator[bytes, None, None]:
     return (data[i : i + size] for i in range(0, len(data), size))
 
 
-def der_to_pem(der):
+def der_to_pem(der: bytes) -> bytes:
     return b''.join([PEM_HEADER, b'\n'.join(chunk_data(b64encode(der), 64)), b'\n', PEM_FOOTER])
 
 
-def pem_to_der(pem):
+def pem_to_der(pem: bytes) -> bytes:
     return b64decode(b''.join(pem.strip().splitlines()[1:-1]))
 
 
-def get_valid_secret():
+def get_valid_secret() -> bytes:
     while True:
         secret = urandom(KEY_SIZE)
         if ZERO < secret < GROUP_ORDER:
             return secret
 
 
-def pad_scalar(scalar):
+def pad_scalar(scalar: bytes) -> bytes:
     return (ZERO * (KEY_SIZE - len(scalar))) + scalar
 
 
-def validate_secret(secret):
+def validate_secret(secret: bytes) -> bytes:
     if not 0 < bytes_to_int(secret) < GROUP_ORDER_INT:
         raise ValueError('Secret scalar must be greater than 0 and less than {}.'.format(GROUP_ORDER_INT))
     return pad_scalar(secret)
 
 
-def verify_signature(signature, message, public_key, hasher=sha256, context=GLOBAL_CONTEXT):
+def verify_signature(
+    signature: bytes, message: bytes, public_key: bytes, hasher: Hasher = sha256, context: Context = GLOBAL_CONTEXT
+) -> bool:
     pubkey = ffi.new('secp256k1_pubkey *')
 
     pubkey_parsed = lib.secp256k1_ec_pubkey_parse(context.ctx, pubkey, public_key, len(public_key))

@@ -1,8 +1,8 @@
-from typing import TYPE_CHECKING, Tuple
+from typing import Tuple
 
 from asn1crypto.keys import ECDomainParameters, ECPointBitString, ECPrivateKey, PrivateKeyAlgorithm, PrivateKeyInfo
 
-from coincurve.context import GLOBAL_CONTEXT
+from coincurve.context import GLOBAL_CONTEXT, Context
 from coincurve.ecdsa import cdata_to_der, der_to_cdata, deserialize_recoverable, recover, serialize_recoverable
 from coincurve.flags import EC_COMPRESSED, EC_UNCOMPRESSED
 from coincurve.types import Hasher
@@ -19,9 +19,6 @@ from coincurve.utils import (
 )
 
 from ._libsecp256k1 import ffi, lib
-
-if TYPE_CHECKING:
-    from coincurve.context import Context
 
 DEFAULT_NONCE = (ffi.NULL, ffi.NULL)
 

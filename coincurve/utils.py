@@ -1,15 +1,12 @@
 from base64 import b64decode, b64encode
 from hashlib import sha256 as _sha256
 from os import urandom
-from typing import TYPE_CHECKING, Generator
+from typing import Generator
 
-from coincurve.context import GLOBAL_CONTEXT
+from coincurve.context import GLOBAL_CONTEXT, Context
 from coincurve.types import Hasher
 
 from ._libsecp256k1 import ffi, lib
-
-if TYPE_CHECKING:
-    from coincurve.context import Context
 
 GROUP_ORDER = (
     b'\xff\xff\xff\xff\xff\xff\xff\xff\xff\xff\xff\xff\xff\xff\xff'

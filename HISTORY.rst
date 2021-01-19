@@ -11,6 +11,7 @@ master
 - Build AArch64 binary wheels for Linux
 - Build binary wheels for PyPy3.6 7.3.3 & PyPy3.7 7.3.3 on Linux
 - Upgrade libsecp256k1 to the latest available version
+- Upgrade libgmp to the latest available version
 
 14.0.0
 ^^^^^^

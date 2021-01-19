@@ -25,7 +25,7 @@ except ImportError:
 
 
 sys.path.append(os.path.abspath(os.path.dirname(__file__)))
-from setup_support import absolute, build_flags, detect_dll, has_system_lib
+from setup_support import absolute, build_flags, detect_dll, has_system_lib  # noqa: E402
 
 
 BUILDING_FOR_WINDOWS = detect_dll()

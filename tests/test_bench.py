@@ -1,5 +1,6 @@
 from coincurve import PrivateKey, PublicKey, verify_signature
-from .samples import PRIVATE_KEY_BYTES, PUBLIC_KEY_COMPRESSED, MESSAGE, SIGNATURE
+
+from .samples import MESSAGE, PRIVATE_KEY_BYTES, PUBLIC_KEY_COMPRESSED, SIGNATURE
 
 
 def test_verify_signature_util(benchmark):

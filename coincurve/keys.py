@@ -14,6 +14,7 @@ from coincurve.utils import (
     sha256,
     validate_secret,
 )
+
 from ._libsecp256k1 import ffi, lib
 
 DEFAULT_NONCE = (ffi.NULL, ffi.NULL)

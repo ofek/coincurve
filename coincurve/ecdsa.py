@@ -1,5 +1,6 @@
 from coincurve.context import GLOBAL_CONTEXT
 from coincurve.utils import bytes_to_int, int_to_bytes, sha256
+
 from ._libsecp256k1 import ffi, lib
 
 MAX_SIG_LENGTH = 72
@@ -48,12 +49,12 @@ def serialize_recoverable(recover_sig, context=GLOBAL_CONTEXT):
 
 def deserialize_recoverable(serialized, context=GLOBAL_CONTEXT):
     if len(serialized) != 65:
-        raise ValueError("Serialized signature must be 65 bytes long.")
+        raise ValueError('Serialized signature must be 65 bytes long.')
 
     ser_sig, rec_id = serialized[:64], bytes_to_int(serialized[64:])
 
     if not 0 <= rec_id <= 3:
-        raise ValueError("Invalid recovery id.")
+        raise ValueError('Invalid recovery id.')
 
     recover_sig = ffi.new('secp256k1_ecdsa_recoverable_signature *')
 
@@ -81,7 +82,7 @@ def serialize_compact(raw_sig, context=GLOBAL_CONTEXT):  # no cov
 
 def deserialize_compact(ser_sig, context=GLOBAL_CONTEXT):  # no cov
     if len(ser_sig) != 64:
-        raise Exception("invalid signature length")
+        raise Exception('invalid signature length')
 
     raw_sig = ffi.new('secp256k1_ecdsa_signature *')
     res = lib.secp256k1_ecdsa_signature_parse_compact(context.ctx, raw_sig, ser_sig)

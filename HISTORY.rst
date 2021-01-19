@@ -8,8 +8,9 @@ master
 
 - **Breaking:** Drop support for Python 2
 - **Breaking:** Binary wheels for CPython require version 19.3 or later of ``pip`` to install
-- Build binary wheels for AArch64 on Linux
-- Build binary wheels for PyPy3.6 7.3.3 & PyPy3.7 7.3.3
+- Build AArch64 binary wheels for Linux
+- Build binary wheels for PyPy3.6 7.3.3 & PyPy3.7 7.3.3 on Linux
+- Upgrade libsecp256k1 to the latest available version
 
 14.0.0
 ^^^^^^

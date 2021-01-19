@@ -1,10 +1,3 @@
-import sys
-from typing import Optional
-
-if sys.version_info >= (3, 9):
-    from collections.abc import Callable
-else:
-    from typing import Callable
-
+from typing import Callable, Optional
 
 Hasher = Optional[Callable[[bytes], bytes]]

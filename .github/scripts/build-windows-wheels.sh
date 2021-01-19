@@ -5,7 +5,7 @@ set -e -x
 build_dll() {
     ./autogen.sh
     echo "LDFLAGS = -no-undefined" >> Makefile.am
-    ./configure --host=$1 --enable-module-recovery --enable-experimental --enable-module-ecdh --enable-static --disable-dependency-tracking --with-pic --enable-benchmark=no
+    ./configure --host=$1 --enable-module-recovery --enable-experimental --enable-module-ecdh --enable-benchmark=no --enable-tests=no --enable-openssl-tests=no --enable-exhaustive-tests=no --enable-static --disable-dependency-tracking --with-pic
     make
 }
 

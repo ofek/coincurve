@@ -59,12 +59,15 @@ jobs:
     - name: Install test dependencies
       run: python -m pip install --upgrade tox codecov
 
-    - name: Run tests
-      run: tox -e ${PYTHON_VERSION},bench
-
     - name: Check style and typing
-      if: startsWith(matrix.os, 'ubuntu-') && matrix.python-version == env.PYTHON_VERSION_BUILD_EXTRA && always()
+      if: startsWith(matrix.os, 'ubuntu-') && matrix.python-version == env.PYTHON_VERSION_BUILD_EXTRA
       run: tox -e lint,typing
+
+    - name: Run tests
+      run: tox -e ${PYTHON_VERSION}
+
+    - name: Run benchmarks
+      run: tox -e bench
 
     - name: Upload coverage
       run: codecov -X gcov

@@ -13,6 +13,7 @@ master
 - Upgrade libsecp256k1 to the latest available version
 - Upgrade libgmp to the latest available version
 - Introduce ``COINCURVE_UPSTREAM_REF`` environment variable to select an alternative libsecp256k1 version when building from source
+- Support PEP 561 type hints
 
 14.0.0
 ^^^^^^

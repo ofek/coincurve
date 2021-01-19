@@ -12,6 +12,7 @@ master
 - Build binary wheels for PyPy3.6 7.3.3 & PyPy3.7 7.3.3 on Linux
 - Upgrade libsecp256k1 to the latest available version
 - Upgrade libgmp to the latest available version
+- Introduce ``COINCURVE_UPSTREAM_REF`` environment variable to select an alternative libsecp256k1 version when building from source
 
 14.0.0
 ^^^^^^

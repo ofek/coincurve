@@ -3,7 +3,6 @@ from collections import namedtuple
 
 from cffi import FFI
 
-
 here = os.path.dirname(os.path.abspath(__file__))
 
 Source = namedtuple('Source', ('h', 'include'))
@@ -22,6 +21,7 @@ def _mk_ffi(sources, name='_libsecp256k1', **kwargs):
     _ffi.set_source(name, '\n'.join(code), **kwargs)
 
     return _ffi
+
 
 modules = [
     Source('secp256k1.h', '#include <secp256k1.h>'),

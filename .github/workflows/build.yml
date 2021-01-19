@@ -61,9 +61,9 @@ jobs:
     - name: Run tests
       run: tox -e ${PYTHON_VERSION},bench
 
-    # - name: Lint
-    #   if: startsWith(matrix.os, 'ubuntu-') && matrix.python-version == '3.9' && always()
-    #   run: tox -e lint
+    - name: Lint
+      if: startsWith(matrix.os, 'ubuntu-') && matrix.python-version == '3.9' && always()
+      run: tox -e lint
 
     - name: Upload coverage
       run: codecov -X gcov

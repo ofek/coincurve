@@ -6,7 +6,9 @@ import pytest
 from coincurve.ecdsa import deserialize_recoverable, recover
 from coincurve.keys import PrivateKey, PublicKey
 from coincurve.utils import bytes_to_int, int_to_bytes_padded, verify_signature
+
 from .samples import (
+    MESSAGE,
     PRIVATE_KEY_BYTES,
     PRIVATE_KEY_DER,
     PRIVATE_KEY_HEX,
@@ -16,11 +18,9 @@ from .samples import (
     PUBLIC_KEY_UNCOMPRESSED,
     PUBLIC_KEY_X,
     PUBLIC_KEY_Y,
-    MESSAGE,
-    SIGNATURE,
     RECOVERABLE_SIGNATURE,
+    SIGNATURE,
 )
-
 
 G = PublicKey(
     b'\x04y\xbef~\xf9\xdc\xbb\xacU\xa0b\x95\xce\x87\x0b\x07\x02\x9b'

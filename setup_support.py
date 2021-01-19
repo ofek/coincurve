@@ -1,10 +1,9 @@
 import glob
 import os
 import shutil
+import subprocess
 from contextlib import contextmanager
 from tempfile import mkdtemp
-
-import subprocess
 
 
 @contextmanager
@@ -42,20 +41,20 @@ def build_flags(library, type_, path):
     """Return separated build flags from pkg-config output"""
 
     pkg_config_path = [path]
-    if "PKG_CONFIG_PATH" in os.environ:
+    if 'PKG_CONFIG_PATH' in os.environ:
         pkg_config_path.append(os.environ['PKG_CONFIG_PATH'])
-    if "LIB_DIR" in os.environ:
+    if 'LIB_DIR' in os.environ:
         pkg_config_path.append(os.environ['LIB_DIR'])
-        pkg_config_path.append(os.path.join(os.environ['LIB_DIR'], "pkgconfig"))
+        pkg_config_path.append(os.path.join(os.environ['LIB_DIR'], 'pkgconfig'))
 
-    options = ["--static", {'I': "--cflags-only-I", 'L': "--libs-only-L", 'l': "--libs-only-l"}[type_]]
+    options = ['--static', {'I': '--cflags-only-I', 'L': '--libs-only-L', 'l': '--libs-only-l'}[type_]]
 
     return [
-        flag.strip("-{}".format(type_))
+        flag.strip('-{}'.format(type_))
         for flag in subprocess.check_output(
-            ["pkg-config"] + options + [library], env=dict(os.environ, PKG_CONFIG_PATH=":".join(pkg_config_path))
+            ['pkg-config'] + options + [library], env=dict(os.environ, PKG_CONFIG_PATH=':'.join(pkg_config_path))
         )
-        .decode("UTF-8")
+        .decode('UTF-8')
         .split()
     ]
 
@@ -68,7 +67,7 @@ def _find_lib():
 
     ffi = FFI()
     try:
-        ffi.dlopen("secp256k1")
+        ffi.dlopen('secp256k1')
         if os.path.exists('/usr/include/secp256k1_ecdh.h'):
             return True
         else:
@@ -76,7 +75,7 @@ def _find_lib():
             return False
     except OSError:
         if 'LIB_DIR' in os.environ:
-            for path in glob.glob(os.path.join(os.environ['LIB_DIR'], "*secp256k1*")):
+            for path in glob.glob(os.path.join(os.environ['LIB_DIR'], '*secp256k1*')):
                 try:
                     FFI().dlopen(path)
                     return True

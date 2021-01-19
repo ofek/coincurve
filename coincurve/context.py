@@ -2,6 +2,7 @@ from os import urandom
 from threading import Lock
 
 from coincurve.flags import CONTEXT_ALL, CONTEXT_FLAGS
+
 from ._libsecp256k1 import ffi, lib
 
 

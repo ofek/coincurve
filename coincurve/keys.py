@@ -1,4 +1,4 @@
-from typing import Tuple
+from typing import TYPE_CHECKING, Tuple
 
 from asn1crypto.keys import ECDomainParameters, ECPointBitString, ECPrivateKey, PrivateKeyAlgorithm, PrivateKeyInfo
 
@@ -20,11 +20,14 @@ from coincurve.utils import (
 
 from ._libsecp256k1 import ffi, lib
 
+if TYPE_CHECKING:
+    from coincurve.context import Context
+
 DEFAULT_NONCE = (ffi.NULL, ffi.NULL)
 
 
 class PrivateKey:
-    def __init__(self, secret: bytes = None, context=GLOBAL_CONTEXT):
+    def __init__(self, secret: bytes = None, context: Context = GLOBAL_CONTEXT):
         self.secret: bytes = validate_secret(secret) if secret is not None else get_valid_secret()
         self.context = context
         self.public_key: PublicKey = PublicKey.from_valid_secret(self.secret, self.context)
@@ -134,21 +137,21 @@ class PrivateKey:
         ).dump()
 
     @classmethod
-    def from_hex(cls, hexed: str, context=GLOBAL_CONTEXT):
+    def from_hex(cls, hexed: str, context: Context = GLOBAL_CONTEXT):
         return PrivateKey(hex_to_bytes(hexed), context)
 
     @classmethod
-    def from_int(cls, num: int, context=GLOBAL_CONTEXT):
+    def from_int(cls, num: int, context: Context = GLOBAL_CONTEXT):
         return PrivateKey(int_to_bytes_padded(num), context)
 
     @classmethod
-    def from_pem(cls, pem: bytes, context=GLOBAL_CONTEXT):
+    def from_pem(cls, pem: bytes, context: Context = GLOBAL_CONTEXT):
         return PrivateKey(
             int_to_bytes_padded(PrivateKeyInfo.load(pem_to_der(pem)).native['private_key']['private_key']), context
         )
 
     @classmethod
-    def from_der(cls, der: bytes, context=GLOBAL_CONTEXT):
+    def from_der(cls, der: bytes, context: Context = GLOBAL_CONTEXT):
         return PrivateKey(int_to_bytes_padded(PrivateKeyInfo.load(der).native['private_key']['private_key']), context)
 
     def _update_public_key(self):
@@ -162,7 +165,7 @@ class PrivateKey:
 
 
 class PublicKey:
-    def __init__(self, data, context=GLOBAL_CONTEXT):
+    def __init__(self, data, context: Context = GLOBAL_CONTEXT):
         if not isinstance(data, bytes):
             self.public_key = data
         else:
@@ -178,7 +181,7 @@ class PublicKey:
         self.context = context
 
     @classmethod
-    def from_secret(cls, secret: bytes, context=GLOBAL_CONTEXT):
+    def from_secret(cls, secret: bytes, context: Context = GLOBAL_CONTEXT):
         public_key = ffi.new('secp256k1_pubkey *')
 
         created = lib.secp256k1_ec_pubkey_create(context.ctx, public_key, validate_secret(secret))
@@ -193,7 +196,7 @@ class PublicKey:
         return PublicKey(public_key, context)
 
     @classmethod
-    def from_valid_secret(cls, secret: bytes, context=GLOBAL_CONTEXT):
+    def from_valid_secret(cls, secret: bytes, context: Context = GLOBAL_CONTEXT):
         public_key = ffi.new('secp256k1_pubkey *')
 
         created = lib.secp256k1_ec_pubkey_create(context.ctx, public_key, secret)
@@ -204,19 +207,19 @@ class PublicKey:
         return PublicKey(public_key, context)
 
     @classmethod
-    def from_point(cls, x: int, y: int, context=GLOBAL_CONTEXT):
+    def from_point(cls, x: int, y: int, context: Context = GLOBAL_CONTEXT):
         return PublicKey(b'\x04' + int_to_bytes_padded(x) + int_to_bytes_padded(y), context)
 
     @classmethod
     def from_signature_and_message(
-        cls, serialized_sig: bytes, message: bytes, hasher: Hasher = sha256, context=GLOBAL_CONTEXT
+        cls, serialized_sig: bytes, message: bytes, hasher: Hasher = sha256, context: Context = GLOBAL_CONTEXT
     ):
         return PublicKey(
             recover(message, deserialize_recoverable(serialized_sig, context=context), hasher=hasher, context=context)
         )
 
     @classmethod
-    def combine_keys(cls, public_keys, context=GLOBAL_CONTEXT):
+    def combine_keys(cls, public_keys, context: Context = GLOBAL_CONTEXT):
         public_key = ffi.new('secp256k1_pubkey *')
 
         combined = lib.secp256k1_ec_pubkey_combine(

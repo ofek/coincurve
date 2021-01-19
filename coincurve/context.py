@@ -7,7 +7,7 @@ from ._libsecp256k1 import ffi, lib
 
 
 class Context:
-    def __init__(self, seed=None, flag=CONTEXT_ALL):
+    def __init__(self, seed: bytes = None, flag=CONTEXT_ALL):
         if flag not in CONTEXT_FLAGS:
             raise ValueError('{} is an invalid context flag.'.format(flag))
         self._lock = Lock()
@@ -15,7 +15,7 @@ class Context:
         self.ctx = ffi.gc(lib.secp256k1_context_create(flag), lib.secp256k1_context_destroy)
         self.reseed(seed)
 
-    def reseed(self, seed=None):
+    def reseed(self, seed: bytes = None):
         """
         Protects against certain possible future side-channel timing attacks.
         """

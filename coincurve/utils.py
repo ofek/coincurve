@@ -1,11 +1,15 @@
 from base64 import b64decode, b64encode
 from hashlib import sha256 as _sha256
 from os import urandom
-from typing import Generator
+from typing import TYPE_CHECKING, Generator
 
 from coincurve.context import GLOBAL_CONTEXT
+from coincurve.types import Hasher
 
 from ._libsecp256k1 import ffi, lib
+
+if TYPE_CHECKING:
+    from coincurve.context import Context
 
 GROUP_ORDER = (
     b'\xff\xff\xff\xff\xff\xff\xff\xff\xff\xff\xff\xff\xff\xff\xff'
@@ -72,7 +76,9 @@ def validate_secret(secret: bytes) -> bytes:
     return pad_scalar(secret)
 
 
-def verify_signature(signature, message, public_key, hasher=sha256, context=GLOBAL_CONTEXT):
+def verify_signature(
+    signature: bytes, message: bytes, public_key: bytes, hasher: Hasher = sha256, context: Context = GLOBAL_CONTEXT
+) -> bool:
     pubkey = ffi.new('secp256k1_pubkey *')
 
     pubkey_parsed = lib.secp256k1_ec_pubkey_parse(context.ctx, pubkey, public_key, len(public_key))

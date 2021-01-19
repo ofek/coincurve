@@ -43,10 +43,7 @@ jobs:
         python-version: ${{ matrix.python-version }}
 
     - name: Upgrade Python packaging tools
-      run: pip install --upgrade pip wheel
-
-    - name: Up
-      run: pip install setuptools==51.1.2
+      run: pip install --upgrade pip setuptools wheel
 
     - name: Show runner information
       run: |

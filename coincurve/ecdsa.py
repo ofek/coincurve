@@ -1,4 +1,5 @@
 from coincurve.context import GLOBAL_CONTEXT
+from coincurve.types import Hasher
 from coincurve.utils import bytes_to_int, int_to_bytes, sha256
 
 from ._libsecp256k1 import ffi, lib
@@ -7,7 +8,7 @@ MAX_SIG_LENGTH = 72
 CDATA_SIG_LENGTH = 64
 
 
-def cdata_to_der(cdata, context=GLOBAL_CONTEXT):
+def cdata_to_der(cdata, context=GLOBAL_CONTEXT) -> bytes:
     der = ffi.new('unsigned char[%d]' % MAX_SIG_LENGTH)
     der_length = ffi.new('size_t *', MAX_SIG_LENGTH)
 
@@ -16,7 +17,7 @@ def cdata_to_der(cdata, context=GLOBAL_CONTEXT):
     return bytes(ffi.buffer(der, der_length[0]))
 
 
-def der_to_cdata(der, context=GLOBAL_CONTEXT):
+def der_to_cdata(der: bytes, context=GLOBAL_CONTEXT):
     cdata = ffi.new('secp256k1_ecdsa_signature *')
     parsed = lib.secp256k1_ecdsa_signature_parse_der(context.ctx, cdata, der, len(der))
 
@@ -26,7 +27,7 @@ def der_to_cdata(der, context=GLOBAL_CONTEXT):
     return cdata
 
 
-def recover(message, recover_sig, hasher=sha256, context=GLOBAL_CONTEXT):
+def recover(message: bytes, recover_sig, hasher: Hasher = sha256, context=GLOBAL_CONTEXT):
     msg_hash = hasher(message) if hasher is not None else message
     if len(msg_hash) != 32:
         raise ValueError('Message hash must be 32 bytes long.')
@@ -38,7 +39,7 @@ def recover(message, recover_sig, hasher=sha256, context=GLOBAL_CONTEXT):
     raise Exception('failed to recover ECDSA public key')
 
 
-def serialize_recoverable(recover_sig, context=GLOBAL_CONTEXT):
+def serialize_recoverable(recover_sig, context=GLOBAL_CONTEXT) -> bytes:
     output = ffi.new('unsigned char[%d]' % CDATA_SIG_LENGTH)
     recid = ffi.new('int *')
 
@@ -47,7 +48,7 @@ def serialize_recoverable(recover_sig, context=GLOBAL_CONTEXT):
     return bytes(ffi.buffer(output, CDATA_SIG_LENGTH)) + int_to_bytes(recid[0])
 
 
-def deserialize_recoverable(serialized, context=GLOBAL_CONTEXT):
+def deserialize_recoverable(serialized: bytes, context=GLOBAL_CONTEXT):
     if len(serialized) != 65:
         raise ValueError('Serialized signature must be 65 bytes long.')
 
@@ -80,7 +81,7 @@ def serialize_compact(raw_sig, context=GLOBAL_CONTEXT):  # no cov
     return bytes(ffi.buffer(output, CDATA_SIG_LENGTH))
 
 
-def deserialize_compact(ser_sig, context=GLOBAL_CONTEXT):  # no cov
+def deserialize_compact(ser_sig: bytes, context=GLOBAL_CONTEXT):  # no cov
     if len(ser_sig) != 64:
         raise Exception('invalid signature length')
 
@@ -94,12 +95,10 @@ def deserialize_compact(ser_sig, context=GLOBAL_CONTEXT):  # no cov
 def signature_normalize(raw_sig, context=GLOBAL_CONTEXT):  # no cov
     """
     Check and optionally convert a signature to a normalized lower-S form.
-    If check_only is True then the normalized signature is not returned.
 
     This function always return a tuple containing a boolean (True if
     not previously normalized or False if signature was already
-    normalized), and the normalized signature. When check_only is True,
-    the normalized signature returned is always None.
+    normalized), and the normalized signature.
     """
     sigout = ffi.new('secp256k1_ecdsa_signature *')
 

@@ -62,9 +62,9 @@ jobs:
     - name: Run tests
       run: tox -e ${PYTHON_VERSION},bench
 
-    - name: Lint
+    - name: Check style and typing
       if: startsWith(matrix.os, 'ubuntu-') && matrix.python-version == env.PYTHON_VERSION_BUILD_EXTRA && always()
-      run: tox -e lint
+      run: tox -e lint,typing
 
     - name: Upload coverage
       run: codecov -X gcov

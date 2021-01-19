@@ -4,6 +4,7 @@
 /.coverage
 /.eggs
 /.idea
+/.mypy_cache
 /.tox
 /coincurve.egg-info
 /build

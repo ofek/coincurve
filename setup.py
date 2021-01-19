@@ -226,13 +226,16 @@ class develop(_develop):
         _develop.run(self)
 
 
+package_data = {'coincurve': ['py.typed']}
+
 if BUILDING_FOR_WINDOWS:
 
     class Distribution(_Distribution):
         def is_pure(self):
             return False
 
-    setup_kwargs = dict(package_data={'coincurve': ['*.dll']}, include_package_data=True)
+    package_data['coincurve'].append('libsecp256k1.dll')
+    setup_kwargs = dict()
 else:
 
     class Distribution(_Distribution):
@@ -272,6 +275,7 @@ setup(
     install_requires=['asn1crypto', 'cffi>=1.3.0'],
 
     packages=find_packages(exclude=('_cffi_build', '_cffi_build.*', 'libsecp256k1', 'tests')),
+    package_data=package_data,
 
     distclass=Distribution,
     zip_safe=False,

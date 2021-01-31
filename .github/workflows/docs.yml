@@ -40,7 +40,7 @@ jobs:
   publish:
     runs-on: ubuntu-latest
 
-    if: github.event_name == 'push' && github.ref == 'refs/heads/master'
+    # if: github.event_name == 'push' && github.ref == 'refs/heads/master'
     needs:
     - build
 
@@ -59,4 +59,4 @@ jobs:
         # https://help.github.com/en/github/working-with-github-pages/about-github-pages#static-site-generators
         enable_jekyll: false
         # Only deploy if there were changes
-        allow_empty_commit: false
+        # allow_empty_commit: false

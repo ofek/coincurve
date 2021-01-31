@@ -30,7 +30,7 @@ jobs:
       run: python -m pip install --upgrade tox
 
     - name: Build documentation
-      run: tox -e docs build
+      run: tox -e docs-ci build
 
     - uses: actions/upload-artifact@v2
       with:

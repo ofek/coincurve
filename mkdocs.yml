@@ -1,5 +1,5 @@
 site_name: coincurve
-site_description: Cross-platform Python CFFI bindings for libsecp256k1
+site_description: Cross-platform Python bindings for libsecp256k1
 site_author: Ofek Lev
 site_url: https://ofek.dev/coincurve/
 repo_name: ofek/coincurve
@@ -44,8 +44,8 @@ plugins:
       handlers:
         python:
           rendering:
-            show_if_no_docstring: yes
-            show_root_heading: yes
+            show_if_no_docstring: true
+            show_root_heading: true
             show_source: true
 
 markdown_extensions:

@@ -15,7 +15,7 @@
 -----
 
 This library provides well-tested Python bindings for [libsecp256k1][], the heavily optimized
-C library used by [Bitcoin Core][] for operations on the elliptic curve [secp256k1][].
+C library used by [Bitcoin Core][] for operations on the elliptic curve [secp256k1][]
 
 ## Features
 

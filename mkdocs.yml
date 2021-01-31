@@ -1,0 +1,110 @@
+site_name: coincurve
+site_description: Cross-platform Python CFFI bindings for libsecp256k1
+site_author: Ofek Lev
+site_url: https://ofek.dev/coincurve/
+repo_name: ofek/coincurve
+repo_url: https://github.com/ofek/coincurve
+edit_uri: blob/master/docs
+copyright: 'Copyright &copy; Ofek Lev 2017-present'
+
+docs_dir: docs
+site_dir: site
+theme:
+  name: material
+  language: en
+  features:
+    - navigation.sections
+    # - navigation.instant
+  palette:
+    scheme: slate
+    primary: amber
+    accent: amber
+  font:
+    text: Roboto
+    code: Roboto Mono
+  icon:
+    logo: material/book-open-page-variant
+    repo: fontawesome/brands/github-alt
+  favicon: assets/images/favicon.ico
+
+nav:
+  - About: index.md
+  - API Reference: api.md
+
+plugins:
+  # Built-in
+  - search:
+  # Extra
+  - minify:
+      minify_html: true
+  - git-revision-date-localized:
+      type: date
+  - mkdocstrings:
+      default_handler: python
+      handlers:
+        python:
+          rendering:
+            show_if_no_docstring: yes
+            show_root_heading: yes
+            show_source: true
+
+markdown_extensions:
+  # Built-in
+  - markdown.extensions.abbr:
+  - markdown.extensions.admonition:
+  - markdown.extensions.footnotes:
+  - markdown.extensions.tables:
+  - markdown.extensions.toc:
+      permalink: true
+      toc_depth: "2-6"
+  # Extra
+  - mkpatcher:
+      location: docs/.scripts
+  - pymdownx.arithmatex:
+  - pymdownx.betterem:
+      smart_enable: all
+  - pymdownx.caret:
+  - pymdownx.critic:
+  - pymdownx.details:
+  - pymdownx.emoji:
+      # https://github.com/twitter/twemoji
+      # https://raw.githubusercontent.com/facelessuser/pymdown-extensions/master/pymdownx/twemoji_db.py
+      emoji_index: !!python/name:materialx.emoji.twemoji
+      emoji_generator: !!python/name:materialx.emoji.to_svg
+  - pymdownx.highlight:
+      guess_lang: false
+      linenums_style: pymdownx-inline
+      use_pygments: true
+  - pymdownx.inlinehilite:
+  - pymdownx.keys:
+  - pymdownx.magiclink:
+      repo_url_shortener: true
+      repo_url_shorthand: true
+      social_url_shorthand: true
+      provider: github
+      user: ofek
+      repo: coincurve
+  - pymdownx.mark:
+  - pymdownx.progressbar:
+  - pymdownx.smartsymbols:
+  - pymdownx.snippets:
+      base_path: docs/.snippets
+  - pymdownx.superfences:
+  - pymdownx.tabbed:
+  - pymdownx.tasklist:
+      custom_checkbox: true
+  - pymdownx.tilde:
+
+extra:
+  social:
+    - icon: fontawesome/brands/github-alt
+      link: https://github.com/ofek
+    - icon: fontawesome/solid/blog
+      link: https://ofek.dev/words/
+    - icon: fontawesome/brands/twitter
+      link: https://twitter.com/Ofekmeister
+    - icon: fontawesome/brands/linkedin
+      link: https://www.linkedin.com/in/ofeklev/
+extra_css:
+  - assets/css/custom.css
+  - https://cdn.jsdelivr.net/gh/tonsky/FiraCode@4/distr/fira_code.css

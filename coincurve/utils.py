@@ -1,6 +1,6 @@
 from base64 import b64decode, b64encode
 from hashlib import sha256 as _sha256
-from os import urandom
+from os import environ, urandom
 from typing import Generator
 
 from coincurve.context import GLOBAL_CONTEXT, Context
@@ -17,6 +17,30 @@ KEY_SIZE = 32
 ZERO = b'\x00'
 PEM_HEADER = b'-----BEGIN PRIVATE KEY-----\n'
 PEM_FOOTER = b'-----END PRIVATE KEY-----\n'
+
+
+if environ.get('COINCURVE_BUILDING_DOCS') != 'true':
+    DEFAULT_NONCE = (ffi.NULL, ffi.NULL)
+
+    def sha256(bytestr: bytes) -> bytes:
+        return _sha256(bytestr).digest()
+
+
+else:  # no cov
+
+    class __Nonce(tuple):
+        def __repr__(self):
+            return '(ffi.NULL, ffi.NULL)'
+
+    class __HasherSHA256:
+        def __call__(self, bytestr: bytes) -> bytes:
+            return _sha256(bytestr).digest()
+
+        def __repr__(self):
+            return 'sha256'
+
+    DEFAULT_NONCE = __Nonce((ffi.NULL, ffi.NULL))  # type: ignore
+    sha256 = __HasherSHA256()
 
 
 def pad_hex(hexed: str) -> str:
@@ -38,10 +62,6 @@ def int_to_bytes_padded(num: int) -> bytes:
 
 def hex_to_bytes(hexed: str) -> bytes:
     return pad_scalar(bytes.fromhex(pad_hex(hexed)))
-
-
-def sha256(bytestr: bytes) -> bytes:
-    return _sha256(bytestr).digest()
 
 
 def chunk_data(data: bytes, size: int) -> Generator[bytes, None, None]:
@@ -76,6 +96,17 @@ def validate_secret(secret: bytes) -> bytes:
 def verify_signature(
     signature: bytes, message: bytes, public_key: bytes, hasher: Hasher = sha256, context: Context = GLOBAL_CONTEXT
 ) -> bool:
+    """
+    :param signature: The ECDSA signature.
+    :param message: The message that was supposedly signed.
+    :param public_key: The formatted public key.
+    :param hasher: The hash function to use, which must return 32 bytes. By default,
+                   the `sha256` algorithm is used. If `None`, no hashing occurs.
+    :param context:
+    :return: A boolean indicating whether or not the signature is correct.
+    :raises ValueError: If the public key could not be parsed or was invalid, the message hash was
+                        not 32 bytes long, or the DER-encoded signature could not be parsed.
+    """
     pubkey = ffi.new('secp256k1_pubkey *')
 
     pubkey_parsed = lib.secp256k1_ec_pubkey_parse(context.ctx, pubkey, public_key, len(public_key))

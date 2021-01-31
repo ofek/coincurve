@@ -36,7 +36,7 @@ def recover(message: bytes, recover_sig, hasher: Hasher = sha256, context: Conte
     recovered = lib.secp256k1_ecdsa_recover(context.ctx, pubkey, recover_sig, msg_hash)
     if recovered:
         return pubkey
-    raise Exception('failed to recover ECDSA public key')
+    raise ValueError('failed to recover ECDSA public key')
 
 
 def serialize_recoverable(recover_sig, context: Context = GLOBAL_CONTEXT) -> bytes:

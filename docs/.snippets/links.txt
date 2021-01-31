@@ -1,0 +1,5 @@
+[Bitcoin Core]: https://github.com/bitcoin/bitcoin
+[ECDH]: https://en.wikipedia.org/wiki/Elliptic-curve_Diffie%E2%80%93Hellman
+[RFC 6979]: https://tools.ietf.org/html/rfc6979
+[libsecp256k1]: https://github.com/bitcoin-core/secp256k1
+[secp256k1]: https://en.bitcoin.it/wiki/Secp256k1

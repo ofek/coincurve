@@ -6,6 +6,8 @@ Important changes are emphasized.
 
 ## master
 
+## 15.0.0
+
 - **Breaking:** Drop support for Python 2
 - **Breaking:** Binary wheels for CPython require version 19.3 or later of ``pip`` to install
 - Build AArch64 binary wheels for Linux

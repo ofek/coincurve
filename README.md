@@ -9,19 +9,10 @@
 
 -----
 
-This library provides well-tested Python bindings for [libsecp256k1][], the heavily optimized
-C library used by [Bitcoin Core][] for operations on the elliptic curve [secp256k1][].
+This library provides well-tested Python bindings for [libsecp256k1](https://github.com/bitcoin-core/secp256k1), the heavily optimized C library
+used by [Bitcoin Core](https://github.com/bitcoin/bitcoin) for operations on the elliptic curve [secp256k1](https://en.bitcoin.it/wiki/Secp256k1).
 
-## Features
-
-- Fastest available implementation (more than 10x faster than OpenSSL)
-- Clean, easy to use API
-- Frequent updates from the development version of [libsecp256k1][]
-- Linux, macOS, and Windows all have binary packages for multiple architectures
-- Linux & macOS use GMP for faster computation
-- Deterministic signatures as specified by [RFC 6979][]
-- Non-malleable signatures (lower-S form) by default
-- Secure, non-malleable [ECDH][] implementation
+Feel free to read the [documentation](https://ofek.dev/coincurve/)!
 
 ## Users
 
@@ -30,7 +21,7 @@ C library used by [Bitcoin Core][] for operations on the elliptic curve [secp256
 - [ZeroNet](https://zeronet.io)
 - [libp2p](https://libp2p.io)
 
-and [many more](users.md)!
+and [many more](https://ofek.dev/coincurve/users/)!
 
 ## License
 
@@ -38,13 +29,3 @@ and [many more](users.md)!
 
 - [MIT](https://spdx.org/licenses/MIT.html)
 - [Apache-2.0](https://spdx.org/licenses/Apache-2.0.html)
-
-## Navigation
-
-Desktop readers can use keyboard shortcuts to navigate.
-
-| Keys | Action |
-| --- | --- |
-| <ul><li><kbd>,</kbd> (comma)</li><li><kbd>p</kbd></li></ul> | Navigate to the "previous" page |
-| <ul><li><kbd>.</kbd> (period)</li><li><kbd>n</kbd></li></ul> | Navigate to the "next" page |
-| <ul><li><kbd>/</kbd></li><li><kbd>s</kbd></li></ul> | Display the search modal |

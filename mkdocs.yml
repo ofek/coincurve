@@ -29,7 +29,10 @@ theme:
 
 nav:
   - About: index.md
+  - Install: install.md
   - API Reference: api.md
+  - Users: users.md
+  - History: history.md
 
 plugins:
   # Built-in

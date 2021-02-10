@@ -39,7 +39,8 @@ class PrivateKey:
         :param message: The message to sign.
         :param hasher: The hash function to use, which must return 32 bytes. By default,
                        the `sha256` algorithm is used. If `None`, no hashing occurs.
-        :param custom_nonce: Custom nonce data in the form `(nonce_function, input_data)`.
+        :param custom_nonce: Custom nonce data in the form `(nonce_function, input_data)`. Refer to
+                             [secp256k1.h](https://github.com/bitcoin-core/secp256k1/blob/f8c0b57e6ba202b1ce7c5357688de97c9c067697/include/secp256k1.h#L546-L547).
         :return: The ECDSA signature.
         :raises ValueError: If the message hash was not 32 bytes long, the nonce generation
                             function failed, or the private key was invalid.
@@ -65,7 +66,8 @@ class PrivateKey:
         :param message: The message to sign.
         :param hasher: The hash function to use, which must return 32 bytes. By default,
                        the `sha256` algorithm is used. If `None`, no hashing occurs.
-        :param custom_nonce: Custom nonce data in the form `(nonce_function, input_data)`.
+        :param custom_nonce: Custom nonce data in the form `(nonce_function, input_data)`. Refer to
+                             [secp256k1_recovery.h](https://github.com/bitcoin-core/secp256k1/blob/f8c0b57e6ba202b1ce7c5357688de97c9c067697/include/secp256k1_recovery.h#L78-L79).
         :return: The recoverable ECDSA signature.
         :raises ValueError: If the message hash was not 32 bytes long, the nonce generation
                             function failed, or the private key was invalid.
@@ -89,6 +91,10 @@ class PrivateKey:
     def ecdh(self, public_key: bytes) -> bytes:
         """
         Compute an EC Diffie-Hellman secret in constant time.
+
+        !!! note
+            This prevents malleability by returning `sha256(compressed_public_key)` instead of the `x` coordinate
+            directly. See #9.
 
         :param public_key: The formatted public key.
         :return: The 32 byte shared secret.

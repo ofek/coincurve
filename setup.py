@@ -262,7 +262,8 @@ setup(
     version='14.0.0',
 
     description='Cross-platform Python CFFI bindings for libsecp256k1',
-    long_description=open('README.rst', 'r').read(),
+    long_description=open('README.md', 'r').read(),
+    long_description_content_type='text/markdown',
     author='Ofek Lev',
     author_email='ofekmeister@gmail.com',
     maintainer='Ofek Lev',

@@ -140,3 +140,9 @@ class TestPublicKey:
         point = G.multiply(x)
 
         assert point.add(k) == G.multiply(int_to_bytes_padded((bytes_to_int(x) + bytes_to_int(k)) % n))
+
+    def test_combine(self):
+        a = PrivateKey().public_key
+        b = PrivateKey().public_key
+
+        assert PublicKey.combine_keys([a, b]) == a.combine([b])

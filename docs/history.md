@@ -6,6 +6,10 @@ Important changes are emphasized.
 
 ## master
 
+## 15.0.1
+
+- Fix the `combine` method of `PublicKey`
+
 ## 15.0.0
 
 - **Breaking:** Drop support for Python 2

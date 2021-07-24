@@ -470,7 +470,7 @@ class PublicKey:
         new_key = ffi.new('secp256k1_pubkey *')
 
         combined = lib.secp256k1_ec_pubkey_combine(
-            self.context.ctx, new_key, [pk.public_key for pk in [self, *public_keys]], len(public_keys)
+            self.context.ctx, new_key, [pk.public_key for pk in [self, *public_keys]], len(public_keys) + 1
         )
 
         if not combined:

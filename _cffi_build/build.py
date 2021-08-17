@@ -27,6 +27,8 @@ modules = [
     Source('secp256k1.h', '#include <secp256k1.h>'),
     Source('secp256k1_ecdh.h', '#include <secp256k1_ecdh.h>'),
     Source('secp256k1_recovery.h', '#include <secp256k1_recovery.h>'),
+    Source('secp256k1_schnorrsig.h', '#include <secp256k1_schnorrsig.h>'),
+    Source('secp256k1_extrakeys.h', '#include <secp256k1_extrakeys.h>'),
 ]
 
 ffi = _mk_ffi(modules, libraries=['secp256k1'])

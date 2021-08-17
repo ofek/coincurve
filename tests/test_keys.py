@@ -59,6 +59,14 @@ class TestPrivateKey:
             == PublicKey(recover(MESSAGE, deserialize_recoverable(private_key.sign_recoverable(MESSAGE)))).format()
         )
 
+    def test_schnorr_signature(self):
+        private_key = PrivateKey()
+        public_key = private_key.public_key
+
+        message = urandom(200)
+        signature = private_key.schnorr_sign(message)
+        assert public_key.schnorr_verify(signature, message)
+
     def test_to_hex(self):
         assert PrivateKey(PRIVATE_KEY_BYTES).to_hex() == PRIVATE_KEY_HEX
 

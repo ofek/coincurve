@@ -5,6 +5,14 @@ typedef struct {
 } secp256k1_pubkey;
 
 typedef struct {
+    unsigned char data[96];
+} secp256k1_keypair;
+
+typedef struct {
+    unsigned char data[64];
+} secp256k1_xonly_pubkey;
+
+typedef struct {
     unsigned char data[64];
 } secp256k1_ecdsa_signature;
 

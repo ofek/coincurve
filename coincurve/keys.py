@@ -106,6 +106,24 @@ class PrivateKey:
 
         return bytes(ffi.buffer(secret, 32))
 
+    def schnorr_sign(self, message: bytes, hasher: Hasher = sha256) -> bytes:
+        msg_hash = hasher(message) if hasher is not None else message
+        if len(msg_hash) != 32:
+            raise ValueError('Message hash must be 32 bytes long.')
+
+        signature = ffi.new('unsigned char [64]')
+
+        # Create the secp256k1_keypair
+        keypair = ffi.new('secp256k1_keypair *')
+        lib.secp256k1_keypair_create(self.context.ctx, keypair, self.secret)
+
+        signed = lib.secp256k1_schnorrsig_sign(self.context.ctx, signature, msg_hash, keypair, ffi.NULL, ffi.NULL)
+
+        if not signed:
+            raise ValueError('Failed to generate Schnorr signature.')
+
+        return bytes(signature)
+
     def add(self, scalar: bytes, update: bool = False):
         """
         Add a scalar to the private key.
@@ -406,6 +424,21 @@ class PublicKey:
             raise ValueError('Message hash must be 32 bytes long.')
 
         verified = lib.secp256k1_ecdsa_verify(self.context.ctx, der_to_cdata(signature), msg_hash, self.public_key)
+
+        # A performance hack to avoid global bool() lookup.
+        return not not verified
+
+    def schnorr_verify(self, signature: bytes, message: bytes, hasher: Hasher = sha256) -> bool:
+        msg_hash = hasher(message) if hasher is not None else message
+        if len(msg_hash) != 32:
+            raise ValueError('Message hash must be 32 bytes long.')
+
+        # Create the secp256k1_xonly_pubkey
+        xonly_pubkey = ffi.new('secp256k1_xonly_pubkey *')
+        parity = ffi.new("int *")
+        lib.secp256k1_xonly_pubkey_from_pubkey(self.context.ctx, xonly_pubkey, parity, self.public_key)
+
+        verified = lib.secp256k1_schnorrsig_verify(self.context.ctx, signature, msg_hash, xonly_pubkey)
 
         # A performance hack to avoid global bool() lookup.
         return not not verified

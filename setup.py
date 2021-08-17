@@ -181,10 +181,13 @@ class build_clib(_build_clib):
             os.path.abspath(self.build_clib),
             '--enable-experimental',
             '--enable-module-ecdh',
+            '--enable-module-extrakeys',
+            '--enable-module-schnorrsig',
             '--enable-benchmark=no',
             '--enable-tests=no',
             '--enable-openssl-tests=no',
             '--enable-exhaustive-tests=no',
+            '',
         ]
 
         log.debug('Running configure: {}'.format(' '.join(cmd)))

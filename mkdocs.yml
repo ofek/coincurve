@@ -59,7 +59,6 @@ markdown_extensions:
   - markdown.extensions.tables:
   - markdown.extensions.toc:
       permalink: true
-      toc_depth: "2-6"
   # Extra
   - mkpatcher:
       location: docs/.scripts

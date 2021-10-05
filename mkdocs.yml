@@ -13,12 +13,22 @@ theme:
   name: material
   language: en
   features:
-    - navigation.sections
-    # - navigation.instant
+    - navigation.instant
   palette:
-    scheme: slate
-    primary: amber
-    accent: amber
+    - media: "(prefers-color-scheme: dark)"
+      scheme: slate
+      primary: teal
+      accent: teal
+      toggle:
+        icon: material/weather-night
+        name: Switch to light mode
+    - media: "(prefers-color-scheme: light)"
+      scheme: default
+      primary: teal
+      accent: teal
+      toggle:
+        icon: material/weather-sunny
+        name: Switch to dark mode
   font:
     text: Roboto
     code: Roboto Mono
@@ -56,6 +66,7 @@ markdown_extensions:
   - markdown.extensions.abbr:
   - markdown.extensions.admonition:
   - markdown.extensions.footnotes:
+  - markdown.extensions.meta:
   - markdown.extensions.tables:
   - markdown.extensions.toc:
       permalink: true
@@ -109,4 +120,4 @@ extra:
       link: https://www.linkedin.com/in/ofeklev/
 extra_css:
   - assets/css/custom.css
-  - https://cdn.jsdelivr.net/gh/tonsky/FiraCode@4/distr/fira_code.css
+  - https://cdn.jsdelivr.net/gh/tonsky/FiraCode@5.2/distr/fira_code.css

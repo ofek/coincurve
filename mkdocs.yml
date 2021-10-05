@@ -33,7 +33,7 @@ theme:
     text: Roboto
     code: Roboto Mono
   icon:
-    logo: material/book-open-page-variant
+    logo: material/circle-multiple
     repo: fontawesome/brands/github-alt
   favicon: assets/images/favicon.ico
 

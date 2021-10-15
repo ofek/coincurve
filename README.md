@@ -14,6 +14,26 @@ used by [Bitcoin Core](https://github.com/bitcoin/bitcoin) for operations on the
 
 Feel free to read the [documentation](https://ofek.dev/coincurve/)!
 
+## Quick Start
+
+```
+pip install coincurve
+```
+```py
+from coincurve import keys, PrivateKey, verify_signature
+
+priv = PrivateKey(secret=None)  # Generate a random private key
+pub = priv.public_key.format()  # Derive a public key from the private key
+
+print(f"private key: {priv.to_hex()}")
+print(f"public key: {pub.hex()}\n")
+
+signed_msg = keys.PrivateKey.sign(priv, message=b"Sign Me!")  # Signs a message using the private key
+
+verify_msg = verify_signature(signature=signed_msg, message=b"Sign Me!", public_key=bytes(pub))  # Verifies if a signed message is valid
+print(f"signature: {signed_msg.hex()}")
+print(f"valid sig: {verify_msg}")
+```
 ## Users
 
 - [Ethereum](https://ethereum.org)

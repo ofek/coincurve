@@ -1,5 +1,5 @@
 #!/bin/bash
-set -x
+set -ex
 
 build_dll() {
     ./autogen.sh

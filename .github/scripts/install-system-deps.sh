@@ -1,5 +1,5 @@
 #!/bin/bash
-set -x
+set -ex
 
 # update brew
 brew update

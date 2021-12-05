@@ -32,6 +32,8 @@ BUILDING_FOR_WINDOWS = detect_dll()
 
 MAKE = 'gmake' if platform.system() in ['FreeBSD', 'OpenBSD'] else 'make'
 
+# IMPORTANT: keep in sync with .github/workflows/build.yml
+#
 # Version of libsecp256k1 to download if none exists in the `libsecp256k1` directory
 UPSTREAM_REF = os.getenv('COINCURVE_UPSTREAM_REF') or 'f2d9aeae6d5a7c7fbbba8bbb38b1849b784beef7'
 

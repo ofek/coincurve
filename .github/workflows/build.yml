@@ -13,10 +13,6 @@ on:
 
 env:
   COINCURVE_UPSTREAM_REF: f2d9aeae6d5a7c7fbbba8bbb38b1849b784beef7
-  LD_LIBRARY_PATH: ./libsecp256k1_ext/.libs
-  DYLD_FALLBACK_LIBRARY_PATH: ./libsecp256k1_ext/.libs
-  LIB_DIR: ./libsecp256k1_ext/.libs
-  INCLUDE_DIR: ./libsecp256k1_ext/include
 
 jobs:
   test:
@@ -46,15 +42,8 @@ jobs:
         python --version
         pip --version
 
-    - name: Install system dependencies
-      if: startsWith(matrix.os, 'macos-')
-      run: ./.github/scripts/install-macos-system-deps.sh
-
-    - name: Install build dependencies
-      run: python -m pip install --upgrade cffi
-
-    - name: Install test dependencies
-      run: python -m pip install --upgrade tox codecov
+    - name: Install dependencies
+      run: ./.github/scripts/install-test-deps.sh
 
     - name: Check style and typing
       run: tox -e lint,typing
@@ -81,22 +70,27 @@ jobs:
     steps:
     - uses: actions/checkout@v2
 
+    - name: Set up QEMU
+      if: runner.os == 'Linux'
+      uses: docker/setup-qemu-action@v1
+      with:
+        platforms: all
+
     - name: Build wheels
       uses: pypa/cibuildwheel@v2.3.0
       env:
-        CIBW_BEFORE_ALL_MACOS: ./.github/scripts/install-macos-system-deps.sh
-        CIBW_BEFORE_ALL_LINUX: ./.github/scripts/install-linux-system-deps.sh
-        CIBW_SKIP: pp*-manylinux_i686
+        CIBW_BEFORE_ALL_MACOS: ./.github/scripts/install-macos-build-deps.sh
+        CIBW_BEFORE_ALL_LINUX: ./.github/scripts/install-linux-build-deps.sh
+        CIBW_ARCHS_LINUX: auto aarch64 ppc64le s390x
+        CIBW_ARCHS_MACOS: auto universal2
+        CIBW_SKIP: pp*
         CIBW_ENVIRONMENT_PASS_LINUX: >
           COINCURVE_UPSTREAM_REF
-          LD_LIBRARY_PATH
-          DYLD_FALLBACK_LIBRARY_PATH
-          LIB_DIR
-          INCLUDE_DIR
 
     - uses: actions/upload-artifact@v2
       with:
         path: wheelhouse/*.whl
+        if-no-files-found: error
 
   build_other:
     name: Build Windows wheels and source distribution
@@ -119,6 +113,7 @@ jobs:
     - uses: actions/upload-artifact@v2
       with:
         path: dist/*
+        if-no-files-found: error
 
   publish:
     name: Publish release

@@ -94,7 +94,7 @@ jobs:
         path: wheelhouse/*.whl
         if-no-files-found: error
 
-  windows-wheels+sdist:
+  windows-wheels-and-sdist:
     name: Build Windows wheels and source distribution
     needs:
     - test
@@ -147,7 +147,7 @@ jobs:
     name: Publish release
     needs:
     - unix-wheels-standard
-    - windows-wheels+sdist
+    - windows-wheels-and-sdist
     - unix-wheels-arm
     runs-on: ubuntu-latest
 

@@ -13,6 +13,10 @@ on:
 
 env:
   COINCURVE_UPSTREAM_REF: f2d9aeae6d5a7c7fbbba8bbb38b1849b784beef7
+  LD_LIBRARY_PATH: ./libsecp256k1_ext/.libs
+  DYLD_FALLBACK_LIBRARY_PATH: ./libsecp256k1_ext/.libs
+  LIB_DIR: ./libsecp256k1_ext/.libs
+  INCLUDE_DIR: ./libsecp256k1_ext/include
 
 jobs:
   test:
@@ -83,6 +87,12 @@ jobs:
         CIBW_BEFORE_ALL_MACOS: ./.github/scripts/install-macos-system-deps.sh
         CIBW_BEFORE_ALL_LINUX: ./.github/scripts/install-linux-system-deps.sh
         CIBW_SKIP: pp*-manylinux_i686
+        CIBW_ENVIRONMENT_PASS_LINUX: >
+          COINCURVE_UPSTREAM_REF
+          LD_LIBRARY_PATH
+          DYLD_FALLBACK_LIBRARY_PATH
+          LIB_DIR
+          INCLUDE_DIR
 
     - uses: actions/upload-artifact@v2
       with:

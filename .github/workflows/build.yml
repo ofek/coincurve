@@ -11,28 +11,40 @@ on:
     branches:
     - master
 
+concurrency:
+  group: ${{ github.head_ref }}
+  cancel-in-progress: true
+
 env:
   COINCURVE_UPSTREAM_REF: f2d9aeae6d5a7c7fbbba8bbb38b1849b784beef7
+  CIBW_ENVIRONMENT_PASS_LINUX: >
+    COINCURVE_UPSTREAM_REF
+  CIBW_TEST_COMMAND: >
+    python -c
+    "from coincurve import PrivateKey;
+    a=PrivateKey();
+    b=PrivateKey();
+    assert a.ecdh(b.public_key.format())==b.ecdh(a.public_key.format())
+    "
+  CIBW_BEFORE_ALL_LINUX: ./.github/scripts/install-linux-build-deps.sh
+  CIBW_SKIP: >
+    pp*
 
 jobs:
   test:
     name: Test latest
     runs-on: ubuntu-latest
-    strategy:
-      fail-fast: false
-      matrix:
-        python-version: ['3.10']
 
     env:
-      PYTHON_VERSION: ${{ matrix.python-version }}
+      PYTHON_VERSION: '3.10'
 
     steps:
     - uses: actions/checkout@v2
 
-    - name: Set up Python ${{ matrix.python-version }}
+    - name: Set up Python ${{ env.PYTHON_VERSION }}
       uses: actions/setup-python@v2
       with:
-        python-version: ${{ matrix.python-version }}
+        python-version: ${{ env.PYTHON_VERSION }}
 
     - name: Upgrade Python packaging tools
       run: pip install --upgrade pip setuptools wheel
@@ -57,8 +69,8 @@ jobs:
     - name: Upload coverage
       run: codecov -X gcov
 
-  build_unix_wheels:
-    name: Build ${{ startsWith(matrix.os, 'macos-') && 'macOS' || 'Linux' }} wheels
+  unix-wheels-standard:
+    name: Build ${{ runner.os == 'macOS' && 'macOS' || 'Linux' }} wheels
     needs:
     - test
     runs-on: ${{ matrix.os }}
@@ -70,29 +82,19 @@ jobs:
     steps:
     - uses: actions/checkout@v2
 
-    - name: Set up QEMU
-      if: runner.os == 'Linux'
-      uses: docker/setup-qemu-action@v1
-      with:
-        platforms: all
-
     - name: Build wheels
       uses: pypa/cibuildwheel@v2.3.0
       env:
         CIBW_BEFORE_ALL_MACOS: ./.github/scripts/install-macos-build-deps.sh
-        CIBW_BEFORE_ALL_LINUX: ./.github/scripts/install-linux-build-deps.sh
-        CIBW_ARCHS_LINUX: auto aarch64 ppc64le s390x
         CIBW_ARCHS_MACOS: x86_64 arm64
-        CIBW_SKIP: pp*
-        CIBW_ENVIRONMENT_PASS_LINUX: >
-          COINCURVE_UPSTREAM_REF
 
     - uses: actions/upload-artifact@v2
       with:
+        name: artifacts
         path: wheelhouse/*.whl
         if-no-files-found: error
 
-  build_other:
+  windows-wheels+sdist:
     name: Build Windows wheels and source distribution
     needs:
     - test
@@ -112,14 +114,42 @@ jobs:
 
     - uses: actions/upload-artifact@v2
       with:
+        name: artifacts
         path: dist/*
+        if-no-files-found: error
+
+  unix-wheels-arm:
+    name: Build Linux wheels for ARM
+    needs:
+    - test
+    runs-on: ubuntu-20.04
+
+    steps:
+    - uses: actions/checkout@v2
+
+    - name: Set up QEMU
+      if: runner.os == 'Linux'
+      uses: docker/setup-qemu-action@v1
+      with:
+        platforms: arm64
+
+    - name: Build wheels
+      uses: pypa/cibuildwheel@v2.3.0
+      env:
+        CIBW_ARCHS_LINUX: aarch64
+
+    - uses: actions/upload-artifact@v2
+      with:
+        name: artifacts
+        path: wheelhouse/*.whl
         if-no-files-found: error
 
   publish:
     name: Publish release
     needs:
-    - build_unix_wheels
-    - build_other
+    - unix-wheels-standard
+    - windows-wheels+sdist
+    - unix-wheels-arm
     runs-on: ubuntu-latest
 
     # Only publish tags

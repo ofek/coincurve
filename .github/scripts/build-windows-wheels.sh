@@ -17,6 +17,8 @@ mv .hidden ../clean
 sudo apt-get install -y mingw-w64
 sudo apt-get -f install
 
+mkdir dist
+
 cd ..
 
 curl -sLO "https://github.com/bitcoin-core/secp256k1/archive/$COINCURVE_UPSTREAM_REF.tar.gz"

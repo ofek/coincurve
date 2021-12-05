@@ -16,113 +16,96 @@ env:
   COINCURVE_UPSTREAM_REF: f2d9aeae6d5a7c7fbbba8bbb38b1849b784beef7
 
 jobs:
-  test:
-    name: "Test ${{ !startsWith(matrix.python-version, 'pypy') && 'Python ' || '' }}${{ startsWith(matrix.python-version, 'pypy') && 'PyPy' || matrix.python-version }} on ${{ startsWith(matrix.os, 'ubuntu-') && 'Ubuntu' || 'macOS' }}"
+  # test:
+  #   name: "Test ${{ !startsWith(matrix.python-version, 'pypy') && 'Python ' || '' }}${{ startsWith(matrix.python-version, 'pypy') && 'PyPy' || matrix.python-version }} on ${{ startsWith(matrix.os, 'ubuntu-') && 'Ubuntu' || 'macOS' }}"
+  #   runs-on: ${{ matrix.os }}
+  #   strategy:
+  #     fail-fast: false
+  #     matrix:
+  #       os: [ubuntu-18.04, macos-10.15]
+  #       python-version: ['3.6', '3.7', '3.8', '3.9', '3.10']
+  #       include:
+  #         - os: ubuntu-18.04
+  #           python-version: pypy3
+  #   env:
+  #     PYTHON_VERSION: ${{ matrix.python-version }}
+  #     OS_NAME: ${{ matrix.os }}
+
+  #   steps:
+  #   - uses: actions/checkout@v2
+
+  #   - name: Set up Python ${{ matrix.python-version }}
+  #     uses: actions/setup-python@v2
+  #     with:
+  #       python-version: ${{ matrix.python-version }}
+
+  #   - name: Upgrade Python packaging tools
+  #     run: pip install --upgrade pip setuptools wheel
+
+  #   - name: Show runner information
+  #     run: |
+  #       python --version
+  #       pip --version
+
+  #   - name: Install system dependencies
+  #     run: ./.github/scripts/install-system-deps.sh
+
+  #   - name: Install build dependencies
+  #     run: python -m pip install --upgrade cffi
+
+  #   - name: Install test dependencies
+  #     run: python -m pip install --upgrade tox codecov
+
+  #   - name: Check style and typing
+  #     if: startsWith(matrix.os, 'ubuntu-') && matrix.python-version == env.PYTHON_VERSION_BUILD_EXTRA
+  #     run: tox -e lint,typing
+
+  #   - name: Run tests
+  #     run: tox -e ${PYTHON_VERSION}
+
+  #   - name: Run benchmarks
+  #     run: tox -e bench
+
+  #   - name: Upload coverage
+  #     run: codecov -X gcov
+
+  build_unix_wheels:
+    name: Build wheels on ${{ matrix.os }}
     runs-on: ${{ matrix.os }}
     strategy:
-      fail-fast: false
       matrix:
-        os: [ubuntu-18.04, macos-10.15]
-        python-version: ['3.6', '3.7', '3.8', '3.9', '3.10']
-        include:
-          - os: ubuntu-18.04
-            python-version: pypy3
-    env:
-      PYTHON_VERSION: ${{ matrix.python-version }}
-      OS_NAME: ${{ matrix.os }}
+        os: [ubuntu-20.04, windows-2019, macos-10.15]
 
     steps:
     - uses: actions/checkout@v2
 
-    - name: Set up Python ${{ matrix.python-version }}
-      uses: actions/setup-python@v2
-      with:
-        python-version: ${{ matrix.python-version }}
-
-    - name: Upgrade Python packaging tools
-      run: pip install --upgrade pip setuptools wheel
-
-    - name: Show runner information
-      run: |
-        python --version
-        pip --version
-
-    - name: Install system dependencies
-      run: ./.github/scripts/install-system-deps.sh
-
-    - name: Install build dependencies
-      run: python -m pip install --upgrade cffi
-
-    - name: Install test dependencies
-      run: python -m pip install --upgrade tox codecov
-
-    - name: Check style and typing
-      if: startsWith(matrix.os, 'ubuntu-') && matrix.python-version == env.PYTHON_VERSION_BUILD_EXTRA
-      run: tox -e lint,typing
-
-    - name: Run tests
-      run: tox -e ${PYTHON_VERSION}
-
-    - name: Run benchmarks
-      run: tox -e bench
-
-    - name: Upload coverage
-      run: codecov -X gcov
-
-  build:
-    name: "Build ${{ !startsWith(matrix.python-version, 'pypy') && 'Python ' || '' }}${{ startsWith(matrix.python-version, 'pypy') && 'PyPy' || matrix.python-version }} ${{ startsWith(matrix.os, 'ubuntu-') && 'manylinux' || 'on' }} ${{ startsWith(matrix.os, 'ubuntu-') && 'wheels' || 'macOS' }}"
-    runs-on: ${{ matrix.os }}
-    needs:
-      - test
-    strategy:
-      fail-fast: false
-      matrix:
-        os: [ubuntu-18.04, macos-10.15]
-        python-version: ['3.6', '3.7', '3.8', '3.9']
-        include:
-          - os: ubuntu-18.04
-            python-version: pypy3
-    env:
-      PYTHON_VERSION: ${{ matrix.python-version }}
-      OS_NAME: ${{ matrix.os }}
-
-    steps:
-    - uses: actions/checkout@v2
-
-    - name: Set up Python ${{ matrix.python-version }}
-      if: startsWith(matrix.os, 'macos-') || matrix.python-version == env.PYTHON_VERSION_BUILD_EXTRA
-      uses: actions/setup-python@v2
-      with:
-        python-version: ${{ matrix.python-version }}
-
-    - name: Upgrade Python packaging tools
-      if: startsWith(matrix.os, 'macos-') || matrix.python-version == env.PYTHON_VERSION_BUILD_EXTRA
-      run: pip install --upgrade pip setuptools wheel
-
-    - name: Show runner information
-      if: startsWith(matrix.os, 'macos-') || matrix.python-version == env.PYTHON_VERSION_BUILD_EXTRA
-      run: |
-        python --version
-        pip --version
-
-    - name: Install system dependencies
-      run: ./.github/scripts/install-system-deps.sh
-
-    - name: Install build dependencies
-      if: startsWith(matrix.os, 'macos-') || matrix.python-version == env.PYTHON_VERSION_BUILD_EXTRA
-      run: python -m pip install --upgrade cffi
-
-    - name: Prepare for cross-platform Windows build
-      if: startsWith(matrix.os, 'ubuntu-') && matrix.python-version == env.PYTHON_VERSION_BUILD_EXTRA
-      run: ./.github/scripts/prepare-windows-build.sh
-
-    - name: Build package
-      run: ./.github/scripts/build.sh
+    - name: Build wheels
+      uses: pypa/cibuildwheel@v2.3.0
+      env:
+        CIBW_BEFORE_ALL_MACOS: ./.github/scripts/install-system-deps.sh
+        CIBW_BEFORE_ALL_LINUX: ./.github/scripts/build-linux-wheels.sh
 
     - uses: actions/upload-artifact@v2
-      if: always()
       with:
-        name: artifacts
+        path: ./wheelhouse/*.whl
+
+  build_other:
+    name: Build Windows wheels and source distribution
+    runs-on: ubuntu-latest
+    steps:
+    - uses: actions/checkout@v2
+
+    - name: Install build dependencies
+      run: python -m pip install --upgrade cffi
+
+    - name: Build Windows wheels
+      run: ./.github/scripts/build-windows-wheels.sh
+
+    - name: Build source distribution
+      run: python setup.py sdist
+
+    - uses: actions/upload-artifact@v2
+      with:
         path: dist/*
 
   publish:

@@ -84,6 +84,7 @@ jobs:
       env:
         CIBW_BEFORE_ALL_MACOS: ./.github/scripts/install-system-deps.sh
         CIBW_BEFORE_ALL_LINUX: ./.github/scripts/build-linux-wheels.sh
+        CIBW_SKIP: pp*
 
     - uses: actions/upload-artifact@v2
       with:

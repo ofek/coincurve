@@ -70,7 +70,7 @@ jobs:
       run: codecov -X gcov
 
   unix-wheels-standard:
-    name: Build ${{ runner.os == 'macOS' && 'macOS' || 'Linux' }} wheels
+    name: Build ${{ env.RUNNER_OS == 'macOS' && 'macOS' || 'Linux' }} wheels
     needs:
     - test
     runs-on: ${{ matrix.os }}

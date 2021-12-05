@@ -82,7 +82,7 @@ jobs:
         CIBW_BEFORE_ALL_MACOS: ./.github/scripts/install-macos-build-deps.sh
         CIBW_BEFORE_ALL_LINUX: ./.github/scripts/install-linux-build-deps.sh
         CIBW_ARCHS_LINUX: auto aarch64 ppc64le s390x
-        CIBW_ARCHS_MACOS: auto universal2
+        CIBW_ARCHS_MACOS: x86_64 arm64
         CIBW_SKIP: pp*
         CIBW_ENVIRONMENT_PASS_LINUX: >
           COINCURVE_UPSTREAM_REF

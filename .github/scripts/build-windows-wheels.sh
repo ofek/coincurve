@@ -1,6 +1,5 @@
 #!/bin/bash
-
-set -e -x
+set -ex
 
 build_dll() {
     ./autogen.sh
@@ -8,6 +7,14 @@ build_dll() {
     ./configure --host=$1 --enable-module-recovery --enable-experimental --enable-module-ecdh --enable-benchmark=no --enable-tests=no --enable-openssl-tests=no --enable-exhaustive-tests=no --enable-static --disable-dependency-tracking --with-pic
     make
 }
+
+sudo apt-get install -y mingw-w64
+sudo apt-get -f install
+
+mkdir .hidden
+cp * .hidden -R
+mv .hidden/coincurve/_windows_libsecp256k1.py .hidden/coincurve/_libsecp256k1.py
+mv .hidden ../clean
 
 cd ..
 

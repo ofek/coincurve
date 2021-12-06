@@ -25,7 +25,6 @@ if environ.get('COINCURVE_BUILDING_DOCS') != 'true':
     def sha256(bytestr: bytes) -> bytes:
         return _sha256(bytestr).digest()
 
-
 else:  # no cov
 
     class __Nonce(tuple):

@@ -12,15 +12,14 @@ pip install coincurve
 
 Binary wheels are available for most platforms and require at least version `19.3` of pip to install.
 
-| | | | | | | |
-| --- | --- | --- | --- | --- | --- | --- |
-| | 3.6 | 3.7 | 3.8 | 3.9 | PyPy3.6 7.3.3 | PyPy3.7 7.3.3 |
-| Linux (x86_64) | :white_check_mark: | :white_check_mark: | :white_check_mark: | :white_check_mark: | :white_check_mark: | :white_check_mark: |
-| Linux (AArch64) | :white_check_mark: | :white_check_mark: | :white_check_mark: | :white_check_mark: | :white_check_mark: | :white_check_mark: |
-| Linux (x86) | :white_check_mark: | :white_check_mark: | :white_check_mark: | :white_check_mark: | :white_check_mark: | :white_check_mark: |
-| Windows (x86_64) | :white_check_mark: | :white_check_mark: | :white_check_mark: | :white_check_mark: | | |
-| Windows (x86) | :white_check_mark: | :white_check_mark: | :white_check_mark: | :white_check_mark: | | |
-| macOS (x86_64) | :white_check_mark: | :white_check_mark: | :white_check_mark: | :white_check_mark: | | |
+| | | | | |
+| --- | --- | --- | --- | --- |
+| | macOS | Windows | Linux (glibc) | Linux (musl) |
+| CPython 3.6 | <ul><li>x86_64</li></ul> | <ul><li>x86_64</li><li>x86</li></ul> | <ul><li>x86_64</li><li>i686</li><li>AArch64</li></ul> | <ul><li>x86_64</li><li>i686</li><li>AArch64</li></ul> |
+| CPython 3.7 | <ul><li>x86_64</li></ul> | <ul><li>x86_64</li><li>x86</li></ul> | <ul><li>x86_64</li><li>i686</li><li>AArch64</li></ul> | <ul><li>x86_64</li><li>i686</li><li>AArch64</li></ul> |
+| CPython 3.8 | <ul><li>x86_64</li><li>Apple Silicon</li></ul> | <ul><li>x86_64</li><li>x86</li></ul> | <ul><li>x86_64</li><li>i686</li><li>AArch64</li></ul> | <ul><li>x86_64</li><li>i686</li><li>AArch64</li></ul> |
+| CPython 3.9 | <ul><li>x86_64</li><li>Apple Silicon</li></ul> | <ul><li>x86_64</li><li>x86</li></ul> | <ul><li>x86_64</li><li>i686</li><li>AArch64</li></ul> | <ul><li>x86_64</li><li>i686</li><li>AArch64</li></ul> |
+| CPython 3.10 | <ul><li>x86_64</li><li>Apple Silicon</li></ul> | <ul><li>x86_64</li><li>x86</li></ul> | <ul><li>x86_64</li><li>i686</li><li>AArch64</li></ul> | <ul><li>x86_64</li><li>i686</li><li>AArch64</li></ul> |
 
 ## Source
 

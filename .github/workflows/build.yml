@@ -123,6 +123,7 @@ jobs:
     needs:
     - test
     runs-on: ubuntu-20.04
+    if: github.ref == 'refs/heads/master'
 
     steps:
     - uses: actions/checkout@v2
@@ -150,8 +151,6 @@ jobs:
     - windows-wheels-and-sdist
     - unix-wheels-arm
     runs-on: ubuntu-latest
-
-    # Only publish tags
     if: github.event_name == 'create' && github.event.ref_type == 'tag'
 
     steps:

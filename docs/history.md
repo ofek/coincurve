@@ -6,6 +6,11 @@ Important changes are emphasized.
 
 ## master
 
+## 16.0.0
+
+- Wheels for Apple Silicon and musl linux (Alpine)
+- No wheels for PyPy until the build system is fixed
+
 ## 15.0.1
 
 - Fix the `combine` method of `PublicKey`

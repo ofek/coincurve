@@ -123,7 +123,10 @@ jobs:
     needs:
     - test
     runs-on: ubuntu-20.04
-    if: github.ref == 'refs/heads/master'
+    if: >
+      (github.event_name == 'push' && github.ref == 'refs/heads/master')
+      ||
+      (github.event_name == 'create' && github.event.ref_type == 'tag')
 
     steps:
     - uses: actions/checkout@v2

@@ -35,7 +35,7 @@ MAKE = 'gmake' if platform.system() in ['FreeBSD', 'OpenBSD'] else 'make'
 # IMPORTANT: keep in sync with .github/workflows/build.yml
 #
 # Version of libsecp256k1 to download if none exists in the `libsecp256k1` directory
-UPSTREAM_REF = os.getenv('COINCURVE_UPSTREAM_REF') or 'f2d9aeae6d5a7c7fbbba8bbb38b1849b784beef7'
+UPSTREAM_REF = os.getenv('COINCURVE_UPSTREAM_REF') or 'a1102b12196ea27f44d6201de4d25926a2ae9640'
 
 LIB_TARBALL_URL = f'https://github.com/bitcoin-core/secp256k1/archive/{UPSTREAM_REF}.tar.gz'
 
@@ -269,7 +269,7 @@ setup(
     author_email='Ofek Lev <oss@ofek.dev>',
     license='MIT OR Apache-2.0',
 
-    python_requires='>=3.6',
+    python_requires='>=3.7',
     install_requires=['asn1crypto', 'cffi>=1.3.0'],
 
     packages=find_packages(exclude=('_cffi_build', '_cffi_build.*', 'libsecp256k1', 'tests')),
@@ -299,7 +299,6 @@ setup(
         'Natural Language :: English',
         'Operating System :: OS Independent',
         'Programming Language :: Python :: 3',
-        'Programming Language :: Python :: 3.6',
         'Programming Language :: Python :: 3.7',
         'Programming Language :: Python :: 3.8',
         'Programming Language :: Python :: 3.9',

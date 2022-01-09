@@ -16,9 +16,11 @@ concurrency:
   cancel-in-progress: true
 
 env:
-  COINCURVE_UPSTREAM_REF: f2d9aeae6d5a7c7fbbba8bbb38b1849b784beef7
+  COINCURVE_UPSTREAM_REF: a1102b12196ea27f44d6201de4d25926a2ae9640
+  COINCURVE_IGNORE_SYSTEM_LIB: '1'
   CIBW_ENVIRONMENT_PASS_LINUX: >
     COINCURVE_UPSTREAM_REF
+    COINCURVE_IGNORE_SYSTEM_LIB
   CIBW_TEST_COMMAND: >
     python -c
     "from coincurve import PrivateKey;
@@ -26,7 +28,6 @@ env:
     b=PrivateKey();
     assert a.ecdh(b.public_key.format())==b.ecdh(a.public_key.format())
     "
-  CIBW_BEFORE_ALL_LINUX: ./.github/scripts/install-linux-build-deps.sh
   CIBW_SKIP: >
     pp*
 

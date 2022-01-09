@@ -6,6 +6,10 @@ Important changes are emphasized.
 
 ## master
 
+## Unreleased
+
+- Upgrade [libsecp256k1][] to the latest available version
+
 ## 16.0.0
 
 - Wheels for Apple Silicon and musl linux (Alpine)

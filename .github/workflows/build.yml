@@ -102,7 +102,7 @@ jobs:
       env:
         CIBW_BEFORE_ALL_MACOS: ./.github/scripts/install-macos-build-deps.sh
         CIBW_ARCHS_MACOS: arm64
-        COINCURVE_HOST: aarch64-apple-darwin
+        # COINCURVE_HOST: aarch64-apple-darwin
         CFLAGS: -target arm64-apple-macos
 
     - uses: actions/upload-artifact@v2

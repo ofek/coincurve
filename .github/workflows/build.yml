@@ -70,15 +70,29 @@ jobs:
     - name: Upload coverage
       run: codecov -X gcov
 
-  unix-wheels-standard:
-    name: Build ${{ startsWith(matrix.os, 'macos-') && 'macOS' || 'Linux' }} wheels
+  linux-wheels-standard:
+    name: Build Linux wheels
     needs:
     - test
-    runs-on: ${{ matrix.os }}
-    strategy:
-      fail-fast: false
-      matrix:
-        os: [ubuntu-20.04, macos-10.15]
+    runs-on: ubuntu-20.04
+
+    steps:
+    - uses: actions/checkout@v2
+
+    - name: Build wheels
+      uses: pypa/cibuildwheel@v2.3.1
+
+    - uses: actions/upload-artifact@v2
+      with:
+        name: artifacts
+        path: wheelhouse/*.whl
+        if-no-files-found: error
+
+  macos-wheels:
+    name: Build macOS wheels
+    needs:
+    - test
+    runs-on: macos-10.15
 
     steps:
     - uses: actions/checkout@v2
@@ -87,7 +101,8 @@ jobs:
       uses: pypa/cibuildwheel@v2.3.1
       env:
         CIBW_BEFORE_ALL_MACOS: ./.github/scripts/install-macos-build-deps.sh
-        CIBW_ARCHS_MACOS: x86_64 arm64
+        CIBW_ARCHS_MACOS: arm64
+        COINCURVE_HOST: aarch64-apple-darwin
 
     - uses: actions/upload-artifact@v2
       with:
@@ -151,9 +166,10 @@ jobs:
   publish:
     name: Publish release
     needs:
-    - unix-wheels-standard
+    - linux-wheels-standard
+    - macos-wheels
     - windows-wheels-and-sdist
-    - unix-wheels-arm
+    - linux-wheels-arm
     runs-on: ubuntu-latest
     if: github.event_name == 'create' && github.event.ref_type == 'tag'
 

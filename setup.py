@@ -188,6 +188,8 @@ class build_clib(_build_clib):
             '--enable-openssl-tests=no',
             '--enable-exhaustive-tests=no',
         ]
+        if 'COINCURVE_HOST' in os.environ:
+            cmd.append('--host={}'.format(os.environ['COINCURVE_HOST']))
 
         log.debug('Running configure: {}'.format(' '.join(cmd)))
         subprocess.check_call(cmd, cwd=build_temp)

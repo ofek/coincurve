@@ -103,6 +103,12 @@ jobs:
       env:
         CIBW_ARCHS_MACOS: x86_64
 
+    - uses: actions/upload-artifact@v2
+      with:
+        name: artifacts
+        path: wheelhouse/*.whl
+        if-no-files-found: error
+
   macos-wheels-arm:
     name: Build macOS wheels for ARM
     needs:
@@ -117,7 +123,7 @@ jobs:
       env:
         CIBW_ARCHS_MACOS: arm64
         COINCURVE_CROSS_HOST: aarch64-apple-darwin
-        CFLAGS: -target arm64-apple-macos
+        CFLAGS: -target arm64-apple-macos11
 
     - uses: actions/upload-artifact@v2
       with:

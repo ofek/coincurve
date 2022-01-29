@@ -134,7 +134,7 @@ jobs:
         path: dist/*
         if-no-files-found: error
 
-  unix-wheels-arm:
+  linux-wheels-arm:
     name: Build Linux wheels for ARM
     needs:
     - test

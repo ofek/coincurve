@@ -16,8 +16,9 @@ concurrency:
   cancel-in-progress: true
 
 env:
-  COINCURVE_UPSTREAM_REF: a1102b12196ea27f44d6201de4d25926a2ae9640
+  COINCURVE_UPSTREAM_REF: d8a246324650c3df8d54d133a8ac3c1b857a7a4e
   COINCURVE_IGNORE_SYSTEM_LIB: '1'
+  CIBW_BEFORE_ALL_MACOS: ./.github/scripts/install-macos-build-deps.sh
   CIBW_ENVIRONMENT_PASS_LINUX: >
     COINCURVE_UPSTREAM_REF
     COINCURVE_IGNORE_SYSTEM_LIB
@@ -33,7 +34,7 @@ env:
 
 jobs:
   test:
-    name: Test latest
+    name: Test latest Python
     runs-on: ubuntu-latest
 
     env:
@@ -88,7 +89,7 @@ jobs:
     #     path: wheelhouse/*.whl
     #     if-no-files-found: error
 
-  macos-wheels:
+  macos-wheels-x86-64:
     name: Build macOS wheels
     needs:
     - test
@@ -100,9 +101,22 @@ jobs:
     - name: Build wheels
       uses: pypa/cibuildwheel@v2.3.1
       env:
-        CIBW_BEFORE_ALL_MACOS: ./.github/scripts/install-macos-build-deps.sh
+        CIBW_ARCHS_MACOS: x86_64
+
+  macos-wheels-arm:
+    name: Build macOS wheels for ARM
+    needs:
+    - test
+    runs-on: macos-10.15
+
+    steps:
+    - uses: actions/checkout@v2
+
+    - name: Build wheels
+      uses: pypa/cibuildwheel@v2.3.1
+      env:
         CIBW_ARCHS_MACOS: arm64
-        # COINCURVE_HOST: aarch64-apple-darwin
+        COINCURVE_CROSS_HOST: aarch64-apple-darwin
         CFLAGS: -target arm64-apple-macos
 
     - uses: actions/upload-artifact@v2
@@ -168,7 +182,8 @@ jobs:
     name: Publish release
     needs:
     - linux-wheels-standard
-    - macos-wheels
+    - macos-wheels-x86-64
+    - macos-wheels-arm
     - windows-wheels-and-sdist
     - linux-wheels-arm
     runs-on: ubuntu-latest

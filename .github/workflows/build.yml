@@ -43,33 +43,33 @@ jobs:
     steps:
     - uses: actions/checkout@v2
 
-    # - name: Set up Python ${{ env.PYTHON_VERSION }}
-    #   uses: actions/setup-python@v2
-    #   with:
-    #     python-version: ${{ env.PYTHON_VERSION }}
+    - name: Set up Python ${{ env.PYTHON_VERSION }}
+      uses: actions/setup-python@v2
+      with:
+        python-version: ${{ env.PYTHON_VERSION }}
 
-    # - name: Upgrade Python packaging tools
-    #   run: pip install --upgrade pip setuptools wheel
+    - name: Upgrade Python packaging tools
+      run: pip install --upgrade pip setuptools wheel
 
-    # - name: Show runner information
-    #   run: |
-    #     python --version
-    #     pip --version
+    - name: Show runner information
+      run: |
+        python --version
+        pip --version
 
-    # - name: Install dependencies
-    #   run: ./.github/scripts/install-test-deps.sh
+    - name: Install dependencies
+      run: ./.github/scripts/install-test-deps.sh
 
-    # - name: Check style and typing
-    #   run: tox -e lint,typing
+    - name: Check style and typing
+      run: tox -e lint,typing
 
-    # - name: Run tests
-    #   run: tox -e ${PYTHON_VERSION}
+    - name: Run tests
+      run: tox -e ${PYTHON_VERSION}
 
-    # - name: Run benchmarks
-    #   run: tox -e bench
+    - name: Run benchmarks
+      run: tox -e bench
 
-    # - name: Upload coverage
-    #   run: codecov -X gcov
+    - name: Upload coverage
+      run: codecov -X gcov
 
   linux-wheels-standard:
     name: Build Linux wheels
@@ -80,14 +80,14 @@ jobs:
     steps:
     - uses: actions/checkout@v2
 
-    # - name: Build wheels
-    #   uses: pypa/cibuildwheel@v2.3.1
+    - name: Build wheels
+      uses: pypa/cibuildwheel@v2.3.1
 
-    # - uses: actions/upload-artifact@v2
-    #   with:
-    #     name: artifacts
-    #     path: wheelhouse/*.whl
-    #     if-no-files-found: error
+    - uses: actions/upload-artifact@v2
+      with:
+        name: artifacts
+        path: wheelhouse/*.whl
+        if-no-files-found: error
 
   macos-wheels-x86-64:
     name: Build macOS wheels

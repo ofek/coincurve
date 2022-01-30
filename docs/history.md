@@ -6,6 +6,12 @@ Important changes are emphasized.
 
 ## master
 
+## Unreleased
+
+- **Breaking:** Drop support for Python 3.6
+- Fix wheels for Apple M1
+- Upgrade [libsecp256k1][] to the latest available version
+
 ## 16.0.0
 
 - Wheels for Apple Silicon and musl linux (Alpine)

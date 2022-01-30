@@ -18,7 +18,6 @@ C library used by [Bitcoin Core][] for operations on the elliptic curve [secp256
 - Clean, easy to use API
 - Frequent updates from the development version of [libsecp256k1][]
 - Linux, macOS, and Windows all have binary packages for multiple architectures
-- Linux & macOS use GMP for faster computation
 - Deterministic signatures as specified by [RFC 6979][]
 - Non-malleable signatures (lower-S form) by default
 - Secure, non-malleable [ECDH][] implementation

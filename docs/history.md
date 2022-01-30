@@ -8,6 +8,8 @@ Important changes are emphasized.
 
 ## Unreleased
 
+## 17.0.0
+
 - **Breaking:** Drop support for Python 3.6
 - Fix wheels for Apple M1
 - Upgrade [libsecp256k1][] to the latest available version

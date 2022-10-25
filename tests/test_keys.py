@@ -4,7 +4,7 @@ from os import urandom
 import pytest
 
 from coincurve.ecdsa import deserialize_recoverable, recover
-from coincurve.keys import PrivateKey, PublicKey
+from coincurve.keys import PrivateKey, PublicKey, XonlyPublicKey
 from coincurve.utils import bytes_to_int, int_to_bytes_padded, verify_signature
 
 from .samples import (
@@ -20,6 +20,8 @@ from .samples import (
     PUBLIC_KEY_Y,
     RECOVERABLE_SIGNATURE,
     SIGNATURE,
+    X_ONLY_PUBKEY,
+    X_ONLY_PUBKEY_INVALID,
 )
 
 G = PublicKey(
@@ -146,3 +148,18 @@ class TestPublicKey:
         b = PrivateKey().public_key
 
         assert PublicKey.combine_keys([a, b]) == a.combine([b])
+
+
+class TestXonlyPubKey:
+    def test_parse_invalid(self):
+        # Must be 32 bytes
+        with pytest.raises(ValueError):
+            XonlyPublicKey(bytes(33))
+
+        # Must be an x coordinate for a valid point
+        with pytest.raises(ValueError):
+            XonlyPublicKey(X_ONLY_PUBKEY_INVALID)
+
+    def test_roundtrip(self):
+        assert XonlyPublicKey(X_ONLY_PUBKEY).format() == X_ONLY_PUBKEY
+        assert XonlyPublicKey(PUBLIC_KEY_COMPRESSED[1:]).format() == PUBLIC_KEY_COMPRESSED[1:]

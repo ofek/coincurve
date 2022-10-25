@@ -15,7 +15,7 @@ concurrency:
   cancel-in-progress: true
 
 env:
-  COINCURVE_UPSTREAM_REF: d8a246324650c3df8d54d133a8ac3c1b857a7a4e
+  COINCURVE_UPSTREAM_REF: 694ce8fb2d1fd8a3d641d7c33705691d41a2a860
   COINCURVE_IGNORE_SYSTEM_LIB: '1'
   CIBW_BEFORE_ALL_MACOS: ./.github/scripts/install-macos-build-deps.sh
   CIBW_ENVIRONMENT_PASS_LINUX: >

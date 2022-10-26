@@ -37,6 +37,9 @@ class TestPrivateKey:
     def test_public_key(self):
         assert PrivateKey(PRIVATE_KEY_BYTES).public_key.format() == PUBLIC_KEY_COMPRESSED
 
+    def test_xonly_pubkey(self):
+        assert PrivateKey(PRIVATE_KEY_BYTES).xonly_pubkey.format() == PUBLIC_KEY_COMPRESSED[1:]
+
     def test_signature_correct(self):
         private_key = PrivateKey()
         public_key = private_key.public_key
@@ -60,6 +63,22 @@ class TestPrivateKey:
             private_key.public_key.format()
             == PublicKey(recover(MESSAGE, deserialize_recoverable(private_key.sign_recoverable(MESSAGE)))).format()
         )
+
+    def test_schnorr_signature(self):
+        private_key = PrivateKey()
+        message = urandom(32)
+
+        # Message must be 32 bytes
+        with pytest.raises(ValueError):
+            private_key.sign_schnorr(message + b'\x01')
+
+        # We can provide supplementary randomness
+        sig = private_key.sign_schnorr(message, urandom(32))
+        assert private_key.xonly_pubkey.verify(sig, message)
+
+        # Or not
+        sig = private_key.sign_schnorr(message)
+        assert private_key.xonly_pubkey.verify(sig, message)
 
     def test_to_hex(self):
         assert PrivateKey(PRIVATE_KEY_BYTES).to_hex() == PRIVATE_KEY_HEX

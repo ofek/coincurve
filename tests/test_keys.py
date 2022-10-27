@@ -182,3 +182,26 @@ class TestXonlyPubKey:
     def test_roundtrip(self):
         assert XonlyPublicKey(X_ONLY_PUBKEY).format() == X_ONLY_PUBKEY
         assert XonlyPublicKey(PUBLIC_KEY_COMPRESSED[1:]).format() == PUBLIC_KEY_COMPRESSED[1:]
+
+        # Test __eq__
+        assert XonlyPublicKey(X_ONLY_PUBKEY) == XonlyPublicKey(X_ONLY_PUBKEY)
+
+    def test_tweak(self):
+        # Taken from BIP341 test vectors.
+        # See github.com/bitcoin/bips/blob/6545b81022212a9f1c814f6ce1673e84bc02c910/bip-0341/wallet-test-vectors.json
+        pubkey = XonlyPublicKey(bytes.fromhex('d6889cb081036e0faefa3a35157ad71086b123b2b144b649798b494c300a961d'))
+        pubkey.tweak_add(bytes.fromhex('b86e7be8f39bab32a6f2c0443abbc210f0edac0e2c53d501b36b64437d9c6c70'))
+        assert pubkey.format() == bytes.fromhex('53a1f6e454df1aa2776a2814a721372d6258050de330b3c6d10ee8f4e0dda343')
+
+    def test_parity(self):
+        # Taken from BIP341 test vectors.
+        # See github.com/bitcoin/bips/blob/6545b81022212a9f1c814f6ce1673e84bc02c910/bip-0341/wallet-test-vectors.json
+        pubkey = XonlyPublicKey(bytes.fromhex('187791b6f712a8ea41c8ecdd0ee77fab3e85263b37e1ec18a3651926b3a6cf27'))
+        pubkey.tweak_add(bytes.fromhex('cbd8679ba636c1110ea247542cfbd964131a6be84f873f7f3b62a777528ed001'))
+        assert pubkey.format() == bytes.fromhex('147c9c57132f6e7ecddba9800bb0c4449251c92a1e60371ee77557b6620f3ea3')
+        assert pubkey.parity
+
+        pubkey = XonlyPublicKey(bytes.fromhex('93478e9488f956df2396be2ce6c5cced75f900dfa18e7dabd2428aae78451820'))
+        pubkey.tweak_add(bytes.fromhex('6af9e28dbf9d6aaf027696e2598a5b3d056f5fd2355a7fd5a37a0e5008132d30'))
+        assert pubkey.format() == bytes.fromhex('e4d810fd50586274face62b8a807eb9719cef49c04177cc6b76a9a4251d5450e')
+        assert not pubkey.parity

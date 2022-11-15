@@ -59,5 +59,5 @@ All objects are available directly under the root namespace `coincurve`.
       - __init__
       - verify
       - format
-      - add
+      - tweak_add
       - from_secret

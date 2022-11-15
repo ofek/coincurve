@@ -606,12 +606,11 @@ class PublicKeyXOnly:
             self.context.ctx, signature, message, len(message), self.public_key
         )
 
-    def add(self, scalar: bytes):
+    def tweak_add(self, scalar: bytes):
         """Add a scalar to the public key.
 
         :param scalar: The scalar with which to add.
-        :param update: Whether or not to update and return the public key in-place.
-        :return: The new public key, or the modified public key if `update` is `True`.
+        :return: The modified public key.
         :rtype: PublicKeyXOnly
         :raises ValueError: If the tweak was out of range or the resulting public key was invalid.
         """

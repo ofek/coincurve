@@ -80,7 +80,7 @@ jobs:
     - uses: actions/checkout@v2
 
     - name: Build wheels
-      uses: pypa/cibuildwheel@v2.3.1
+      uses: pypa/cibuildwheel@v2.11.2
 
     - uses: actions/upload-artifact@v2
       with:
@@ -98,7 +98,7 @@ jobs:
     - uses: actions/checkout@v2
 
     - name: Build wheels
-      uses: pypa/cibuildwheel@v2.3.1
+      uses: pypa/cibuildwheel@v2.11.2
       env:
         CIBW_ARCHS_MACOS: x86_64
 
@@ -118,7 +118,7 @@ jobs:
     - uses: actions/checkout@v2
 
     - name: Build wheels
-      uses: pypa/cibuildwheel@v2.3.1
+      uses: pypa/cibuildwheel@v2.11.2
       env:
         CIBW_ARCHS_MACOS: arm64
         COINCURVE_CROSS_HOST: aarch64-apple-darwin
@@ -173,7 +173,7 @@ jobs:
         platforms: arm64
 
     - name: Build wheels
-      uses: pypa/cibuildwheel@v2.3.1
+      uses: pypa/cibuildwheel@v2.11.2
       env:
         CIBW_ARCHS_LINUX: aarch64
 

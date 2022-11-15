@@ -38,7 +38,7 @@ class TestPrivateKey:
         assert PrivateKey(PRIVATE_KEY_BYTES).public_key.format() == PUBLIC_KEY_COMPRESSED
 
     def test_xonly_pubkey(self):
-        assert PrivateKey(PRIVATE_KEY_BYTES).xonly_pubkey.format() == PUBLIC_KEY_COMPRESSED[1:]
+        assert PrivateKey(PRIVATE_KEY_BYTES).public_key_xonly.format() == PUBLIC_KEY_COMPRESSED[1:]
 
     def test_signature_correct(self):
         private_key = PrivateKey()

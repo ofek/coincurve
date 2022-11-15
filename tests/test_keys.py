@@ -74,11 +74,11 @@ class TestPrivateKey:
 
         # We can provide supplementary randomness
         sig = private_key.sign_schnorr(message, urandom(32))
-        assert private_key.xonly_pubkey.verify(sig, message)
+        assert private_key.public_key_xonly.verify(sig, message)
 
         # Or not
         sig = private_key.sign_schnorr(message)
-        assert private_key.xonly_pubkey.verify(sig, message)
+        assert private_key.public_key_xonly.verify(sig, message)
 
     def test_to_hex(self):
         assert PrivateKey(PRIVATE_KEY_BYTES).to_hex() == PRIVATE_KEY_HEX
@@ -173,7 +173,7 @@ class TestXonlyPubKey:
     def test_parse_invalid(self):
         # Must be 32 bytes
         with pytest.raises(ValueError):
-            XonlyPublicKey(bytes(33))
+            XonlyPublicKey.from_secret(bytes(33))
 
         # Must be an x coordinate for a valid point
         with pytest.raises(ValueError):

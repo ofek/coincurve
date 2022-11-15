@@ -3,7 +3,7 @@ set -ex
 
 build_dll() {
     ./autogen.sh
-    ./configure --host=$1 --enable-module-recovery --enable-experimental --enable-module-ecdh --enable-benchmark=no --enable-tests=no --enable-openssl-tests=no --enable-exhaustive-tests=no --enable-static --disable-dependency-tracking --with-pic
+    ./configure --host=$1 --enable-module-recovery --enable-experimental --enable-module-ecdh --enable-module-extrakeys --enable-module-schnorrsig --enable-benchmark=no --enable-tests=no --enable-openssl-tests=no --enable-exhaustive-tests=no --enable-static --disable-dependency-tracking --with-pic
     make
 }
 

@@ -32,7 +32,7 @@ class PrivateKey:
         self.secret: bytes = validate_secret(secret) if secret is not None else get_valid_secret()
         self.context = context
         self.public_key: PublicKey = PublicKey.from_valid_secret(self.secret, self.context)
-        self.xonly_pubkey: XonlyPublicKey = XonlyPublicKey.from_secret(self.secret, self.context)
+        self.public_key_xonly: PublicKeyXOnly = PublicKeyXOnly.from_valid_secret(self.secret, self.context)
 
     def sign(self, message: bytes, hasher: Hasher = sha256, custom_nonce: Nonce = DEFAULT_NONCE) -> bytes:
         """
@@ -61,31 +61,40 @@ class PrivateKey:
 
         return cdata_to_der(signature, self.context)
 
-    def sign_schnorr(self, message: bytes, aux_randomness: bytes = None) -> bytes:
+    def sign_schnorr(self, message: bytes, aux_randomness: bytes = b'') -> bytes:
         """Create a Schnorr signature.
 
-        :param message: the message to be signed as an array of 32 bytes.
-        :param aux_randomness: an optional 32 bytes of fresh randomness.
-        :return: the 64-bytes Schnorr signature.
+        :param message: The message to sign.
+        :param aux_randomness: An optional 32 bytes of fresh randomness. By default (empty bytestring), this
+                               will be generated automatically. Set to `None` to disable this behavior.
+        :return: The Schnorr signature.
+        :raises ValueError: If the message was not 32 bytes long, the optional auxiliary random data was not
+                            32 bytes long, signing failed, or the signature was invalid.
         """
-        if not isinstance(message, bytes) or len(message) != 32:
-            raise ValueError('"message" must be an array of 32 bytes')
-        if aux_randomness is not None and (not isinstance(aux_randomness, bytes) or len(aux_randomness) != 32):
-            raise ValueError('"aux_randomness" must be an array of 32 bytes')
+        if len(message) != 32:
+            raise ValueError('Message must be 32 bytes long.')
+        elif aux_randomness == b'':
+            aux_randomness = os.urandom(32)
+        elif aux_randomness is None:
+            aux_randomness = ffi.NULL
+        elif len(aux_randomness) != 32:
+            raise ValueError('Auxiliary random data must be 32 bytes long.')
 
         keypair = ffi.new('secp256k1_keypair *')
         res = lib.secp256k1_keypair_create(self.context.ctx, keypair, self.secret)
-        assert res, 'Secret must be valid, we just checked it'
+        if not res:
+            raise ValueError('Secret was invalid')
 
-        aux_randomness = aux_randomness or os.urandom(32)
         signature = ffi.new('unsigned char[64]')
         res = lib.secp256k1_schnorrsig_sign32(self.context.ctx, signature, message, keypair, aux_randomness)
-        assert res, 'Secret key is valid, signing must not fail'
+        if not res:
+            raise ValueError('Signing failed')
 
         res = lib.secp256k1_schnorrsig_verify(
-            self.context.ctx, signature, message, len(message), self.xonly_pubkey.xonly_pubkey
+            self.context.ctx, signature, message, len(message), self.public_key_xonly.public_key
         )
-        assert res, 'libsecp must not give us an invalid signature'
+        if not res:
+            raise ValueError('Invalid signature')
 
         return bytes(ffi.buffer(signature))
 
@@ -516,96 +525,106 @@ class PublicKey:
         return self.format(compressed=False) == other.format(compressed=False)
 
 
-class XonlyPublicKey:
-    def __init__(self, data: bytes, parity: bool = False, context: Context = GLOBAL_CONTEXT):
-        """A BIP340 'x-only' public key.
+class PublicKeyXOnly:
+    def __init__(self, data, parity: bool = False, context: Context = GLOBAL_CONTEXT):
+        """A BIP340 `x-only` public key.
 
-        :param data: The formatted public key as a 32 bytes array or as an ffi 'secp256k1_xonly_pubkey *' type.
-        :param parity: Whether the encoded point is the negation of the pubkey.
+        :param data: The formatted public key.
         :type data: bytes
-        :param context: a reference to a verification context.
+        :param parity: Whether the encoded point is the negation of the public key.
+        :param context:
         """
-        if isinstance(data, bytes):
-            if len(data) != 32:
-                raise ValueError('"data" if in bytes must be an array of 32 bytes')
-
-            self.xonly_pubkey = ffi.new('secp256k1_xonly_pubkey *')
-            parsed = lib.secp256k1_xonly_pubkey_parse(context.ctx, self.xonly_pubkey, data)
+        if not isinstance(data, bytes):
+            self.public_key = data
+        else:
+            public_key = ffi.new('secp256k1_xonly_pubkey *')
+            parsed = lib.secp256k1_xonly_pubkey_parse(context.ctx, public_key, data)
             if not parsed:
                 raise ValueError('The public key could not be parsed or is invalid.')
-        else:
-            # data must be a cdata 'secp256k1_xonly_pubkey *' type
-            self.xonly_pubkey = data
+
+            self.public_key = public_key
 
         self.parity = parity
         self.context = context
 
     @classmethod
     def from_secret(cls, secret: bytes, context: Context = GLOBAL_CONTEXT):
-        """Create an x-only public key from a given secret.
+        """Derive an x-only public key from a private key secret.
 
-        :param secret: the private key as an array of 32 bytes.
+        :param secret: The private key secret.
+        :param context:
         :return: The x-only public key.
         """
-        if not isinstance(secret, bytes) or len(secret) != 32:
-            raise ValueError('"data" must be an array of 32 bytes')
-        secret = validate_secret(secret)
-
         keypair = ffi.new('secp256k1_keypair *')
-        res = lib.secp256k1_keypair_create(context.ctx, keypair, secret)
-        assert res, 'Secret must be valid, we just checked it'
+        res = lib.secp256k1_keypair_create(context.ctx, keypair, validate_secret(secret))
+        if not res:
+            raise ValueError('Secret was invalid')
 
         xonly_pubkey = ffi.new('secp256k1_xonly_pubkey *')
         pk_parity = ffi.new('int *')
         res = lib.secp256k1_keypair_xonly_pub(context.ctx, xonly_pubkey, pk_parity, keypair)
-        assert res and pk_parity[0] in (0, 1), 'Must always return 1 and a boolean parity'
 
-        return cls(xonly_pubkey, parity=bool(pk_parity[0]), context=context)
+        return cls(xonly_pubkey, parity=not not pk_parity[0], context=context)
+
+    @classmethod
+    def from_valid_secret(cls, secret: bytes, context: Context = GLOBAL_CONTEXT):
+        keypair = ffi.new('secp256k1_keypair *')
+        res = lib.secp256k1_keypair_create(context.ctx, keypair, secret)
+        if not res:
+            raise ValueError('Secret was invalid')
+
+        xonly_pubkey = ffi.new('secp256k1_xonly_pubkey *')
+        pk_parity = ffi.new('int *')
+        res = lib.secp256k1_keypair_xonly_pub(context.ctx, xonly_pubkey, pk_parity, keypair)
+
+        return cls(xonly_pubkey, parity=not not pk_parity[0], context=context)
 
     def format(self) -> bytes:
         """Serialize the public key.
 
-        :return: The public key serialized as an array of 32 bytes.
+        :return: The public key serialized as 32 bytes.
         """
         output32 = ffi.new('unsigned char [32]')
 
-        res = lib.secp256k1_xonly_pubkey_serialize(self.context.ctx, output32, self.xonly_pubkey)
-        assert res, 'Public key in self.xonly_pubkey must be valid'
+        res = lib.secp256k1_xonly_pubkey_serialize(self.context.ctx, output32, self.public_key)
+        if not res:
+            raise ValueError('Public key in self.public_key must be valid')
 
         return bytes(ffi.buffer(output32, 32))
 
     def verify(self, signature: bytes, message: bytes) -> bool:
         """Verify a Schnorr signature over a given message.
 
-        :param signature: The 64-bytes Schnorr signature to verify.
+        :param signature: The 64-byte Schnorr signature to verify.
         :param message: The message to be verified.
         :return: A boolean indicating whether or not the signature is correct.
         """
-        if not isinstance(signature, bytes) or len(signature) != 64:
-            raise ValueError('The "signature" parameter must be an array of 64 bytes')
-        if not isinstance(message, bytes):
-            raise ValueError('The "message" parameter must be an array of bytes')
+        if len(signature) != 64:
+            raise ValueError('Signature must be 32 bytes long.')
 
-        return lib.secp256k1_schnorrsig_verify(self.context.ctx, signature, message, len(message), self.xonly_pubkey)
+        return not not lib.secp256k1_schnorrsig_verify(
+            self.context.ctx, signature, message, len(message), self.public_key
+        )
 
-    def tweak_add(self, tweak: bytes):
-        """Tweak the public key by adding the generator multiplied with tweak32 to it.
+    def tweak_add(self, scalar: bytes):
+        """Add a scalar to the public key.
 
-        :param tweak: A 32 bytes tweak.
+        :param scalar: The scalar with which to add.
+        :return: The modified public key.
+        :rtype: PublicKeyXOnly
+        :raises ValueError: If the tweak was out of range or the resulting public key was invalid.
         """
-        if not isinstance(tweak, bytes) or len(tweak) != 32:
-            raise ValueError('"tweak" must be an array of 32 bytes')
+        scalar = pad_scalar(scalar)
 
         out_pubkey = ffi.new('secp256k1_pubkey *')
-        res = lib.secp256k1_xonly_pubkey_tweak_add(self.context.ctx, out_pubkey, self.xonly_pubkey, tweak)
+        res = lib.secp256k1_xonly_pubkey_tweak_add(self.context.ctx, out_pubkey, self.public_key, scalar)
         if not res:
-            raise ValueError('Resulting public key would be invalid')
+            raise ValueError('The tweak was out of range, or the resulting public key would be invalid')
 
         pk_parity = ffi.new('int *')
-        res = lib.secp256k1_xonly_pubkey_from_pubkey(self.context.ctx, self.xonly_pubkey, pk_parity, out_pubkey)
-        assert res and pk_parity[0] in (0, 1), 'Must always return 1 and a boolean parity'
-        self.parity = bool(pk_parity[0])
+        lib.secp256k1_xonly_pubkey_from_pubkey(self.context.ctx, self.public_key, pk_parity, out_pubkey)
+        self.parity = not not pk_parity[0]
 
     def __eq__(self, other) -> bool:
-        res = lib.secp256k1_xonly_pubkey_cmp(self.context.ctx, self.xonly_pubkey, other.xonly_pubkey)
+        res = lib.secp256k1_xonly_pubkey_cmp(self.context.ctx, self.public_key, other.public_key)
         return res == 0

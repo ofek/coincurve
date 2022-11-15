@@ -526,7 +526,7 @@ class PublicKey:
 
 
 class PublicKeyXOnly:
-    def __init__(self, data: bytes, parity: bool = False, context: Context = GLOBAL_CONTEXT):
+    def __init__(self, data, parity: bool = False, context: Context = GLOBAL_CONTEXT):
         """A BIP340 `x-only` public key.
 
         :param data: The formatted public key as a 32 bytes array or as an ffi 'secp256k1_xonly_pubkey *' type.
@@ -538,7 +538,7 @@ class PublicKeyXOnly:
             self.public_key = data
         else:
             public_key = ffi.new('secp256k1_xonly_pubkey *')
-            parsed = lib.secp256k1_xonly_pubkey_parse(context.ctx, self.public_key, data)
+            parsed = lib.secp256k1_xonly_pubkey_parse(context.ctx, public_key, data)
             if not parsed:
                 raise ValueError('The public key could not be parsed or is invalid.')
 
@@ -602,7 +602,9 @@ class PublicKeyXOnly:
         if len(signature) != 64:
             raise ValueError('Signature must be 32 bytes long.')
 
-        return not not lib.secp256k1_schnorrsig_verify(self.context.ctx, signature, message, len(message), self.public_key)
+        return not not lib.secp256k1_schnorrsig_verify(
+            self.context.ctx, signature, message, len(message), self.public_key
+        )
 
     def tweak_add(self, tweak: bytes):
         """Tweak the public key by adding the generator multiplied with tweak32 to it.

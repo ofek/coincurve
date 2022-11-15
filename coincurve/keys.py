@@ -529,10 +529,10 @@ class PublicKeyXOnly:
     def __init__(self, data, parity: bool = False, context: Context = GLOBAL_CONTEXT):
         """A BIP340 `x-only` public key.
 
-        :param data: The formatted public key as a 32 bytes array or as an ffi 'secp256k1_xonly_pubkey *' type.
-        :param parity: Whether the encoded point is the negation of the pubkey.
+        :param data: The formatted public key.
         :type data: bytes
-        :param context: a reference to a verification context.
+        :param parity: Whether the encoded point is the negation of the public key.
+        :param context:
         """
         if not isinstance(data, bytes):
             self.public_key = data
@@ -606,18 +606,21 @@ class PublicKeyXOnly:
             self.context.ctx, signature, message, len(message), self.public_key
         )
 
-    def tweak_add(self, tweak: bytes):
-        """Tweak the public key by adding the generator multiplied with tweak32 to it.
+    def add(self, scalar: bytes):
+        """Add a scalar to the public key.
 
-        :param tweak: A 32-byte tweak.
+        :param scalar: The scalar with which to add.
+        :param update: Whether or not to update and return the public key in-place.
+        :return: The new public key, or the modified public key if `update` is `True`.
+        :rtype: PublicKeyXOnly
+        :raises ValueError: If the tweak was out of range or the resulting public key was invalid.
         """
-        if not isinstance(tweak, bytes) or len(tweak) != 32:
-            raise ValueError('Tweak must be 32 bytes long.')
+        scalar = pad_scalar(scalar)
 
         out_pubkey = ffi.new('secp256k1_pubkey *')
-        res = lib.secp256k1_xonly_pubkey_tweak_add(self.context.ctx, out_pubkey, self.public_key, tweak)
+        res = lib.secp256k1_xonly_pubkey_tweak_add(self.context.ctx, out_pubkey, self.public_key, scalar)
         if not res:
-            raise ValueError('Resulting public key would be invalid')
+            raise ValueError('The tweak was out of range, or the resulting public key would be invalid')
 
         pk_parity = ffi.new('int *')
         lib.secp256k1_xonly_pubkey_from_pubkey(self.context.ctx, self.public_key, pk_parity, out_pubkey)

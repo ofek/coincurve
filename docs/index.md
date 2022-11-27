@@ -26,7 +26,6 @@ C library used by [Bitcoin Core][] for operations on the elliptic curve [secp256
 
 - [Ethereum](https://ethereum.org)
 - [LBRY](https://lbry.com)
-- [ZeroNet](https://zeronet.io)
 - [libp2p](https://libp2p.io)
 
 and [many more](users.md)!

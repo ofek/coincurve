@@ -76,7 +76,8 @@ def serialize_compact(raw_sig, context: Context = GLOBAL_CONTEXT):  # no cov
     output = ffi.new('unsigned char[%d]' % CDATA_SIG_LENGTH)
 
     res = lib.secp256k1_ecdsa_signature_serialize_compact(context.ctx, output, raw_sig)
-    assert res == 1
+    if not res:
+        raise ValueError('secp256k1_ecdsa_signature_serialize_compact')
 
     return bytes(ffi.buffer(output, CDATA_SIG_LENGTH))
 
@@ -87,7 +88,8 @@ def deserialize_compact(ser_sig: bytes, context: Context = GLOBAL_CONTEXT):  # n
 
     raw_sig = ffi.new('secp256k1_ecdsa_signature *')
     res = lib.secp256k1_ecdsa_signature_parse_compact(context.ctx, raw_sig, ser_sig)
-    assert res == 1
+    if not res:
+        raise ValueError('secp256k1_ecdsa_signature_parse_compact')
 
     return raw_sig
 

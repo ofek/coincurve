@@ -24,7 +24,8 @@ class Context:
         with self._lock:
             seed = urandom(32) if not seed or len(seed) != 32 else seed
             res = lib.secp256k1_context_randomize(self.ctx, ffi.new('unsigned char [32]', seed))
-            assert res == 1
+            if not res:
+                raise ValueError('secp256k1_context_randomize')
 
     def __repr__(self):
         return self.name or super().__repr__()

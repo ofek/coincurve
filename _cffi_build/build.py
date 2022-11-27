@@ -13,7 +13,7 @@ def _mk_ffi(sources, name='_libsecp256k1', **kwargs):
     code = []
 
     for source in sources:
-        with open(os.path.join(here, source.h), 'rt') as h:
+        with open(os.path.join(here, source.h)) as h:
             _ffi.cdef(h.read())
         code.append(source.include)
 

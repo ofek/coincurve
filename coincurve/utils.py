@@ -27,11 +27,11 @@ if environ.get('COINCURVE_BUILDING_DOCS') != 'true':
 
 else:  # no cov
 
-    class __Nonce(tuple):
+    class __Nonce(tuple):  # noqa: N801
         def __repr__(self):
             return '(ffi.NULL, ffi.NULL)'
 
-    class __HasherSHA256:
+    class __HasherSHA256:  # noqa: N801
         def __call__(self, bytestr: bytes) -> bytes:
             return _sha256(bytestr).digest()
 

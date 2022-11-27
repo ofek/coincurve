@@ -40,4 +40,4 @@
 - [python-idex](https://github.com/sammchardy/python-idex/blob/24cee970172491a7f7d5f52558727a77384cce26/requirements.txt#L2)
 - [Rotki](https://github.com/rotki/rotki/blob/70508f99f890bcbd520f1efe7776194d6a5e5e06/requirements.txt#L8)
 - [Vyper](https://github.com/vyperlang/vyper/blob/3bd0bf96856554810065fa9cfb89afef7625d436/Dockerfile#L15)
-- [ZeroNet](https://github.com/HelloZeroNet/ZeroNet/blob/454c0b2e7e000fda7000cba49027541fbf327b96/requirements.txt#L12)
+- [ZeroNet](https://github.com/zeronet-conservancy/zeronet-conservancy/blob/b6e18fd3738b4725726c5e170040deb3048c9048/requirements.txt#L12)

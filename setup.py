@@ -193,6 +193,7 @@ class build_clib(_build_clib):
         if 'COINCURVE_CROSS_HOST' in os.environ:
             cmd.append('--host={}'.format(os.environ['COINCURVE_CROSS_HOST']))
 
+        subprocess.check_call([MAKE, 'uninstall'], cwd=build_temp)
         log.debug('Running configure: {}'.format(' '.join(cmd)))
         subprocess.check_call(cmd, cwd=build_temp)
 

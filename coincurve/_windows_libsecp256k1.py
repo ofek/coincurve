@@ -4,6 +4,7 @@ from cffi import FFI
 
 BASE_DEFINITIONS = """
 typedef struct secp256k1_context_struct secp256k1_context;
+typedef struct secp256k1_scratch_space_struct secp256k1_scratch_space;
 
 typedef struct {
     unsigned char data[64];
@@ -22,20 +23,31 @@ typedef int (*secp256k1_nonce_function)(
     unsigned int attempt
 );
 
-#define SECP256K1_FLAGS_TYPE_MASK 255
-#define SECP256K1_FLAGS_TYPE_CONTEXT 1
-#define SECP256K1_FLAGS_TYPE_COMPRESSION 2
+#define SECP256K1_FLAGS_TYPE_MASK ...
+#define SECP256K1_FLAGS_TYPE_CONTEXT ...
+#define SECP256K1_FLAGS_TYPE_COMPRESSION ...
+#define SECP256K1_FLAGS_BIT_CONTEXT_VERIFY ...
+#define SECP256K1_FLAGS_BIT_CONTEXT_SIGN ...
+#define SECP256K1_FLAGS_BIT_CONTEXT_DECLASSIFY ...
+#define SECP256K1_FLAGS_BIT_COMPRESSION ...
 
-#define SECP256K1_FLAGS_BIT_CONTEXT_VERIFY 256
-#define SECP256K1_FLAGS_BIT_CONTEXT_SIGN 512
-#define SECP256K1_FLAGS_BIT_COMPRESSION 256
+#define SECP256K1_CONTEXT_NONE ...
 
-#define SECP256K1_CONTEXT_VERIFY 257
-#define SECP256K1_CONTEXT_SIGN 513
-#define SECP256K1_CONTEXT_NONE 1
+#define SECP256K1_CONTEXT_VERIFY ...
+#define SECP256K1_CONTEXT_SIGN ...
 
-#define SECP256K1_EC_COMPRESSED 258
-#define SECP256K1_EC_UNCOMPRESSED 2
+#define SECP256K1_CONTEXT_DECLASSIFY ...
+
+#define SECP256K1_EC_COMPRESSED ...
+#define SECP256K1_EC_UNCOMPRESSED ...
+
+#define SECP256K1_TAG_PUBKEY_EVEN ...
+#define SECP256K1_TAG_PUBKEY_ODD ...
+#define SECP256K1_TAG_PUBKEY_UNCOMPRESSED ...
+#define SECP256K1_TAG_PUBKEY_HYBRID_EVEN ...
+#define SECP256K1_TAG_PUBKEY_HYBRID_ODD ...
+
+void secp256k1_selftest(void);
 
 secp256k1_context* secp256k1_context_create(
     unsigned int flags
@@ -59,6 +71,11 @@ void secp256k1_context_set_error_callback(
     secp256k1_context* ctx,
     void (*fun)(const char* message, void* data),
     const void* data
+);
+
+secp256k1_scratch_space* secp256k1_scratch_space_create(
+    const secp256k1_context* ctx,
+    size_t size
 );
 
 int secp256k1_ec_pubkey_parse(

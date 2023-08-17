@@ -36,7 +36,7 @@ MAKE = 'gmake' if platform.system() in ['FreeBSD', 'OpenBSD'] else 'make'
 #
 # Version of libsecp256k1 to download if none exists in the `libsecp256k1` directory
 # UPSTREAM_TAG = os.getenv('COINCURVE_UPSTREAM_TAG') or 'v0.3.2'
-UPSTREAM_REF = os.getenv('COINCURVE_UPSTREAM_TAG') or 'b327abfcea90394b5c63890406d6a5c54d02212e'
+UPSTREAM_REF = os.getenv('COINCURVE_UPSTREAM_TAG') or 'acf5c55ae6a94e5ca847e07def40427547876101'
 
 # LIB_TARBALL_URL = f'https://github.com/bitcoin-core/secp256k1/archive/refs/tags/{UPSTREAM_TAG}.tar.gz'
 LIB_TARBALL_URL = f'https://github.com/bitcoin-core/secp256k1/archive/{UPSTREAM_REF}.tar.gz'
@@ -198,6 +198,7 @@ class build_clib(_build_clib):
         subprocess.check_call(cmd, cwd=build_temp)  # noqa S603
 
         subprocess.check_call([MAKE], cwd=build_temp)  # noqa S603
+        subprocess.check_call([MAKE, 'check'], cwd=build_temp)  # noqa S603
         subprocess.check_call([MAKE, 'install'], cwd=build_temp)  # noqa S603
 
         self.build_flags['include_dirs'].extend(build_flags('libsecp256k1', 'I', build_temp))

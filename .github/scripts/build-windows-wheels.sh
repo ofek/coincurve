@@ -17,9 +17,9 @@ mv .hidden ../clean
 
 cd ..
 
-curl -sLO "https://github.com/bitcoin-core/secp256k1/archive/ref/tags/$COINCURVE_UPSTREAM_TAG.tar.gz"
-tar -xzf "$COINCURVE_UPSTREAM_TAG.tar.gz"
-mv "secp256k1-$COINCURVE_UPSTREAM_TAG" secp256k1
+curl -sLO "https://github.com/bitcoin-core/secp256k1/archive/$COINCURVE_UPSTREAM_REF.tar.gz"
+tar -xzf "$COINCURVE_UPSTREAM_REF.tar.gz"
+mv "secp256k1-$COINCURVE_UPSTREAM_REF" secp256k1
 
 mv secp256k1 64bit
 cp 64bit 32bit -R

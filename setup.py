@@ -58,21 +58,19 @@ def download_library(command):
         command.announce('downloading libsecp256k1 source code', level=log.INFO)
         try:
             import requests
-            try:
-                r = requests.get(LIB_TARBALL_URL, stream=True, timeout=10)
-                status_code = r.status_code
-                if status_code == 200:
-                    content = BytesIO(r.raw.read())
-                    content.seek(0)
-                    with tarfile.open(fileobj=content) as tf:
-                        dirname = tf.getnames()[0].partition('/')[0]
-                        tf.extractall()
-                    shutil.move(dirname, libdir)
-                else:
-                    raise SystemExit('Unable to download secp256k1 library: HTTP-Status: %d', status_code)
-            except requests.exceptions.RequestException as e:
-                raise SystemExit('Unable to download secp256k1 library: %s', str(e))
-        except ImportError as e:
+
+            r = requests.get(LIB_TARBALL_URL, stream=True)
+            status_code = r.status_code
+            if status_code == 200:
+                content = BytesIO(r.raw.read())
+                content.seek(0)
+                with tarfile.open(fileobj=content) as tf:
+                    dirname = tf.getnames()[0].partition('/')[0]
+                    tf.extractall()
+                shutil.move(dirname, libdir)
+            else:
+                raise SystemExit('Unable to download secp256k1 library: HTTP-Status: %d', status_code)
+        except requests.exceptions.RequestException as e:
             raise SystemExit('Unable to download secp256k1 library: %s', str(e))
 
 class egg_info(_egg_info):

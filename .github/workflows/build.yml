@@ -83,7 +83,7 @@ jobs:
     - name: Build wheels
       uses: pypa/cibuildwheel@v2.11.2
 
-    - uses: actions/upload-artifact@v2
+    - uses: actions/upload-artifact@v3
       with:
         name: artifacts
         path: wheelhouse/*.whl
@@ -93,7 +93,7 @@ jobs:
     name: Build macOS wheels
     needs:
     - test
-    runs-on: macos-10.15
+    runs-on: macos-12
 
     steps:
     - uses: actions/checkout@v3
@@ -103,7 +103,7 @@ jobs:
       env:
         CIBW_ARCHS_MACOS: x86_64
 
-    - uses: actions/upload-artifact@v2
+    - uses: actions/upload-artifact@v3
       with:
         name: artifacts
         path: wheelhouse/*.whl
@@ -113,7 +113,7 @@ jobs:
     name: Build macOS wheels for ARM
     needs:
     - test
-    runs-on: macos-10.15
+    runs-on: macos-12
 
     steps:
     - uses: actions/checkout@v3
@@ -125,7 +125,7 @@ jobs:
         COINCURVE_CROSS_HOST: aarch64-apple-darwin
         CFLAGS: -target arm64-apple-macos11
 
-    - uses: actions/upload-artifact@v2
+    - uses: actions/upload-artifact@v3
       with:
         name: artifacts
         path: wheelhouse/*.whl
@@ -149,7 +149,7 @@ jobs:
     - name: Build Windows wheels
       run: ./.github/scripts/build-windows-wheels.sh
 
-    - uses: actions/upload-artifact@v2
+    - uses: actions/upload-artifact@v3
       with:
         name: artifacts
         path: dist/*
@@ -178,7 +178,7 @@ jobs:
       env:
         CIBW_ARCHS_LINUX: aarch64
 
-    - uses: actions/upload-artifact@v2
+    - uses: actions/upload-artifact@v3
       with:
         name: artifacts
         path: wheelhouse/*.whl
@@ -197,7 +197,7 @@ jobs:
       github.event_name == 'push' && startsWith(github.event.ref, 'refs/tags')
 
     steps:
-    - uses: actions/download-artifact@v2
+    - uses: actions/download-artifact@v3
       with:
         name: artifacts
         path: dist

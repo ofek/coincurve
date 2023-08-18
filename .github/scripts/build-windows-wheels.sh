@@ -3,7 +3,7 @@ set -ex
 
 build_dll() {
     ./autogen.sh
-    ./configure --host=$1 --enable-module-recovery --enable-experimental --enable-module-ecdh --enable-module-extrakeys --enable-module-schnorrsig --enable-benchmark=no --enable-tests=no --enable-openssl-tests=no --enable-exhaustive-tests=no --enable-static --disable-dependency-tracking --with-pic
+    ./configure --host=$1 --enable-module-recovery --enable-experimental --enable-module-ecdh --enable-module-extrakeys --enable-module-schnorrsig --enable-benchmark=no --enable-tests=no --enable-exhaustive-tests=no --enable-static --disable-dependency-tracking --with-pic
     make
 }
 
@@ -26,6 +26,8 @@ cp 64bit 32bit -R
 
 cd 64bit
 build_dll x86_64-w64-mingw32
+ls -la .libs
+ls *.dll
 mv .libs/libsecp256k1-0.dll ../clean/coincurve/libsecp256k1.dll
 cd ../clean
 python setup.py bdist_wheel --plat-name=win_amd64
@@ -33,6 +35,8 @@ rm coincurve/libsecp256k1.dll
 
 cd ../32bit
 build_dll i686-w64-mingw32
+ls -la .libs
+ls *.dll
 mv .libs/libsecp256k1-0.dll ../clean/coincurve/libsecp256k1.dll
 cd ../clean
 python setup.py bdist_wheel --plat-name=win32

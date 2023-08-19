@@ -26,18 +26,16 @@ cp 64bit 32bit -R
 
 cd 64bit
 build_dll x86_64-w64-mingw32
-ls -la .libs
-ls *.dll
-mv .libs/libsecp256k1-0.dll ../clean/coincurve/libsecp256k1.dll
+# Not sure why it ended-up being a -2.dll instead of -0.dll: Researching
+mv .libs/libsecp256k1-?.dll ../clean/coincurve/libsecp256k1.dll
 cd ../clean
 python setup.py bdist_wheel --plat-name=win_amd64
 rm coincurve/libsecp256k1.dll
 
 cd ../32bit
 build_dll i686-w64-mingw32
-ls -la .libs
-ls *.dll
-mv .libs/libsecp256k1-0.dll ../clean/coincurve/libsecp256k1.dll
+# Not sure why it ended-up being a -2.dll instead of -0.dll: Researching
+mv .libs/libsecp256k1-?.dll ../clean/coincurve/libsecp256k1.dll
 cd ../clean
 python setup.py bdist_wheel --plat-name=win32
 

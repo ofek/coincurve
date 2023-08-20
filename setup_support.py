@@ -2,7 +2,7 @@ import glob
 import os
 import shutil
 import subprocess
-from contextlib import contextmanager
+from contextlib import contextmanager, suppress
 from tempfile import mkdtemp
 
 
@@ -36,6 +36,29 @@ def absolute(*paths):
     op = os.path
     return op.realpath(op.abspath(op.join(op.dirname(__file__), *paths)))
 
+def find_conda_executable(executable: str):
+    exec_path = None
+    for path in ("LIBRARY_BIN", "PREFIX", "BUILD_PREFIX", "SP_DIR", "PATH"):
+        if os.environ.get(path, None) is None:
+            continue
+
+        if exec_path is not None:
+            # For windows, we need to replace backslashes with forward slashes
+            exec_path = exec_path.replace("\\", "/")
+            break
+
+        for root, _, filenames in os.walk(os.environ.get(path)):
+            if 'bin' not in root.split(os.sep):
+                continue
+
+            for filename in filenames:
+                # Strip .exe suffix on Windows
+                executable = executable.replace(".exe", "")
+                if filename in (executable, f"{executable}.exe"):
+                    exec_path = os.path.join(root, filename)
+                    break
+    return exec_path
+
 
 def build_flags(library, type_, path):
     """Return separated build flags from pkg-config output"""
@@ -47,16 +70,15 @@ def build_flags(library, type_, path):
         pkg_config_path.append(os.environ['LIB_DIR'])
         pkg_config_path.append(os.path.join(os.environ['LIB_DIR'], 'pkgconfig'))
 
-    options = ['--static', {'I': '--cflags-only-I', 'L': '--libs-only-L', 'l': '--libs-only-l'}[type_]]
+    pkgconfig = find_conda_executable("pkg-config") or "pkg-config"
 
-    return [
-        flag.strip('-{}'.format(type_))
-        for flag in subprocess.check_output(
-            ['pkg-config'] + options + [library], env=dict(os.environ, PKG_CONFIG_PATH=':'.join(pkg_config_path))
-        )
-        .decode('UTF-8')
-        .split()
-    ]
+    options = {'I': '--cflags-only-I', 'L': '--libs-only-L', 'l': '--libs-only-l'}
+    env = dict(os.environ, PKG_CONFIG_PATH=':'.join(pkg_config_path))
+
+    flags = subprocess.check_output([pkgconfig, '--static', options[type_], library], env=env)  # noqa S603
+    flags = list(flags.decode('UTF-8').split())
+
+    return [flag.strip(f'-{type_}') for flag in flags]
 
 
 def _find_lib():
@@ -68,24 +90,15 @@ def _find_lib():
     ffi = FFI()
     try:
         ffi.dlopen('secp256k1')
-        if os.path.exists('/usr/include/secp256k1_ecdh.h'):
-            return True
-        else:
-            # The system library lacks the ecdh module
-            return False
+        return bool(os.path.exists('/usr/include/secp256k1_ecdh.h'))
     except OSError:
         if 'LIB_DIR' in os.environ:
             for path in glob.glob(os.path.join(os.environ['LIB_DIR'], '*secp256k1*')):
-                try:
+                with suppress(OSError):
                     FFI().dlopen(path)
                     return True
-                except OSError:
-                    pass
         # We couldn't locate libsecp256k1 so we'll use the bundled one
         return False
-    else:
-        # If we got this far then the system library should be good enough
-        return True
 
 
 _has_system_lib = None
@@ -100,7 +113,7 @@ def has_system_lib():
 
 def detect_dll():
     here = os.path.dirname(os.path.abspath(__file__))
-    for fn in os.listdir(os.path.join(here, 'coincurve')):
-        if fn.endswith('.dll'):
-            return True
-    return False
+    return any(
+        fn.endswith('.dll')
+        for fn in os.listdir(os.path.join(here, 'coincurve'))
+    )

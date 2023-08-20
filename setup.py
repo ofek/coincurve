@@ -5,13 +5,13 @@ import pathlib
 import platform
 import shutil
 import subprocess
+import sys
 import tarfile
 from distutils import log
 from distutils.command.build_clib import build_clib as _build_clib
 from distutils.command.build_ext import build_ext as _build_ext
 from distutils.errors import DistutilsError
 from io import BytesIO
-import sys
 
 from setuptools import Distribution as _Distribution, setup, find_packages, __version__ as setuptools_version
 from setuptools.command.develop import develop as _develop
@@ -24,7 +24,7 @@ except ImportError:
     _bdist_wheel = None
 
 sys.path.append(os.path.abspath(os.path.dirname(__file__)))
-from setup_support import absolute, build_flags, detect_dll, has_system_lib, find_conda_executable  # noqa: E402
+from setup_support import build_flags, detect_dll, has_system_lib, find_conda_executable  # noqa: E402
 
 
 BUILDING_FOR_WINDOWS = detect_dll()
@@ -69,12 +69,12 @@ def download_library(command, libdir=LIB_NAME, force=False):
     try:
         _download_library(libdir)
     except RequestException as e:
-        raise SystemExit(f'Unable to download {LIB_NAME} library: {str(e)}', ) from e
+        raise SystemExit(f'Unable to download {LIB_NAME} library: {e!s}', ) from e
 
 
 def _download_library(libdir):
     import requests
-    r = requests.get(LIB_TARBALL_URL, stream=True)
+    r = requests.get(LIB_TARBALL_URL, stream=True, timeout=10)
     status_code = r.status_code
     if status_code != 200:
         raise SystemExit(f'Unable to download {LIB_NAME} library: HTTP-Status: {status_code}')
@@ -160,9 +160,9 @@ class build_clib(_build_clib):
 
         download_library(self, libdir=built_lib_dir)
 
-        autoreconf = "autoreconf -if --warnings=all"
+        autoreconf = 'autoreconf -if --warnings=all'
         bash = find_conda_executable('bash') or find_conda_executable('sh') or 'bash'
-        subprocess.check_call([bash, '-c', autoreconf], cwd=built_lib_dir)
+        subprocess.check_call([bash, '-c', autoreconf], cwd=built_lib_dir)  # noqa S603
 
         for filename in [
             os.path.join(built_lib_dir, 'configure'),
@@ -206,13 +206,17 @@ class build_clib(_build_clib):
         log.debug(f"Running configure: {' '.join(cmd)}")
         # Prepend the working directory to the PATH
         os.environ['PATH'] = built_lib_dir + os.pathsep + os.environ['PATH']
-        subprocess.check_call([bash, '-c', ' '.join(cmd)], cwd=built_lib_dir)
+        subprocess.check_call([bash, '-c', ' '.join(cmd)], cwd=built_lib_dir)  # noqa S603
 
-        subprocess.check_call([MAKE], cwd=built_lib_dir)
-        subprocess.check_call([MAKE, 'install'], cwd=built_lib_dir)
+        subprocess.check_call([MAKE], cwd=built_lib_dir)  # noqa S603
+        subprocess.check_call([MAKE, 'install'], cwd=built_lib_dir)  # noqa S603
 
-        self.build_flags['include_dirs'].extend(build_flags(LIB_NAME, 'I', os.path.join(installed_lib_dir, "lib", "pkgconfig")))
-        self.build_flags['library_dirs'].extend(build_flags(LIB_NAME, 'L', os.path.join(installed_lib_dir, "lib", "pkgconfig")))
+        self.build_flags['include_dirs'].extend(build_flags(LIB_NAME,
+                                                            'I',
+                                                            os.path.join(installed_lib_dir, 'lib', 'pkgconfig')))
+        self.build_flags['library_dirs'].extend(build_flags(LIB_NAME,
+                                                            'L',
+                                                            os.path.join(installed_lib_dir, 'lib', 'pkgconfig')))
         if not has_system_lib():
             self.build_flags['define'].append(('CFFI_ENABLE_RECOVERY', None))
         self.announce('build_clib Done', level=log.INFO)

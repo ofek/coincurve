@@ -36,15 +36,16 @@ def absolute(*paths):
     op = os.path
     return op.realpath(op.abspath(op.join(op.dirname(__file__), *paths)))
 
+
 def find_conda_executable(executable: str):
     exec_path = None
-    for path in ("LIBRARY_BIN", "PREFIX", "BUILD_PREFIX", "SP_DIR", "PATH"):
+    for path in ('LIBRARY_BIN', 'PREFIX', 'BUILD_PREFIX', 'SP_DIR', 'PATH'):
         if os.environ.get(path, None) is None:
             continue
 
         if exec_path is not None:
             # For windows, we need to replace backslashes with forward slashes
-            exec_path = exec_path.replace("\\", "/")
+            exec_path = exec_path.replace('\\', '/')
             break
 
         for root, _, filenames in os.walk(os.environ.get(path)):
@@ -53,8 +54,8 @@ def find_conda_executable(executable: str):
 
             for filename in filenames:
                 # Strip .exe suffix on Windows
-                executable = executable.replace(".exe", "")
-                if filename in (executable, f"{executable}.exe"):
+                executable = executable.replace('.exe', '')
+                if filename in (executable, f'{executable}.exe'):
                     exec_path = os.path.join(root, filename)
                     break
     return exec_path
@@ -70,7 +71,7 @@ def build_flags(library, type_, path):
         pkg_config_path.append(os.environ['LIB_DIR'])
         pkg_config_path.append(os.path.join(os.environ['LIB_DIR'], 'pkgconfig'))
 
-    pkgconfig = find_conda_executable("pkg-config") or "pkg-config"
+    pkgconfig = find_conda_executable('pkg-config') or 'pkg-config'
 
     options = {'I': '--cflags-only-I', 'L': '--libs-only-L', 'l': '--libs-only-l'}
     env = dict(os.environ, PKG_CONFIG_PATH=':'.join(pkg_config_path))
@@ -113,7 +114,4 @@ def has_system_lib():
 
 def detect_dll():
     here = os.path.dirname(os.path.abspath(__file__))
-    return any(
-        fn.endswith('.dll')
-        for fn in os.listdir(os.path.join(here, 'coincurve'))
-    )
+    return any(fn.endswith('.dll') for fn in os.listdir(os.path.join(here, 'coincurve')))

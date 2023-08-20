@@ -1,3 +1,7 @@
+[tool.pytest.ini_options]
+addopts = [
+    "--import-mode=importlib",
+]
 [tool.black]
 target-version = ["py37"]
 line-length = 120

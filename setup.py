@@ -42,8 +42,8 @@ LIB_TARBALL_URL = f'https://github.com/bitcoin-core/secp256k1/archive/{UPSTREAM_
 # We require setuptools >= 3.3
 if [int(i) for i in setuptools_version.split('.', 2)[:2]] < [3, 3]:
     raise SystemExit(
-        'Your setuptools version ({}) is too old to correctly install this '
-        'package. Please upgrade to a newer version (>= 3.3).'.format(setuptools_version)
+        f'Your setuptools version ({setuptools_version}) is too old to correctly install this package. Please upgrade '
+        f'to a newer version (>= 3.3).'
     )
 
 

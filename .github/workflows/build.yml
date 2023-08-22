@@ -92,7 +92,7 @@ jobs:
     name: Build macOS wheels
     needs:
     - test
-    runs-on: macos-10.15
+    runs-on: macos-11
 
     steps:
     - uses: actions/checkout@v2

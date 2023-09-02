@@ -37,7 +37,6 @@ MAKE = 'gmake' if platform.system() in ['FreeBSD', 'OpenBSD'] else 'make'
 # Version of libsecp256k1 to download if none exists in the `libsecp256k1` directory
 UPSTREAM_REF = os.getenv('COINCURVE_UPSTREAM_TAG') or 'acf5c55ae6a94e5ca847e07def40427547876101'
 
-# LIB_TARBALL_URL = f'https://github.com/bitcoin-core/secp256k1/archive/refs/tags/{UPSTREAM_TAG}.tar.gz'
 LIB_TARBALL_URL = f'https://github.com/bitcoin-core/secp256k1/archive/{UPSTREAM_REF}.tar.gz'
 
 # We require setuptools >= 3.3

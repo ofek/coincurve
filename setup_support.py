@@ -64,7 +64,7 @@ def _find_lib():
     ffi = FFI()
     try:
         ffi.dlopen('secp256k1')
-        return bool(os.path.exists('/usr/include/secp256k1_ecdh.h'))
+        return os.path.exists('/usr/include/secp256k1_ecdh.h')
     except OSError:
         if 'LIB_DIR' in os.environ:
             for path in glob.glob(os.path.join(os.environ['LIB_DIR'], '*secp256k1*')):

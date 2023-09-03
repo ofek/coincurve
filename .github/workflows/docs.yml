@@ -32,7 +32,7 @@ jobs:
     - name: Build documentation
       run: tox -e docs-ci -- build
 
-    - uses: actions/upload-artifact@v2
+    - uses: actions/upload-artifact@v3
       with:
         name: documentation
         path: site
@@ -45,7 +45,7 @@ jobs:
     - build
 
     steps:
-    - uses: actions/download-artifact@v2
+    - uses: actions/download-artifact@v3
       with:
         name: documentation
         path: site

@@ -159,7 +159,7 @@ class PrivateKey:
 
         secret = ffi.new('unsigned char [32]', self.secret)
 
-        success = lib.secp256k1_ec_privkey_tweak_add(self.context.ctx, secret, scalar)
+        success = lib.secp256k1_ec_seckey_tweak_add(self.context.ctx, secret, scalar)
 
         if not success:
             raise ValueError('The tweak was out of range, or the resulting private key is invalid.')
@@ -186,7 +186,7 @@ class PrivateKey:
 
         secret = ffi.new('unsigned char [32]', self.secret)
 
-        lib.secp256k1_ec_privkey_tweak_mul(self.context.ctx, secret, scalar)
+        lib.secp256k1_ec_seckey_tweak_mul(self.context.ctx, secret, scalar)
 
         secret = bytes(ffi.buffer(secret, 32))
 

@@ -9,7 +9,7 @@ typedef int (*secp256k1_nonce_function_hardened)(
     void *data
 );
 
-extern const secp256k1_nonce_function_hardened secp256k1_nonce_function_bip340;
+const secp256k1_nonce_function_hardened secp256k1_nonce_function_bip340;
 
 typedef struct {
     unsigned char magic[4];
@@ -17,7 +17,12 @@ typedef struct {
     void* ndata;
 } secp256k1_schnorrsig_extraparams;
 
-int secp256k1_schnorrsig_sign(
+/**
+* #define SECP256K1_SCHNORRSIG_EXTRAPARAMS_MAGIC ...
+* #define SECP256K1_SCHNORRSIG_EXTRAPARAMS_INIT ...
+**/
+
+int secp256k1_schnorrsig_sign32(
     const secp256k1_context* ctx,
     unsigned char *sig64,
     const unsigned char *msg32,
@@ -25,7 +30,7 @@ int secp256k1_schnorrsig_sign(
     const unsigned char *aux_rand32
 );
 
-int secp256k1_schnorrsig_sign32(
+int secp256k1_schnorrsig_sign(
     const secp256k1_context* ctx,
     unsigned char *sig64,
     const unsigned char *msg32,

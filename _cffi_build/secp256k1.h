@@ -1,4 +1,5 @@
 typedef struct secp256k1_context_struct secp256k1_context;
+
 typedef struct secp256k1_scratch_space_struct secp256k1_scratch_space;
 
 typedef struct {
@@ -42,6 +43,10 @@ typedef int (*secp256k1_nonce_function)(
 #define SECP256K1_TAG_PUBKEY_HYBRID_EVEN ...
 #define SECP256K1_TAG_PUBKEY_HYBRID_ODD ...
 
+const secp256k1_context *secp256k1_context_static;
+
+const secp256k1_context *secp256k1_context_no_precomp;
+
 void secp256k1_selftest(void);
 
 secp256k1_context* secp256k1_context_create(
@@ -73,6 +78,11 @@ secp256k1_scratch_space* secp256k1_scratch_space_create(
     size_t size
 );
 
+void secp256k1_scratch_space_destroy(
+    const secp256k1_context *ctx,
+    secp256k1_scratch_space *scratch
+);
+
 int secp256k1_ec_pubkey_parse(
     const secp256k1_context* ctx,
     secp256k1_pubkey* pubkey,
@@ -86,6 +96,12 @@ int secp256k1_ec_pubkey_serialize(
     size_t *outputlen,
     const secp256k1_pubkey* pubkey,
     unsigned int flags
+);
+
+int secp256k1_ec_pubkey_cmp(
+    const secp256k1_context *ctx,
+    const secp256k1_pubkey *pubkey1,
+    const secp256k1_pubkey *pubkey2
 );
 
 int secp256k1_ecdsa_signature_parse_compact(
@@ -127,9 +143,9 @@ int secp256k1_ecdsa_signature_normalize(
     const secp256k1_ecdsa_signature *sigin
 );
 
-extern const secp256k1_nonce_function secp256k1_nonce_function_rfc6979;
+const secp256k1_nonce_function secp256k1_nonce_function_rfc6979;
 
-extern const secp256k1_nonce_function secp256k1_nonce_function_default;
+const secp256k1_nonce_function secp256k1_nonce_function_default;
 
 int secp256k1_ecdsa_sign(
     const secp256k1_context* ctx,
@@ -151,16 +167,43 @@ int secp256k1_ec_pubkey_create(
     const unsigned char *seckey
 );
 
+int secp256k1_ec_seckey_negate(
+    const secp256k1_context *ctx,
+    unsigned char *seckey
+);
+
+int secp256k1_ec_privkey_negate(
+    const secp256k1_context *ctx,
+    unsigned char *seckey
+);
+
+int secp256k1_ec_seckey_tweak_add(
+    const secp256k1_context *ctx,
+    unsigned char *seckey,
+    const unsigned char *tweak32
+);
+
 int secp256k1_ec_privkey_tweak_add(
     const secp256k1_context* ctx,
     unsigned char *seckey,
     const unsigned char *tweak
 );
 
+int secp256k1_ec_pubkey_negate(
+    const secp256k1_context *ctx,
+    secp256k1_pubkey *pubkey
+);
+
 int secp256k1_ec_pubkey_tweak_add(
     const secp256k1_context* ctx,
     secp256k1_pubkey *pubkey,
     const unsigned char *tweak
+);
+
+int secp256k1_ec_seckey_tweak_mul(
+    const secp256k1_context *ctx,
+    unsigned char *seckey,
+    const unsigned char *tweak32
 );
 
 int secp256k1_ec_privkey_tweak_mul(
@@ -185,4 +228,13 @@ int secp256k1_ec_pubkey_combine(
     secp256k1_pubkey *out,
     const secp256k1_pubkey * const * ins,
     size_t n
+);
+
+int secp256k1_tagged_sha256(
+    const secp256k1_context *ctx,
+    unsigned char *hash32,
+    const unsigned char *tag,
+    size_t taglen,
+    const unsigned char *msg,
+    size_t msglen
 );

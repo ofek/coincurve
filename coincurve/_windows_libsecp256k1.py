@@ -4,6 +4,7 @@ from cffi import FFI
 
 BASE_DEFINITIONS = """
 typedef struct secp256k1_context_struct secp256k1_context;
+
 typedef struct secp256k1_scratch_space_struct secp256k1_scratch_space;
 
 typedef struct {
@@ -47,6 +48,10 @@ typedef int (*secp256k1_nonce_function)(
 #define SECP256K1_TAG_PUBKEY_HYBRID_EVEN ...
 #define SECP256K1_TAG_PUBKEY_HYBRID_ODD ...
 
+const secp256k1_context *secp256k1_context_static;
+
+const secp256k1_context *secp256k1_context_no_precomp;
+
 void secp256k1_selftest(void);
 
 secp256k1_context* secp256k1_context_create(
@@ -78,6 +83,11 @@ secp256k1_scratch_space* secp256k1_scratch_space_create(
     size_t size
 );
 
+void secp256k1_scratch_space_destroy(
+    const secp256k1_context *ctx,
+    secp256k1_scratch_space *scratch
+);
+
 int secp256k1_ec_pubkey_parse(
     const secp256k1_context* ctx,
     secp256k1_pubkey* pubkey,
@@ -91,6 +101,12 @@ int secp256k1_ec_pubkey_serialize(
     size_t *outputlen,
     const secp256k1_pubkey* pubkey,
     unsigned int flags
+);
+
+int secp256k1_ec_pubkey_cmp(
+    const secp256k1_context *ctx,
+    const secp256k1_pubkey *pubkey1,
+    const secp256k1_pubkey *pubkey2
 );
 
 int secp256k1_ecdsa_signature_parse_compact(
@@ -132,9 +148,9 @@ int secp256k1_ecdsa_signature_normalize(
     const secp256k1_ecdsa_signature *sigin
 );
 
-extern const secp256k1_nonce_function secp256k1_nonce_function_rfc6979;
+const secp256k1_nonce_function secp256k1_nonce_function_rfc6979;
 
-extern const secp256k1_nonce_function secp256k1_nonce_function_default;
+const secp256k1_nonce_function secp256k1_nonce_function_default;
 
 int secp256k1_ecdsa_sign(
     const secp256k1_context* ctx,
@@ -156,16 +172,43 @@ int secp256k1_ec_pubkey_create(
     const unsigned char *seckey
 );
 
+int secp256k1_ec_seckey_negate(
+    const secp256k1_context *ctx,
+    unsigned char *seckey
+);
+
+int secp256k1_ec_privkey_negate(
+    const secp256k1_context *ctx,
+    unsigned char *seckey
+);
+
+int secp256k1_ec_seckey_tweak_add(
+    const secp256k1_context *ctx,
+    unsigned char *seckey,
+    const unsigned char *tweak32
+);
+
 int secp256k1_ec_privkey_tweak_add(
     const secp256k1_context* ctx,
     unsigned char *seckey,
     const unsigned char *tweak
 );
 
+int secp256k1_ec_pubkey_negate(
+    const secp256k1_context *ctx,
+    secp256k1_pubkey *pubkey
+);
+
 int secp256k1_ec_pubkey_tweak_add(
     const secp256k1_context* ctx,
     secp256k1_pubkey *pubkey,
     const unsigned char *tweak
+);
+
+int secp256k1_ec_seckey_tweak_mul(
+    const secp256k1_context *ctx,
+    unsigned char *seckey,
+    const unsigned char *tweak32
 );
 
 int secp256k1_ec_privkey_tweak_mul(
@@ -190,6 +233,15 @@ int secp256k1_ec_pubkey_combine(
     secp256k1_pubkey *out,
     const secp256k1_pubkey * const * ins,
     size_t n
+);
+
+int secp256k1_tagged_sha256(
+    const secp256k1_context *ctx,
+    unsigned char *hash32,
+    const unsigned char *tag,
+    size_t taglen,
+    const unsigned char *msg,
+    size_t msglen
 );
 """
 
@@ -328,7 +380,7 @@ typedef int (*secp256k1_nonce_function_hardened)(
     void *data
 );
 
-extern const secp256k1_nonce_function_hardened secp256k1_nonce_function_bip340;
+const secp256k1_nonce_function_hardened secp256k1_nonce_function_bip340;
 
 typedef struct {
     unsigned char magic[4];
@@ -336,7 +388,12 @@ typedef struct {
     void* ndata;
 } secp256k1_schnorrsig_extraparams;
 
-int secp256k1_schnorrsig_sign(
+/**
+* #define SECP256K1_SCHNORRSIG_EXTRAPARAMS_MAGIC ...
+* #define SECP256K1_SCHNORRSIG_EXTRAPARAMS_INIT ...
+**/
+
+int secp256k1_schnorrsig_sign32(
     const secp256k1_context* ctx,
     unsigned char *sig64,
     const unsigned char *msg32,
@@ -344,7 +401,7 @@ int secp256k1_schnorrsig_sign(
     const unsigned char *aux_rand32
 );
 
-int secp256k1_schnorrsig_sign32(
+int secp256k1_schnorrsig_sign(
     const secp256k1_context* ctx,
     unsigned char *sig64,
     const unsigned char *msg32,
@@ -371,13 +428,79 @@ int secp256k1_schnorrsig_verify(
 """
 
 ECDH_DEFINITIONS = """
+typedef int (*secp256k1_ecdh_hash_function)(
+  unsigned char *output,
+  const unsigned char *x32,
+  const unsigned char *y32,
+  void *data
+);
+
+const secp256k1_ecdh_hash_function secp256k1_ecdh_hash_function_sha256;
+
+const secp256k1_ecdh_hash_function secp256k1_ecdh_hash_function_default;
+
 int secp256k1_ecdh(
   const secp256k1_context* ctx,
   unsigned char *result,
   const secp256k1_pubkey *pubkey,
   const unsigned char *privkey,
-  void *hashfp,
+  secp256k1_ecdh_hash_function hashfp,
   void *data
+);
+"""
+
+ELLSWIFT_DEFINITIONS = """
+typedef int (*secp256k1_ellswift_xdh_hash_function)(
+    unsigned char *output,
+    const unsigned char *x32,
+    const unsigned char *ell_a64,
+    const unsigned char *ell_b64,
+    void *data
+);
+
+const secp256k1_ellswift_xdh_hash_function secp256k1_ellswift_xdh_hash_function_prefix;
+
+const secp256k1_ellswift_xdh_hash_function secp256k1_ellswift_xdh_hash_function_bip324;
+
+int secp256k1_ellswift_encode(
+    const secp256k1_context *ctx,
+    unsigned char *ell64,
+    const secp256k1_pubkey *pubkey,
+    const unsigned char *rnd32
+);
+
+int secp256k1_ellswift_decode(
+    const secp256k1_context *ctx,
+    secp256k1_pubkey *pubkey,
+    const unsigned char *ell64
+);
+
+int secp256k1_ellswift_xdh(
+    const secp256k1_context *ctx,
+    unsigned char *result,
+    const secp256k1_pubkey *pubkey,
+    const unsigned char *privkey,
+    secp256k1_ellswift_xdh_hash_function hashfp,
+    void *data
+);
+"""
+
+PREALLOCATED_DEFINITIONS = """
+size_t secp256k1_context_preallocated_size(
+    unsigned int flags
+);
+
+secp256k1_context* secp256k1_context_preallocated_create(
+    void* prealloc,
+    unsigned int flags
+);
+
+size_t secp256k1_context_preallocated_clone_size(
+    const secp256k1_context *ctx
+);
+
+void secp256k1_context_preallocated_destroy(
+    secp256k1_context* ctx
 );
 """
 
@@ -388,6 +511,8 @@ ffi.cdef(EXTRAKEYS_DEFINITIONS)
 ffi.cdef(RECOVERY_DEFINITIONS)
 ffi.cdef(SCHNORRSIG_DEFINITIONS)
 ffi.cdef(ECDH_DEFINITIONS)
+# ffi.cdef(ELLSWIFT_DEFINITIONS)
+ffi.cdef(PREALLOCATED_DEFINITIONS)
 
 here = os.path.dirname(os.path.abspath(__file__))
 lib = ffi.dlopen(os.path.join(here, 'libsecp256k1.dll'))

@@ -59,7 +59,7 @@ def download_library(command):
         try:
             import requests
 
-            r = requests.get(LIB_TARBALL_URL, stream=True)
+            r = requests.get(LIB_TARBALL_URL, stream=True, timeout=10)
             status_code = r.status_code
             if status_code == 200:
                 content = BytesIO(r.raw.read())

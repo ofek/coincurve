@@ -1,5 +1,5 @@
 import os
-from typing import Tuple
+from typing import Optional, Tuple
 
 from asn1crypto.keys import ECDomainParameters, ECPointBitString, ECPrivateKey, PrivateKeyAlgorithm, PrivateKeyInfo
 
@@ -24,7 +24,7 @@ from ._libsecp256k1 import ffi, lib
 
 
 class PrivateKey:
-    def __init__(self, secret: bytes = None, context: Context = GLOBAL_CONTEXT):
+    def __init__(self, secret: Optional[bytes] = None, context: Context = GLOBAL_CONTEXT):
         """
         :param secret: The secret used to initialize the private key.
                        If not provided or `None`, a new key will be generated.

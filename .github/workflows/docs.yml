@@ -13,13 +13,13 @@ jobs:
     runs-on: ubuntu-latest
 
     steps:
-    - uses: actions/checkout@v2
+    - uses: actions/checkout@v3
       with:
         # Fetch all history for applying timestamps to every page
         fetch-depth: 0
 
     - name: Set up Python
-      uses: actions/setup-python@v2
+      uses: actions/setup-python@v3
       with:
         python-version: '3.9'
 
@@ -30,7 +30,7 @@ jobs:
       run: python -m pip install --upgrade tox
 
     - name: Build documentation
-      run: tox -e docs-ci build
+      run: tox -e docs-ci -- build
 
     - uses: actions/upload-artifact@v2
       with:

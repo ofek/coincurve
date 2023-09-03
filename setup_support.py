@@ -2,7 +2,7 @@ import glob
 import os
 import shutil
 import subprocess
-from contextlib import contextmanager
+from contextlib import contextmanager, suppress
 from tempfile import mkdtemp
 
 
@@ -47,16 +47,12 @@ def build_flags(library, type_, path):
         pkg_config_path.append(os.environ['LIB_DIR'])
         pkg_config_path.append(os.path.join(os.environ['LIB_DIR'], 'pkgconfig'))
 
-    options = ['--static', {'I': '--cflags-only-I', 'L': '--libs-only-L', 'l': '--libs-only-l'}[type_]]
+    options = {'I': '--cflags-only-I', 'L': '--libs-only-L', 'l': '--libs-only-l'}
+    env = dict(os.environ, PKG_CONFIG_PATH=':'.join(pkg_config_path))
+    flags = subprocess.check_output(['pkg-config', '--static', options[type_], library], env=env)  # noqa S603
+    flags = list(flags.decode('UTF-8').split())
 
-    return [
-        flag.strip('-{}'.format(type_))
-        for flag in subprocess.check_output(
-            ['pkg-config'] + options + [library], env=dict(os.environ, PKG_CONFIG_PATH=':'.join(pkg_config_path))
-        )
-        .decode('UTF-8')
-        .split()
-    ]
+    return [flag.strip(f'-{type_}') for flag in flags]
 
 
 def _find_lib():
@@ -68,24 +64,15 @@ def _find_lib():
     ffi = FFI()
     try:
         ffi.dlopen('secp256k1')
-        if os.path.exists('/usr/include/secp256k1_ecdh.h'):
-            return True
-        else:
-            # The system library lacks the ecdh module
-            return False
+        return os.path.exists('/usr/include/secp256k1_ecdh.h')
     except OSError:
         if 'LIB_DIR' in os.environ:
             for path in glob.glob(os.path.join(os.environ['LIB_DIR'], '*secp256k1*')):
-                try:
+                with suppress(OSError):
                     FFI().dlopen(path)
                     return True
-                except OSError:
-                    pass
         # We couldn't locate libsecp256k1 so we'll use the bundled one
         return False
-    else:
-        # If we got this far then the system library should be good enough
-        return True
 
 
 _has_system_lib = None

@@ -15,7 +15,7 @@ concurrency:
   cancel-in-progress: true
 
 env:
-  COINCURVE_UPSTREAM_REF: ddf2b2910eb19032f8dd657c66735115ae24bfba
+  COINCURVE_UPSTREAM_REF: acf5c55ae6a94e5ca847e07def40427547876101
   COINCURVE_IGNORE_SYSTEM_LIB: '1'
   CIBW_BEFORE_ALL_MACOS: ./.github/scripts/install-macos-build-deps.sh
   CIBW_ENVIRONMENT_PASS_LINUX: >
@@ -28,8 +28,9 @@ env:
     b=PrivateKey();
     assert a.ecdh(b.public_key.format())==b.ecdh(a.public_key.format())
     "
+  CIBW_TEST_SKIP: "*-macosx_arm64"
   CIBW_SKIP: >
-    pp*
+      pp*
 
 jobs:
   test:
@@ -40,10 +41,10 @@ jobs:
       PYTHON_VERSION: '3.10'
 
     steps:
-    - uses: actions/checkout@v2
+    - uses: actions/checkout@v3
 
     - name: Set up Python ${{ env.PYTHON_VERSION }}
-      uses: actions/setup-python@v2
+      uses: actions/setup-python@v3
       with:
         python-version: ${{ env.PYTHON_VERSION }}
 
@@ -77,12 +78,12 @@ jobs:
     runs-on: ubuntu-20.04
 
     steps:
-    - uses: actions/checkout@v2
+    - uses: actions/checkout@v3
 
     - name: Build wheels
       uses: pypa/cibuildwheel@v2.11.2
 
-    - uses: actions/upload-artifact@v2
+    - uses: actions/upload-artifact@v3
       with:
         name: artifacts
         path: wheelhouse/*.whl
@@ -92,17 +93,17 @@ jobs:
     name: Build macOS wheels
     needs:
     - test
-    runs-on: macos-10.15
+    runs-on: macos-12
 
     steps:
-    - uses: actions/checkout@v2
+    - uses: actions/checkout@v3
 
     - name: Build wheels
       uses: pypa/cibuildwheel@v2.11.2
       env:
         CIBW_ARCHS_MACOS: x86_64
 
-    - uses: actions/upload-artifact@v2
+    - uses: actions/upload-artifact@v3
       with:
         name: artifacts
         path: wheelhouse/*.whl
@@ -112,10 +113,10 @@ jobs:
     name: Build macOS wheels for ARM
     needs:
     - test
-    runs-on: macos-10.15
+    runs-on: macos-12
 
     steps:
-    - uses: actions/checkout@v2
+    - uses: actions/checkout@v3
 
     - name: Build wheels
       uses: pypa/cibuildwheel@v2.11.2
@@ -124,7 +125,7 @@ jobs:
         COINCURVE_CROSS_HOST: aarch64-apple-darwin
         CFLAGS: -target arm64-apple-macos11
 
-    - uses: actions/upload-artifact@v2
+    - uses: actions/upload-artifact@v3
       with:
         name: artifacts
         path: wheelhouse/*.whl
@@ -137,7 +138,7 @@ jobs:
     runs-on: ubuntu-latest
 
     steps:
-    - uses: actions/checkout@v2
+    - uses: actions/checkout@v3
 
     - name: Install build dependencies
       run: python -m pip install --upgrade cffi
@@ -148,7 +149,7 @@ jobs:
     - name: Build Windows wheels
       run: ./.github/scripts/build-windows-wheels.sh
 
-    - uses: actions/upload-artifact@v2
+    - uses: actions/upload-artifact@v3
       with:
         name: artifacts
         path: dist/*
@@ -165,7 +166,7 @@ jobs:
       (github.ref == 'refs/heads/master' || startsWith(github.event.ref, 'refs/tags'))
 
     steps:
-    - uses: actions/checkout@v2
+    - uses: actions/checkout@v3
 
     - name: Set up QEMU
       uses: docker/setup-qemu-action@v1
@@ -177,7 +178,7 @@ jobs:
       env:
         CIBW_ARCHS_LINUX: aarch64
 
-    - uses: actions/upload-artifact@v2
+    - uses: actions/upload-artifact@v3
       with:
         name: artifacts
         path: wheelhouse/*.whl
@@ -196,7 +197,7 @@ jobs:
       github.event_name == 'push' && startsWith(github.event.ref, 'refs/tags')
 
     steps:
-    - uses: actions/download-artifact@v2
+    - uses: actions/download-artifact@v3
       with:
         name: artifacts
         path: dist

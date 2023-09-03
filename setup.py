@@ -35,10 +35,9 @@ MAKE = 'gmake' if platform.system() in ['FreeBSD', 'OpenBSD'] else 'make'
 # IMPORTANT: keep in sync with .github/workflows/build.yml
 #
 # Version of libsecp256k1 to download if none exists in the `libsecp256k1` directory
-UPSTREAM_REF = os.getenv('COINCURVE_UPSTREAM_REF') or 'ddf2b2910eb19032f8dd657c66735115ae24bfba'
+UPSTREAM_REF = os.getenv('COINCURVE_UPSTREAM_TAG') or 'acf5c55ae6a94e5ca847e07def40427547876101'
 
 LIB_TARBALL_URL = f'https://github.com/bitcoin-core/secp256k1/archive/{UPSTREAM_REF}.tar.gz'
-
 
 # We require setuptools >= 3.3
 if [int(i) for i in setuptools_version.split('.', 2)[:2]] < [3, 3]:
@@ -59,21 +58,22 @@ def download_library(command):
         command.announce('downloading libsecp256k1 source code', level=log.INFO)
         try:
             import requests
-
-            r = requests.get(LIB_TARBALL_URL, stream=True)
-            status_code = r.status_code
-            if status_code == 200:
-                content = BytesIO(r.raw.read())
-                content.seek(0)
-                with tarfile.open(fileobj=content) as tf:
-                    dirname = tf.getnames()[0].partition('/')[0]
-                    tf.extractall()
-                shutil.move(dirname, libdir)
-            else:
-                raise SystemExit('Unable to download secp256k1 library: HTTP-Status: %d', status_code)
-        except requests.exceptions.RequestException as e:
+            try:
+                r = requests.get(LIB_TARBALL_URL, stream=True, timeout=10)
+                status_code = r.status_code
+                if status_code == 200:
+                    content = BytesIO(r.raw.read())
+                    content.seek(0)
+                    with tarfile.open(fileobj=content) as tf:
+                        dirname = tf.getnames()[0].partition('/')[0]
+                        tf.extractall()
+                    shutil.move(dirname, libdir)
+                else:
+                    raise SystemExit('Unable to download secp256k1 library: HTTP-Status: %d', status_code)
+            except requests.exceptions.RequestException as e:
+                raise SystemExit('Unable to download secp256k1 library: %s', str(e))
+        except ImportError as e:
             raise SystemExit('Unable to download secp256k1 library: %s', str(e))
-
 
 class egg_info(_egg_info):
     def run(self):
@@ -150,8 +150,8 @@ class build_clib(_build_clib):
         if not os.path.exists(absolute('libsecp256k1/configure')):
             # configure script hasn't been generated yet
             autogen = absolute('libsecp256k1/autogen.sh')
-            os.chmod(absolute(autogen), 0o755)
-            subprocess.check_call([autogen], cwd=absolute('libsecp256k1'))
+            os.chmod(absolute(autogen), 0o700)
+            subprocess.check_call([autogen], cwd=absolute('libsecp256k1'))  # noqa S603
 
         for filename in [
             'libsecp256k1/configure',
@@ -164,7 +164,7 @@ class build_clib(_build_clib):
             'libsecp256k1/build-aux/test-driver',
         ]:
             try:
-                os.chmod(absolute(filename), 0o755)
+                os.chmod(absolute(filename), 0o700)
             except OSError as e:
                 # some of these files might not exist depending on autoconf version
                 if e.errno != errno.ENOENT:
@@ -187,24 +187,22 @@ class build_clib(_build_clib):
             '--enable-module-ecdh',
             '--enable-benchmark=no',
             '--enable-tests=no',
-            '--enable-openssl-tests=no',
             '--enable-exhaustive-tests=no',
         ]
         if 'COINCURVE_CROSS_HOST' in os.environ:
-            cmd.append('--host={}'.format(os.environ['COINCURVE_CROSS_HOST']))
+            cmd.append(f"--host={os.environ['COINCURVE_CROSS_HOST']}")
 
-        log.debug('Running configure: {}'.format(' '.join(cmd)))
-        subprocess.check_call(cmd, cwd=build_temp)
+        log.debug(f"Running configure: {' '.join(cmd)}")
+        subprocess.check_call(cmd, cwd=build_temp)  # noqa S603
 
-        subprocess.check_call([MAKE], cwd=build_temp)
-        subprocess.check_call([MAKE, 'install'], cwd=build_temp)
+        subprocess.check_call([MAKE], cwd=build_temp)  # noqa S603
+        subprocess.check_call([MAKE, 'check'], cwd=build_temp)  # noqa S603
+        subprocess.check_call([MAKE, 'install'], cwd=build_temp)  # noqa S603
 
         self.build_flags['include_dirs'].extend(build_flags('libsecp256k1', 'I', build_temp))
         self.build_flags['library_dirs'].extend(build_flags('libsecp256k1', 'L', build_temp))
         if not has_system_lib():
             self.build_flags['define'].append(('CFFI_ENABLE_RECOVERY', None))
-        else:
-            pass
 
 
 class build_ext(_build_ext):

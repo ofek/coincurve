@@ -35,7 +35,7 @@ MAKE = 'gmake' if platform.system() in ['FreeBSD', 'OpenBSD'] else 'make'
 # IMPORTANT: keep in sync with .github/workflows/build.yml
 #
 # Version of libsecp256k1 to download if none exists in the `libsecp256k1` directory
-UPSTREAM_REF = os.getenv('COINCURVE_UPSTREAM_TAG') or 'acf5c55ae6a94e5ca847e07def40427547876101'
+UPSTREAM_REF = os.getenv('COINCURVE_UPSTREAM_TAG') or '199d27cea32203b224b208627533c2e813cd3b21'
 
 LIB_TARBALL_URL = f'https://github.com/bitcoin-core/secp256k1/archive/{UPSTREAM_REF}.tar.gz'
 
@@ -247,7 +247,7 @@ else:
             return not has_system_lib()
 
     setup_kwargs = dict(
-        setup_requires=['cffi>=1.3.0', 'requests'],
+        setup_requires=['cffi>=1.3.0', 'setuptools>61,<=62', 'requests'],
         ext_package='coincurve',
         cffi_modules=['_cffi_build/build.py:ffi'],
         cmdclass={

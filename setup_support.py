@@ -1,5 +1,9 @@
 import glob
 import os
+from distutils.extension import Extension
+
+import pkgconfig
+import subprocess
 import shutil
 import subprocess
 from contextlib import contextmanager, suppress
@@ -64,9 +68,16 @@ def _find_lib():
     ffi = FFI()
     try:
         ffi.dlopen('secp256k1')
-        include_path = subprocess.check_output(['pkg-config', '--cflags-only-I', 'libsecp256k1'])  # noqa S603
-        include_path = include_path.decode('UTF-8').strip().split()[0][2:]
-        return os.path.exists(os.path.join(include_path, 'secp256k1_ecdh.h'))
+
+        extension = Extension(
+            name='coincurve._libsecp256k1',
+            sources=[os.path.join('coincurve', '_libsecp256k1.c')],
+        )
+
+        pkgconfig.configure_extension(extension, 'libsecp256k1', static=False)
+        package_info = pkgconfig.parse('libsecp256k1', static=False)
+
+        return os.path.exists(os.path.join(package_info['include_dirs'][0], 'secp256k1_ecdh.h'))
     except OSError:
         if 'LIB_DIR' in os.environ:
             for path in glob.glob(os.path.join(os.environ['LIB_DIR'], '*secp256k1*')):

@@ -239,9 +239,6 @@ package_data = {'coincurve': ['py.typed']}
 if BUILDING_FOR_WINDOWS:
 
     class Distribution(_Distribution):
-        def has_c_libraries(self):
-            return not has_system_lib()
-
         def is_pure(self):
             return False
 

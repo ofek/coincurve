@@ -445,3 +445,15 @@ extern void secp256k1_context_preallocated_destroy(
     secp256k1_context *ctx
 ) ;
 """
+
+ffi = FFI()
+
+ffi.cdef(BASE_DEFINITIONS)
+ffi.cdef(EXTRAKEYS_DEFINITIONS)
+ffi.cdef(RECOVERY_DEFINITIONS)
+ffi.cdef(SCHNORRSIG_DEFINITIONS)
+ffi.cdef(ECDH_DEFINITIONS)
+
+here = os.path.dirname(os.path.abspath(__file__))
+lib = ffi.dlopen(os.path.join(here, 'libsecp256k1.dll'))
+

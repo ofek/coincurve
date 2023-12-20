@@ -95,7 +95,7 @@ extend-exclude = [
 ]
 
 [tool.ruff.isort]
-known-first-party = ["zzz"]
+known-first-party = ["coincurve"]
 
 [tool.ruff.flake8-quotes]
 inline-quotes = "single"

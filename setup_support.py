@@ -75,6 +75,7 @@ def _find_lib():
 
         pkgconfig.configure_extension(extension, 'libsecp256k1', static=False)
         package_info = pkgconfig.parse('libsecp256k1', static=False)
+        print(package_info)
 
         return os.path.exists(os.path.join(package_info['include_dirs'][0], 'secp256k1_ecdh.h'))
     except OSError:

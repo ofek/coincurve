@@ -64,7 +64,7 @@ def _find_lib():
     ffi = FFI()
     try:
         ffi.dlopen('secp256k1')
-        include_path = subprocess.check_output(['pkg-config', '--static', '--cflags-only-I', 'libsecp256k1'])  # noqa S603
+        include_path = subprocess.check_output(['pkg-config', '--cflags-only-I', 'libsecp256k1'])  # noqa S603
         include_path = include_path.decode('UTF-8').strip().split()[0][2:]
         return os.path.exists(os.path.join(include_path, 'secp256k1_ecdh.h'))
     except OSError:

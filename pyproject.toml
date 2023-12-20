@@ -3,8 +3,8 @@ requires = ["setuptools>=61,<=63", "cffi>=1.3.0", "pkgconfig", "libsecp256k1"]
 build-backend = "setuptools.build_meta"
 
 [project]
-name = "libsecp256k1_py_bindings"
-version = "18.0.0"
+name = "coincurve"
+version = "19.0.0"
 authors = [
   { name="Ofek Lev", email="oss@ofek.dev" },
 ]
@@ -30,6 +30,7 @@ classifiers = [
     'Programming Language :: Python :: 3.9',
     'Programming Language :: Python :: 3.10',
     'Programming Language :: Python :: 3.11',
+    'Programming Language :: Python :: 3.12',
     'Programming Language :: Python :: Implementation :: CPython',
     'Programming Language :: Python :: Implementation :: PyPy',
     'Topic :: Software Development :: Libraries',
@@ -42,11 +43,6 @@ classifiers = [
 "Documentation" = "https://ofek.dev/coincurve/"
 "Issues" = "https://github.com/ofek/coincurve/issues"
 "Source" = "https://github.com/ofek/coincurve"
-
-[tool.setuptools]
-packages = [
-    "coincurve",
-]
 
 [tool.pytest.ini_options]
 addopts = [

@@ -1,13 +1,12 @@
 import glob
 import os
-from distutils.extension import Extension
-
-import pkgconfig
-import subprocess
 import shutil
 import subprocess
 from contextlib import contextmanager, suppress
+from distutils.extension import Extension
 from tempfile import mkdtemp
+
+import pkgconfig
 
 
 @contextmanager

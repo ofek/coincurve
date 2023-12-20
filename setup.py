@@ -78,14 +78,16 @@ def download_library(command):
 class egg_info(_egg_info):
     def run(self):
         # Ensure library has been downloaded (sdist might have been skipped)
-        download_library(self)
+        if not has_system_lib():
+            download_library(self)
 
         _egg_info.run(self)
 
 
 class sdist(_sdist):
     def run(self):
-        download_library(self)
+        if not has_system_lib():
+            download_library(self)
         _sdist.run(self)
 
 
@@ -93,7 +95,8 @@ if _bdist_wheel:
 
     class bdist_wheel(_bdist_wheel):
         def run(self):
-            download_library(self)
+            if not has_system_lib():
+                download_library(self)
             _bdist_wheel.run(self)
 
 
@@ -113,7 +116,8 @@ class build_clib(_build_clib):
 
     def get_source_files(self):
         # Ensure library has been downloaded (sdist might have been skipped)
-        download_library(self)
+        if not has_system_lib():
+            download_library(self)
 
         return [
             absolute(os.path.join(root, filename))

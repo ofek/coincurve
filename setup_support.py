@@ -2,6 +2,7 @@ import glob
 import os
 import shutil
 import subprocess
+import sys
 from contextlib import contextmanager, suppress
 from distutils.extension import Extension
 from tempfile import mkdtemp
@@ -73,9 +74,11 @@ def _find_lib():
 
         pkgconfig.configure_extension(extension, 'libsecp256k1', static=False)
         package_info = pkgconfig.parse('libsecp256k1', static=False)
-        print(package_info)
 
-        ffi.dlopen('secp256k1')
+        if os.name == 'nt' or sys.platform == 'win32':
+            ffi.dlopen('libsecp256k1-2')
+        else:
+            ffi.dlopen('secp256k1')
 
         return os.path.exists(os.path.join(package_info['include_dirs'][0], 'secp256k1_ecdh.h'))
     except OSError:

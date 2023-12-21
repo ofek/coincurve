@@ -221,7 +221,12 @@ class build_ext(_build_ext):
 
             self.define = _build_clib.build_flags['define']
 
-        print(self)
+        if os.name == 'nt' or sys.platform == 'win32':
+            # Apparently, the linker on Windows interprets -lxxx as xxx.lib, not libxxx.lib
+            for i, v in enumerate(self.__dict__.get('extra_link_args')):
+                if v.endswith('.lib'):
+                    self.__dict__['extra_link_args'][i] = f'lib{v}'
+
         return _build_ext.run(self)
 
 

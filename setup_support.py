@@ -5,6 +5,7 @@ import subprocess
 import sys
 from contextlib import contextmanager, suppress
 from distutils.extension import Extension
+from importlib.metadata import PackageNotFoundError
 from tempfile import mkdtemp
 
 import pkgconfig
@@ -81,7 +82,7 @@ def _find_lib():
             ffi.dlopen('secp256k1')
 
         return os.path.exists(os.path.join(package_info['include_dirs'][0], 'secp256k1_ecdh.h'))
-    except OSError:
+    except (OSError, PackageNotFoundError):
         if 'LIB_DIR' in os.environ:
             for path in glob.glob(os.path.join(os.environ['LIB_DIR'], '*secp256k1*')):
                 with suppress(OSError):

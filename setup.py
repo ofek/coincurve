@@ -223,9 +223,7 @@ class build_ext(_build_ext):
 
         if os.name == 'nt' or sys.platform == 'win32':
             # Apparently, the linker on Windows interprets -lxxx as xxx.lib, not libxxx.lib
-            for i, v in enumerate(self.__dict__.get('extra_link_args')):
-                if v.endswith('.lib'):
-                    self.__dict__['extra_link_args'][i] = f'lib{v}'
+            self.libraries = [lib[1:] for lib in self.libraries if 'secp256k1' in lib]
 
         return _build_ext.run(self)
 

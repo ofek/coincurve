@@ -221,6 +221,7 @@ class build_ext(_build_ext):
 
             self.define = _build_clib.build_flags['define']
 
+        print(self)
         return _build_ext.run(self)
 
 

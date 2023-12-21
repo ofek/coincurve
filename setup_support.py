@@ -66,8 +66,6 @@ def _find_lib():
 
     ffi = FFI()
     try:
-        ffi.dlopen('secp256k1')
-
         extension = Extension(
             name='coincurve._libsecp256k1',
             sources=[os.path.join('coincurve', '_libsecp256k1.c')],
@@ -76,6 +74,8 @@ def _find_lib():
         pkgconfig.configure_extension(extension, 'libsecp256k1', static=False)
         package_info = pkgconfig.parse('libsecp256k1', static=False)
         print(package_info)
+
+        ffi.dlopen('secp256k1')
 
         return os.path.exists(os.path.join(package_info['include_dirs'][0], 'secp256k1_ecdh.h'))
     except OSError:

@@ -9,6 +9,7 @@ from distutils import log
 from distutils.command.build_clib import build_clib as _build_clib
 from distutils.command.build_ext import build_ext as _build_ext
 from distutils.errors import DistutilsError
+from distutils.extension import Extension
 from io import BytesIO
 import sys
 
@@ -16,6 +17,8 @@ from setuptools import Distribution as _Distribution, setup, find_packages, __ve
 from setuptools.command.develop import develop as _develop
 from setuptools.command.egg_info import egg_info as _egg_info
 from setuptools.command.sdist import sdist as _sdist
+
+import pkgconfig
 
 try:
     from wheel.bdist_wheel import bdist_wheel as _bdist_wheel
@@ -221,10 +224,6 @@ class build_ext(_build_ext):
 
             self.define = _build_clib.build_flags['define']
 
-        if os.name == 'nt' or sys.platform == 'win32':
-            # Apparently, the linker on Windows interprets -lxxx as xxx.lib, not libxxx.lib
-            self.libraries = [lib[1:] for lib in self.libraries if 'secp256k1' in lib]
-
         return _build_ext.run(self)
 
 
@@ -271,16 +270,48 @@ else:
         },
     )
 
+if (os.name == 'nt' or sys.platform == 'win32') and has_system_lib():
+    class BuildCFFIForSharedLib(build_ext):
+        def build_extensions(self):
+            build_script = os.path.join('_cffi_build', 'build_shared.py')
+            c_file = self.extensions[0].sources[0]
+            python_exe = shutil.which('python', path=os.environ['PATH'])
+            subprocess.run([python_exe, build_script, c_file, '0'], shell=False, check=True)  # noqa S603
+            super().build_extensions()
 
-setup(
-    long_description=open('README.md', 'r').read(),
-    long_description_content_type='text/markdown',
 
-    packages=find_packages(exclude=('_cffi_build', '_cffi_build.*', 'libsecp256k1', 'tests')),
-    package_data=package_data,
+    # --- SECP256K1 package definitions ---
+    secp256k1_package = 'libsecp256k1'
 
-    distclass=Distribution,
-    zip_safe=False,
+    extension = Extension(
+        name='coincurve._libsecp256k1',
+        sources=[os.path.join('coincurve', '_libsecp256k1.c')],
+        py_limited_api=True,
+    )
 
-    **setup_kwargs
-)
+    pkgconfig.configure_extension(extension, secp256k1_package, static=False)
+    package_info = pkgconfig.parse(secp256k1_package, static=False)
+
+    # Apparently, the linker on Windows interprets -lxxx as xxx.lib, not libxxx.lib
+    for i, v in enumerate(extension.__dict__.get('extra_link_args')):
+        if v.endswith('.lib'):
+            extension.__dict__['extra_link_args'][i] = f'lib{v}'
+
+    setup(
+        ext_modules=[extension],
+        cmdclass={'build_ext': BuildCFFIForSharedLib},
+        package_data=package_data,
+    )
+else:
+    setup(
+        long_description=open('README.md', 'r').read(),
+        long_description_content_type='text/markdown',
+
+        packages=find_packages(exclude=('_cffi_build', '_cffi_build.*', 'libsecp256k1', 'tests')),
+        package_data=package_data,
+
+        distclass=Distribution,
+        zip_safe=False,
+
+        **setup_kwargs
+    )

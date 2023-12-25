@@ -271,7 +271,7 @@ else:
     )
 
 if (os.name == 'nt' or sys.platform == 'win32') and has_system_lib():
-    class BuildCFFIForSharedLib(build_ext):
+    class BuildCFFIForSharedLib(_build_ext):
         def build_extensions(self):
             build_script = os.path.join('_cffi_build', 'build_shared.py')
             c_file = self.extensions[0].sources[0]
@@ -286,7 +286,7 @@ if (os.name == 'nt' or sys.platform == 'win32') and has_system_lib():
     extension = Extension(
         name='coincurve._libsecp256k1',
         sources=[os.path.join('coincurve', '_libsecp256k1.c')],
-        py_limited_api=True,
+        # ABI?: py_limited_api=True,
     )
 
     pkgconfig.configure_extension(extension, secp256k1_package, static=False)

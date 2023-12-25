@@ -18,18 +18,14 @@ from setuptools.command.develop import develop as _develop
 from setuptools.command.egg_info import egg_info as _egg_info
 from setuptools.command.sdist import sdist as _sdist
 
-import pkgconfig
-
 try:
     from wheel.bdist_wheel import bdist_wheel as _bdist_wheel
 except ImportError:
     _bdist_wheel = None
     pass
 
-
 sys.path.append(os.path.abspath(os.path.dirname(__file__)))
 from setup_support import absolute, build_flags, detect_dll, has_system_lib  # noqa: E402
-
 
 BUILDING_FOR_WINDOWS = detect_dll()
 
@@ -77,6 +73,7 @@ def download_library(command):
                 raise SystemExit('Unable to download secp256k1 library: %s', str(e))
         except ImportError as e:
             raise SystemExit('Unable to download secp256k1 library: %s', str(e))
+
 
 class egg_info(_egg_info):
     def run(self):
@@ -248,6 +245,7 @@ if BUILDING_FOR_WINDOWS:
         def is_pure(self):
             return False
 
+
     package_data['coincurve'].append('libsecp256k1.dll')
     setup_kwargs = dict()
 else:
@@ -255,6 +253,7 @@ else:
     class Distribution(_Distribution):
         def has_c_libraries(self):
             return not has_system_lib()
+
 
     setup_kwargs = dict(
         setup_requires=['cffi>=1.3.0', 'requests'],
@@ -271,6 +270,10 @@ else:
     )
 
 if (os.name == 'nt' or sys.platform == 'win32') and has_system_lib():
+
+    import pkgconfig
+
+
     class BuildCFFIForSharedLib(_build_ext):
         def build_extensions(self):
             build_script = os.path.join('_cffi_build', 'build_shared.py')

@@ -57,7 +57,7 @@ def build_flags(library, type_, path):
 
 
 def _find_lib():
-    import pkgconfig
+    pkgconfig = __import__("pkgconfig")
 
     if 'COINCURVE_IGNORE_SYSTEM_LIB' in os.environ:
         return False

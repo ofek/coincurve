@@ -271,7 +271,7 @@ else:
 
 if (os.name == 'nt' or sys.platform == 'win32') and has_system_lib():
 
-    pkgconfig = __import__("pkgconfig")
+    pkgconfig = __import__('pkgconfig')
 
 
     class BuildCFFIForSharedLib(_build_ext):

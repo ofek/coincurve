@@ -7,9 +7,6 @@ from contextlib import contextmanager, suppress
 from distutils.extension import Extension
 from tempfile import mkdtemp
 
-import pkgconfig
-
-
 @contextmanager
 def workdir():
     cwd = os.getcwd()
@@ -60,6 +57,8 @@ def build_flags(library, type_, path):
 
 
 def _find_lib():
+    import pkgconfig
+
     if 'COINCURVE_IGNORE_SYSTEM_LIB' in os.environ:
         return False
 

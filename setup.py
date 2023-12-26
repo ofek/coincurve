@@ -15,6 +15,7 @@ from setuptools.command.build_clib import build_clib as _build_clib
 from setuptools.command.build_ext import build_ext as _build_ext
 from setuptools.extension import Extension
 from setuptools.command.develop import develop as _develop
+from setuptools.command.dist_info import dist_info as _dist_info
 from setuptools.command.egg_info import egg_info as _egg_info
 from setuptools.command.sdist import sdist as _sdist
 
@@ -81,6 +82,15 @@ class egg_info(_egg_info):
             download_library(self)
 
         _egg_info.run(self)
+
+
+class dist_info(_dist_info):
+    def run(self):
+        # Ensure library has been downloaded (sdist might have been skipped)
+        if not has_system_lib():
+            download_library(self)
+
+        _dist_info.run(self)
 
 
 class sdist(_sdist):

@@ -58,8 +58,6 @@ def build_flags(library, type_, path):
 
 
 def _find_lib():
-    pkgconfig = __import__('pkgconfig')
-
     if 'COINCURVE_IGNORE_SYSTEM_LIB' in os.environ:
         return False
 
@@ -72,16 +70,22 @@ def _find_lib():
             sources=[os.path.join('coincurve', '_libsecp256k1.c')],
         )
 
-        pkgconfig.configure_extension(extension, 'libsecp256k1', static=False)
-        package_info = pkgconfig.parse('libsecp256k1', static=False)
+        if subprocess.check_output(['pkg-config', '--exists', 'libsecp256k1']):  # noqa S603
+            return False
+
+        extension.extra_compile_args = [str(subprocess.check_output(['pkg-config', '--cflags-only-I', 'libsecp256k1']))]  # noqa S603
+        extension.extra_link_args = [
+            str(subprocess.check_output(['pkg-config', '--libs-only-L', 'libsecp256k1'])),  # noqa S603
+            str(subprocess.check_output(['pkg-config', '--libs-only-l', 'libsecp256k1'])),  # noqa S603
+        ]
 
         if os.name == 'nt' or sys.platform == 'win32':
             ffi.dlopen('libsecp256k1-2')
         else:
             ffi.dlopen('secp256k1')
 
-        return os.path.exists(os.path.join(package_info['include_dirs'][0], 'secp256k1_ecdh.h'))
-    except (OSError, pkgconfig.pkgconfig.PackageNotFoundError):
+        return os.path.exists(os.path.join(extension.extra_compile_args[0][2:], 'secp256k1_ecdh.h'))
+    except OSError:
         if 'LIB_DIR' in os.environ:
             for path in glob.glob(os.path.join(os.environ['LIB_DIR'], '*secp256k1*')):
                 with suppress(OSError):

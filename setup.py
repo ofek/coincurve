@@ -292,8 +292,11 @@ if (os.name == 'nt' or sys.platform == 'win32') and has_system_lib():
         # ABI?: py_limited_api=True,
     )
 
-    pkgconfig.configure_extension(extension, secp256k1_package, static=False)
-    package_info = pkgconfig.parse(secp256k1_package, static=False)
+    extension.extra_compile_args = [str(subprocess.check_output(['pkg-config', '--cflags-only-I', 'libsecp256k1']))]  # noqa S603
+    extension.extra_link_args = [
+        str(subprocess.check_output(['pkg-config', '--libs-only-L', 'libsecp256k1'])),  # noqa S603
+        str(subprocess.check_output(['pkg-config', '--libs-only-l', 'libsecp256k1'])),  # noqa S603
+    ]
 
     # Apparently, the linker on Windows interprets -lxxx as xxx.lib, not libxxx.lib
     for i, v in enumerate(extension.__dict__.get('extra_link_args')):
@@ -317,7 +320,7 @@ else:
         license='MIT OR Apache-2.0',
 
         python_requires='>=3.7',
-        install_requires=['asn1crypto', 'cffi>=1.3.0', 'pkgconfig'],
+        install_requires=['asn1crypto', 'cffi>=1.3.0'],
 
         packages=find_packages(exclude=('_cffi_build', '_cffi_build.*', 'libsecp256k1', 'tests')),
         package_data=package_data,
@@ -357,5 +360,5 @@ else:
             'Topic :: Software Development :: Libraries',
             'Topic :: Security :: Cryptography',
         ],
-       **setup_kwargs
+        **setup_kwargs
     )

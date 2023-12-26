@@ -4,7 +4,6 @@ import shutil
 import subprocess
 import sys
 from contextlib import contextmanager, suppress
-from distutils.extension import Extension
 from tempfile import mkdtemp
 
 

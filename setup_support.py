@@ -67,10 +67,11 @@ def _find_lib():
         # raises CalledProcessError if pkg-config is not installed or the lib does not exists
         subprocess.check_output(['pkg-config', '--exists', 'libsecp256k1'])  # noqa S603
 
-        includes = str(subprocess.check_output(['pkg-config', '--cflags-only-I', 'libsecp256k1']))  # noqa S603
+        includes = subprocess.check_output(['pkg-config', '--cflags-only-I', 'libsecp256k1'])  # noqa S603
+        includes = includes.strip().decode('utf-8')
 
         print(f'libsecp256k1 found, using system library: {includes}', file=sys.stderr)
-        return os.path.exists(os.path.join(includes[0][2:], 'secp256k1_ecdh.h'))
+        return os.path.exists(os.path.join(includes[2:], 'secp256k1_ecdh.h'))
 
     except (OSError, subprocess.CalledProcessError):
         print('libsecp256k1 not found, falling back to bundled version', file=sys.stderr)

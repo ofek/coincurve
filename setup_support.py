@@ -73,7 +73,9 @@ def _find_lib():
         if subprocess.check_output(['pkg-config', '--exists', 'libsecp256k1']):  # noqa S603
             return False
 
-        extension.extra_compile_args = [str(subprocess.check_output(['pkg-config', '--cflags-only-I', 'libsecp256k1']))]  # noqa S603
+        extension.extra_compile_args = [
+            str(subprocess.check_output(['pkg-config', '--cflags-only-I', 'libsecp256k1']))  # noqa S603
+        ]
         extension.extra_link_args = [
             str(subprocess.check_output(['pkg-config', '--libs-only-L', 'libsecp256k1'])),  # noqa S603
             str(subprocess.check_output(['pkg-config', '--libs-only-l', 'libsecp256k1'])),  # noqa S603

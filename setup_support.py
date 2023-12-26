@@ -65,25 +65,18 @@ def _find_lib():
 
     ffi = FFI()
     try:
-        extension = Extension(
-            name='coincurve._libsecp256k1',
-            sources=[os.path.join('coincurve', '_libsecp256k1.c')],
-        )
-
         # raises CalledProcessError if pkg-config is not installed or the lib does not exists
         subprocess.check_output(['pkg-config', '--exists', 'libsecp256k1'])  # noqa S603
 
-        extension.extra_compile_args = [
+        includes = [
             str(subprocess.check_output(['pkg-config', '--cflags-only-I', 'libsecp256k1']))  # noqa S603
         ]
 
-        if os.name == 'nt' or sys.platform == 'win32':
-            ffi.dlopen('libsecp256k1-2')
-        else:
-            ffi.dlopen('secp256k1')
+        print('libsecp256k1 found, using system library', file=sys.stderr)
+        return os.path.exists(os.path.join(includes[0][2:], 'secp256k1_ecdh.h'))
 
-        return os.path.exists(os.path.join(extension.extra_compile_args[0][2:], 'secp256k1_ecdh.h'))
     except (OSError, subprocess.CalledProcessError):
+        print('libsecp256k1 not found, falling back to bundled version', file=sys.stderr)
         if 'LIB_DIR' in os.environ:
             for path in glob.glob(os.path.join(os.environ['LIB_DIR'], '*secp256k1*')):
                 with suppress(OSError):

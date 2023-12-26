@@ -236,81 +236,84 @@ class develop(_develop):
 
 package_data = {'coincurve': ['py.typed']}
 
-if BUILDING_FOR_WINDOWS:
 
-    class Distribution(_Distribution):
-        def is_pure(self):
-            return False
-
-
-    package_data['coincurve'].append('libsecp256k1.dll')
-    setup_kwargs = {}
-
-    if has_system_lib():
-
-        class BuildCFFIForSharedLib(_build_ext):
-            def build_extensions(self):
-                build_script = os.path.join('_cffi_build', 'build_shared.py')
-                c_file = self.extensions[0].sources[0]
-                python_exe = shutil.which('python', path=os.environ['PATH'])
-                subprocess.run([python_exe, build_script, c_file, '0'], shell=False, check=True)  # noqa S603
-                super().build_extensions()
+class BuildCFFIForSharedLib(_build_ext):
+    def build_extensions(self):
+        build_script = os.path.join('_cffi_build', 'build_shared.py')
+        c_file = self.extensions[0].sources[0]
+        python_exe = shutil.which('python', path=os.environ['PATH'])
+        subprocess.run([python_exe, build_script, c_file, '0'], shell=False, check=True)  # noqa S603
+        super().build_extensions()
 
 
-        # --- SECP256K1 package definitions ---
-        secp256k1_package = 'libsecp256k1'
+if has_system_lib():
 
-        extension = Extension(
-            name='coincurve._libsecp256k1',
-            sources=[os.path.join('coincurve', '_libsecp256k1.c')],
-            # ABI?: py_limited_api=True,
-        )
+    # --- SECP256K1 package definitions ---
+    secp256k1_package = 'libsecp256k1'
 
-        extension.extra_compile_args = [
-            str(subprocess.check_output(['pkg-config', '--cflags-only-I', 'libsecp256k1']))  # noqa S603
-        ]
-        extension.extra_link_args = [
-            str(subprocess.check_output(['pkg-config', '--libs-only-L', 'libsecp256k1'])),  # noqa S603
-            str(subprocess.check_output(['pkg-config', '--libs-only-l', 'libsecp256k1'])),  # noqa S603
-        ]
+    extension = Extension(
+        name='coincurve._libsecp256k1',
+        sources=[os.path.join('coincurve', '_libsecp256k1.c')],
+        # ABI?: py_limited_api=True,
+    )
 
-        # Apparently, the linker on Windows interprets -lxxx as xxx.lib, not libxxx.lib
-        for i, v in enumerate(extension.__dict__.get('extra_link_args')):
-            if v.endswith('.lib'):
-                extension.__dict__['extra_link_args'][i] = f'lib{v}'
+    extension.extra_compile_args = [
+        str(subprocess.check_output(['pkg-config', '--cflags-only-I', 'libsecp256k1']))  # noqa S603
+    ]
+    extension.extra_link_args = [
+        str(subprocess.check_output(['pkg-config', '--libs-only-L', 'libsecp256k1'])),  # noqa S603
+        str(subprocess.check_output(['pkg-config', '--libs-only-l', 'libsecp256k1'])),  # noqa S603
+    ]
 
-        setup_kwargs = dict(
-            setup_requires=['cffi>=1.3.0', 'requests'],
-            ext_modules=[extension],
-            cmdclass={
-                'build_clib': build_clib,
-                'build_ext': BuildCFFIForSharedLib,
-                'develop': develop,
-                'egg_info': egg_info,
-                'sdist': sdist,
-                'bdist_wheel': bdist_wheel,
-            },
-        )
-else:
-
-    class Distribution(_Distribution):
-        def has_c_libraries(self):
-            return not has_system_lib()
-
+    # Apparently, the linker on Windows interprets -lxxx as xxx.lib, not libxxx.lib
+    for i, v in enumerate(extension.__dict__.get('extra_link_args')):
+        if v.endswith('.lib'):
+            extension.__dict__['extra_link_args'][i] = f'lib{v}'
 
     setup_kwargs = dict(
         setup_requires=['cffi>=1.3.0', 'requests'],
-        ext_package='coincurve',
-        cffi_modules=['_cffi_build/build.py:ffi'],
+        ext_modules=[extension],
         cmdclass={
             'build_clib': build_clib,
-            'build_ext': build_ext,
+            'build_ext': BuildCFFIForSharedLib,
             'develop': develop,
             'egg_info': egg_info,
             'sdist': sdist,
             'bdist_wheel': bdist_wheel,
         },
     )
+
+else:
+    if BUILDING_FOR_WINDOWS:
+
+        class Distribution(_Distribution):
+            def is_pure(self):
+                return False
+
+
+        package_data['coincurve'].append('libsecp256k1.dll')
+        setup_kwargs = {}
+
+    else:
+
+        class Distribution(_Distribution):
+            def has_c_libraries(self):
+                return not has_system_lib()
+
+
+        setup_kwargs = dict(
+            setup_requires=['cffi>=1.3.0', 'requests'],
+            ext_package='coincurve',
+            cffi_modules=['_cffi_build/build.py:ffi'],
+            cmdclass={
+                'build_clib': build_clib,
+                'build_ext': build_ext,
+                'develop': develop,
+                'egg_info': egg_info,
+                'sdist': sdist,
+                'bdist_wheel': bdist_wheel,
+            },
+        )
 
 setup(
     name='coincurve',

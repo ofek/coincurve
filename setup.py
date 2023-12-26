@@ -245,6 +245,52 @@ if BUILDING_FOR_WINDOWS:
 
     package_data['coincurve'].append('libsecp256k1.dll')
     setup_kwargs = {}
+
+    if has_system_lib():
+
+        class BuildCFFIForSharedLib(_build_ext):
+            def build_extensions(self):
+                build_script = os.path.join('_cffi_build', 'build_shared.py')
+                c_file = self.extensions[0].sources[0]
+                python_exe = shutil.which('python', path=os.environ['PATH'])
+                subprocess.run([python_exe, build_script, c_file, '0'], shell=False, check=True)  # noqa S603
+                super().build_extensions()
+
+
+        # --- SECP256K1 package definitions ---
+        secp256k1_package = 'libsecp256k1'
+
+        extension = Extension(
+            name='coincurve._libsecp256k1',
+            sources=[os.path.join('coincurve', '_libsecp256k1.c')],
+            # ABI?: py_limited_api=True,
+        )
+
+        extension.extra_compile_args = [
+            str(subprocess.check_output(['pkg-config', '--cflags-only-I', 'libsecp256k1']))  # noqa S603
+        ]
+        extension.extra_link_args = [
+            str(subprocess.check_output(['pkg-config', '--libs-only-L', 'libsecp256k1'])),  # noqa S603
+            str(subprocess.check_output(['pkg-config', '--libs-only-l', 'libsecp256k1'])),  # noqa S603
+        ]
+
+        # Apparently, the linker on Windows interprets -lxxx as xxx.lib, not libxxx.lib
+        for i, v in enumerate(extension.__dict__.get('extra_link_args')):
+            if v.endswith('.lib'):
+                extension.__dict__['extra_link_args'][i] = f'lib{v}'
+
+        setup_kwargs = dict(
+            setup_requires=['cffi>=1.3.0', 'requests'],
+            ext_modules=[extension],
+            cmdclass={
+                'build_clib': build_clib,
+                'build_ext': BuildCFFIForSharedLib,
+                'develop': develop,
+                'egg_info': egg_info,
+                'sdist': sdist,
+                'bdist_wheel': bdist_wheel,
+            },
+        )
 else:
 
     class Distribution(_Distribution):
@@ -266,50 +312,14 @@ else:
         },
     )
 
-if (os.name == 'nt' or sys.platform == 'win32') and has_system_lib():
+setup(
+    name='coincurve',
+    version='19.0.0',
 
-    class BuildCFFIForSharedLib(_build_ext):
-        def build_extensions(self):
-            build_script = os.path.join('_cffi_build', 'build_shared.py')
-            c_file = self.extensions[0].sources[0]
-            python_exe = shutil.which('python', path=os.environ['PATH'])
-            subprocess.run([python_exe, build_script, c_file, '0'], shell=False, check=True)  # noqa S603
-            super().build_extensions()
+    packages=find_packages(exclude=('_cffi_build', '_cffi_build.*', 'libsecp256k1', 'tests')),
+    package_data=package_data,
 
-
-    # --- SECP256K1 package definitions ---
-    secp256k1_package = 'libsecp256k1'
-
-    extension = Extension(
-        name='coincurve._libsecp256k1',
-        sources=[os.path.join('coincurve', '_libsecp256k1.c')],
-        # ABI?: py_limited_api=True,
-    )
-
-    extension.extra_compile_args = [
-        str(subprocess.check_output(['pkg-config', '--cflags-only-I', 'libsecp256k1']))  # noqa S603
-    ]
-    extension.extra_link_args = [
-        str(subprocess.check_output(['pkg-config', '--libs-only-L', 'libsecp256k1'])),  # noqa S603
-        str(subprocess.check_output(['pkg-config', '--libs-only-l', 'libsecp256k1'])),  # noqa S603
-    ]
-
-    # Apparently, the linker on Windows interprets -lxxx as xxx.lib, not libxxx.lib
-    for i, v in enumerate(extension.__dict__.get('extra_link_args')):
-        if v.endswith('.lib'):
-            extension.__dict__['extra_link_args'][i] = f'lib{v}'
-
-    setup(
-        ext_modules=[extension],
-        cmdclass={'build_ext': BuildCFFIForSharedLib},
-        package_data=package_data,
-    )
-else:
-    setup(
-        packages=find_packages(exclude=('_cffi_build', '_cffi_build.*', 'libsecp256k1', 'tests')),
-        package_data=package_data,
-
-        distclass=Distribution,
-        zip_safe=False,
-        **setup_kwargs
-    )
+    distclass=Distribution,
+    zip_safe=False,
+    **setup_kwargs
+)

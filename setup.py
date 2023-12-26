@@ -5,15 +5,15 @@ import platform
 import shutil
 import subprocess
 import tarfile
-from distutils import log
-from distutils.command.build_clib import build_clib as _build_clib
-from distutils.command.build_ext import build_ext as _build_ext
-from distutils.errors import DistutilsError
-from distutils.extension import Extension
 from io import BytesIO
 import sys
 
 from setuptools import Distribution as _Distribution, setup, find_packages, __version__ as setuptools_version
+from setuptools._distutils import log
+from setuptools._distutils.errors import DistutilsError
+from setuptools.command.build_clib import build_clib as _build_clib
+from setuptools.command.build_ext import build_ext as _build_ext
+from setuptools.extension import Extension
 from setuptools.command.develop import develop as _develop
 from setuptools.command.egg_info import egg_info as _egg_info
 from setuptools.command.sdist import sdist as _sdist
@@ -22,7 +22,6 @@ try:
     from wheel.bdist_wheel import bdist_wheel as _bdist_wheel
 except ImportError:
     _bdist_wheel = None
-    pass
 
 sys.path.append(os.path.abspath(os.path.dirname(__file__)))
 from setup_support import absolute, build_flags, detect_dll, has_system_lib  # noqa: E402
@@ -41,8 +40,7 @@ LIB_TARBALL_URL = f'https://github.com/bitcoin-core/secp256k1/archive/{UPSTREAM_
 # We require setuptools >= 3.3
 if [int(i) for i in setuptools_version.split('.', 2)[:2]] < [3, 3]:
     raise SystemExit(
-        'Your setuptools version ({}) is too old to correctly install this '
-        'package. Please upgrade to a newer version (>= 3.3).'.format(setuptools_version)
+        f'Your setuptools version ({setuptools_version}) is too old to correctly install this package. Please upgrade to a newer version (>= 3.3).'
     )
 
 
@@ -265,10 +263,11 @@ if has_system_lib():
         str(subprocess.check_output(['pkg-config', '--libs-only-l', 'libsecp256k1'])),  # noqa S603
     ]
 
-    # Apparently, the linker on Windows interprets -lxxx as xxx.lib, not libxxx.lib
-    for i, v in enumerate(extension.__dict__.get('extra_link_args')):
-        if v.endswith('.lib'):
-            extension.__dict__['extra_link_args'][i] = f'lib{v}'
+    if os.name == 'nt' or sys.platform == 'win32':
+        # Apparently, the linker on Windows interprets -lxxx as xxx.lib, not libxxx.lib
+        for i, v in enumerate(extension.__dict__.get('extra_link_args')):
+            if v.endswith('.lib'):
+                extension.__dict__['extra_link_args'][i] = f'lib{v}'
 
     setup_kwargs = dict(
         setup_requires=['cffi>=1.3.0', 'requests'],

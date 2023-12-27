@@ -2,7 +2,6 @@ import glob
 import os
 import shutil
 import subprocess
-import sys
 from contextlib import contextmanager, suppress
 from tempfile import mkdtemp
 
@@ -62,7 +61,6 @@ def _find_lib():
 
     from cffi import FFI
 
-    ffi = FFI()
     try:
         # raises CalledProcessError if pkg-config is not installed or the lib does not exists
         subprocess.check_output(['pkg-config', '--exists', 'libsecp256k1'])  # noqa S603
@@ -73,7 +71,6 @@ def _find_lib():
         return os.path.exists(os.path.join(includes[2:], 'secp256k1_ecdh.h'))
 
     except (OSError, subprocess.CalledProcessError):
-        print('libsecp256k1 not found, falling back to bundled version', file=sys.stderr)
         if 'LIB_DIR' in os.environ:
             for path in glob.glob(os.path.join(os.environ['LIB_DIR'], '*secp256k1*')):
                 with suppress(OSError):

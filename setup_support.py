@@ -3,7 +3,6 @@ import logging
 import os
 import shutil
 import subprocess
-from cgi import log
 from contextlib import contextmanager, suppress
 from tempfile import mkdtemp
 
@@ -79,10 +78,6 @@ def _find_lib():
                     FFI().dlopen(path)
                     return True
         # We couldn't locate libsecp256k1 so we'll use the bundled one
-        return False
-
-    except Exception as e:
-        log.DEBUG(f'Error while trying to find libsecp256k1: {e}')
         return False
 
 

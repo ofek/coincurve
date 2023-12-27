@@ -271,11 +271,11 @@ if has_system_lib():
     )
 
     extension.extra_compile_args = [
-        str(subprocess.check_output(['pkg-config', '--cflags-only-I', 'libsecp256k1']))  # noqa S603
+        subprocess.check_output(['pkg-config', '--cflags-only-I', 'libsecp256k1']).strip().decode('utf-8')  # noqa S603
     ]
     extension.extra_link_args = [
-        str(subprocess.check_output(['pkg-config', '--libs-only-L', 'libsecp256k1'])),  # noqa S603
-        str(subprocess.check_output(['pkg-config', '--libs-only-l', 'libsecp256k1'])),  # noqa S603
+        subprocess.check_output(['pkg-config', '--libs-only-L', 'libsecp256k1']).strip().decode('utf-8'),  # noqa S603
+        subprocess.check_output(['pkg-config', '--libs-only-l', 'libsecp256k1']).strip().decode('utf-8'),  # noqa S603
     ]
 
     if os.name == 'nt' or sys.platform == 'win32':

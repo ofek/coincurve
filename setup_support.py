@@ -70,7 +70,6 @@ def _find_lib():
         includes = subprocess.check_output(['pkg-config', '--cflags-only-I', 'libsecp256k1'])  # noqa S603
         includes = includes.strip().decode('utf-8')
 
-        print(f'libsecp256k1 found, using system library: {includes}', file=sys.stderr)
         return os.path.exists(os.path.join(includes[2:], 'secp256k1_ecdh.h'))
 
     except (OSError, subprocess.CalledProcessError):

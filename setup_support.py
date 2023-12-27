@@ -62,10 +62,9 @@ def _find_lib():
     from cffi import FFI
 
     try:
-        # raises CalledProcessError if pkg-config is not installed or the lib does not exists
-        subprocess.check_output(['pkg-config', '--exists', 'libsecp256k1'])  # noqa S603
+        subprocess.check_output(['pkg-config', '--exists', 'libsecp256k1'], env=env)  # noqa S603
 
-        includes = subprocess.check_output(['pkg-config', '--cflags-only-I', 'libsecp256k1'])  # noqa S603
+        includes = subprocess.check_output(['pkg-config', '--cflags-only-I', 'libsecp256k1'], env=env)  # noqa S603
         includes = includes.strip().decode('utf-8')
 
         return os.path.exists(os.path.join(includes[2:], 'secp256k1_ecdh.h'))

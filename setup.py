@@ -281,8 +281,11 @@ if has_system_lib():
     if os.name == 'nt' or sys.platform == 'win32':
         # Apparently, the linker on Windows interprets -lxxx as xxx.lib, not libxxx.lib
         for i, v in enumerate(extension.__dict__.get('extra_link_args')):
-            if v.endswith('.lib'):
-                extension.__dict__['extra_link_args'][i] = f'lib{v}'
+            extension.__dict__['extra_link_args'][i] = v.replace('-L', '/LIBPATH:')
+
+            if v.startswith('-l'):
+                v = v.replace('-l', 'lib')
+                extension.__dict__['extra_link_args'][i] = f'{v}.lib'
 
     setup_kwargs = dict(
         setup_requires=['cffi>=1.3.0', 'requests'],

@@ -8,7 +8,10 @@ Important changes are emphasized.
 
 ## Unreleased
 
+## 19.0.0
+
 - **Breaking:** Drop support for Python 3.7
+- Add support for Python 3.12
 - Upgrade [libsecp256k1][] to version 0.4.1
 
 ## 18.0.0

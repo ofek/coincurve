@@ -61,17 +61,21 @@ def _find_lib():
 
     from cffi import FFI
 
-    ffi = FFI()
     try:
-        ffi.dlopen('secp256k1')
-        return os.path.exists('/usr/include/secp256k1_ecdh.h')
-    except OSError:
+        subprocess.check_output(['pkg-config', '--exists', 'libsecp256k1'])  # noqa S603
+
+        includes = subprocess.check_output(['pkg-config', '--cflags-only-I', 'libsecp256k1'])  # noqa S603
+        includes = includes.strip().decode('utf-8')
+
+        return os.path.exists(os.path.join(includes[2:], 'secp256k1_ecdh.h'))
+
+    except (OSError, subprocess.CalledProcessError):
         if 'LIB_DIR' in os.environ:
             for path in glob.glob(os.path.join(os.environ['LIB_DIR'], '*secp256k1*')):
                 with suppress(OSError):
                     FFI().dlopen(path)
                     return True
-        # We couldn't locate libsecp256k1 so we'll use the bundled one
+        # We couldn't locate libsecp256k1, so we'll use the bundled one
         return False
 
 

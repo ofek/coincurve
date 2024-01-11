@@ -5,15 +5,17 @@ import platform
 import shutil
 import subprocess
 import tarfile
-from distutils import log
-from distutils.command.build_clib import build_clib as _build_clib
-from distutils.command.build_ext import build_ext as _build_ext
-from distutils.errors import DistutilsError
 from io import BytesIO
 import sys
 
 from setuptools import Distribution as _Distribution, setup, find_packages, __version__ as setuptools_version
+from setuptools._distutils import log
+from setuptools._distutils.errors import DistutilsError
+from setuptools.command.build_clib import build_clib as _build_clib
+from setuptools.command.build_ext import build_ext as _build_ext
+from setuptools.extension import Extension
 from setuptools.command.develop import develop as _develop
+from setuptools.command.dist_info import dist_info as _dist_info
 from setuptools.command.egg_info import egg_info as _egg_info
 from setuptools.command.sdist import sdist as _sdist
 
@@ -21,12 +23,9 @@ try:
     from wheel.bdist_wheel import bdist_wheel as _bdist_wheel
 except ImportError:
     _bdist_wheel = None
-    pass
-
 
 sys.path.append(os.path.abspath(os.path.dirname(__file__)))
 from setup_support import absolute, build_flags, detect_dll, has_system_lib  # noqa: E402
-
 
 BUILDING_FOR_WINDOWS = detect_dll()
 
@@ -35,15 +34,15 @@ MAKE = 'gmake' if platform.system() in ['FreeBSD', 'OpenBSD'] else 'make'
 # IMPORTANT: keep in sync with .github/workflows/build.yml
 #
 # Version of libsecp256k1 to download if none exists in the `libsecp256k1` directory
-UPSTREAM_REF = os.getenv('COINCURVE_UPSTREAM_TAG') or 'acf5c55ae6a94e5ca847e07def40427547876101'
+UPSTREAM_REF = os.getenv('COINCURVE_UPSTREAM_TAG') or '1ad5185cd42c0636104129fcc9f6a4bf9c67cc40'
 
 LIB_TARBALL_URL = f'https://github.com/bitcoin-core/secp256k1/archive/{UPSTREAM_REF}.tar.gz'
 
 # We require setuptools >= 3.3
 if [int(i) for i in setuptools_version.split('.', 2)[:2]] < [3, 3]:
     raise SystemExit(
-        'Your setuptools version ({}) is too old to correctly install this '
-        'package. Please upgrade to a newer version (>= 3.3).'.format(setuptools_version)
+        f'Your setuptools version ({setuptools_version}) is too old to correctly install this package. Please upgrade '
+        f'to a newer version (>= 3.3).'
     )
 
 
@@ -75,17 +74,29 @@ def download_library(command):
         except ImportError as e:
             raise SystemExit('Unable to download secp256k1 library: %s', str(e))
 
+
 class egg_info(_egg_info):
     def run(self):
         # Ensure library has been downloaded (sdist might have been skipped)
-        download_library(self)
+        if not has_system_lib():
+            download_library(self)
 
         _egg_info.run(self)
 
 
+class dist_info(_dist_info):
+    def run(self):
+        # Ensure library has been downloaded (sdist might have been skipped)
+        if not has_system_lib():
+            download_library(self)
+
+        _dist_info.run(self)
+
+
 class sdist(_sdist):
     def run(self):
-        download_library(self)
+        if not has_system_lib():
+            download_library(self)
         _sdist.run(self)
 
 
@@ -93,7 +104,8 @@ if _bdist_wheel:
 
     class bdist_wheel(_bdist_wheel):
         def run(self):
-            download_library(self)
+            if not has_system_lib():
+                download_library(self)
             _bdist_wheel.run(self)
 
 
@@ -113,7 +125,8 @@ class build_clib(_build_clib):
 
     def get_source_files(self):
         # Ensure library has been downloaded (sdist might have been skipped)
-        download_library(self)
+        if not has_system_lib():
+            download_library(self)
 
         return [
             absolute(os.path.join(root, filename))
@@ -232,27 +245,53 @@ class develop(_develop):
 
 package_data = {'coincurve': ['py.typed']}
 
-if BUILDING_FOR_WINDOWS:
 
-    class Distribution(_Distribution):
-        def is_pure(self):
-            return False
+class BuildCFFIForSharedLib(_build_ext):
+    def build_extensions(self):
+        build_script = os.path.join('_cffi_build', 'build_shared.py')
+        c_file = self.extensions[0].sources[0]
+        subprocess.run([sys.executable, build_script, c_file, '0'], shell=False, check=True)  # noqa S603
+        super().build_extensions()
 
-    package_data['coincurve'].append('libsecp256k1.dll')
-    setup_kwargs = dict()
-else:
+
+if has_system_lib():
 
     class Distribution(_Distribution):
         def has_c_libraries(self):
             return not has_system_lib()
 
+    # --- SECP256K1 package definitions ---
+    secp256k1_package = 'libsecp256k1'
+
+    extension = Extension(
+        name='coincurve._libsecp256k1',
+        sources=[os.path.join('coincurve', '_libsecp256k1.c')],
+        # ABI?: py_limited_api=True,
+    )
+
+    extension.extra_compile_args = [
+        subprocess.check_output(['pkg-config', '--cflags-only-I', 'libsecp256k1']).strip().decode('utf-8')  # noqa S603
+    ]
+    extension.extra_link_args = [
+        subprocess.check_output(['pkg-config', '--libs-only-L', 'libsecp256k1']).strip().decode('utf-8'),  # noqa S603
+        subprocess.check_output(['pkg-config', '--libs-only-l', 'libsecp256k1']).strip().decode('utf-8'),  # noqa S603
+    ]
+
+    if os.name == 'nt' or sys.platform == 'win32':
+        # Apparently, the linker on Windows interprets -lxxx as xxx.lib, not libxxx.lib
+        for i, v in enumerate(extension.__dict__.get('extra_link_args')):
+            extension.__dict__['extra_link_args'][i] = v.replace('-L', '/LIBPATH:')
+
+            if v.startswith('-l'):
+                v = v.replace('-l', 'lib')
+                extension.__dict__['extra_link_args'][i] = f'{v}.lib'
+
     setup_kwargs = dict(
         setup_requires=['cffi>=1.3.0', 'requests'],
-        ext_package='coincurve',
-        cffi_modules=['_cffi_build/build.py:ffi'],
+        ext_modules=[extension],
         cmdclass={
             'build_clib': build_clib,
-            'build_ext': build_ext,
+            'build_ext': BuildCFFIForSharedLib,
             'develop': develop,
             'egg_info': egg_info,
             'sdist': sdist,
@@ -260,56 +299,46 @@ else:
         },
     )
 
+else:
+    if BUILDING_FOR_WINDOWS:
+
+        class Distribution(_Distribution):
+            def is_pure(self):
+                return False
+
+
+        package_data['coincurve'].append('libsecp256k1.dll')
+        setup_kwargs = {}
+
+    else:
+
+        class Distribution(_Distribution):
+            def has_c_libraries(self):
+                return not has_system_lib()
+
+
+        setup_kwargs = dict(
+            setup_requires=['cffi>=1.3.0', 'requests'],
+            ext_package='coincurve',
+            cffi_modules=['_cffi_build/build.py:ffi'],
+            cmdclass={
+                'build_clib': build_clib,
+                'build_ext': build_ext,
+                'develop': develop,
+                'egg_info': egg_info,
+                'sdist': sdist,
+                'bdist_wheel': bdist_wheel,
+            },
+        )
 
 setup(
     name='coincurve',
-    version='18.0.0',
-
-    description='Cross-platform Python CFFI bindings for libsecp256k1',
-    long_description=open('README.md', 'r').read(),
-    long_description_content_type='text/markdown',
-    author_email='Ofek Lev <oss@ofek.dev>',
-    license='MIT OR Apache-2.0',
-
-    python_requires='>=3.7',
-    install_requires=['asn1crypto', 'cffi>=1.3.0'],
+    version='19.0.0',
 
     packages=find_packages(exclude=('_cffi_build', '_cffi_build.*', 'libsecp256k1', 'tests')),
     package_data=package_data,
 
     distclass=Distribution,
     zip_safe=False,
-
-    project_urls={
-        'Documentation': 'https://ofek.dev/coincurve/',
-        'Issues': 'https://github.com/ofek/coincurve/issues',
-        'Source': 'https://github.com/ofek/coincurve',
-    },
-    keywords=[
-        'secp256k1',
-        'crypto',
-        'elliptic curves',
-        'bitcoin',
-        'ethereum',
-        'cryptocurrency',
-    ],
-    classifiers=[
-        'Development Status :: 5 - Production/Stable',
-        'Intended Audience :: Developers',
-        'License :: OSI Approved :: MIT License',
-        'License :: OSI Approved :: Apache Software License',
-        'Natural Language :: English',
-        'Operating System :: OS Independent',
-        'Programming Language :: Python :: 3',
-        'Programming Language :: Python :: 3.7',
-        'Programming Language :: Python :: 3.8',
-        'Programming Language :: Python :: 3.9',
-        'Programming Language :: Python :: 3.10',
-        'Programming Language :: Python :: 3.11',
-        'Programming Language :: Python :: Implementation :: CPython',
-        'Programming Language :: Python :: Implementation :: PyPy',
-        'Topic :: Software Development :: Libraries',
-        'Topic :: Security :: Cryptography',
-    ],
     **setup_kwargs
 )

@@ -38,7 +38,7 @@ else:  # no cov
         def __repr__(self):
             return 'sha256'
 
-    DEFAULT_NONCE = __Nonce((ffi.NULL, ffi.NULL))  # type: ignore
+    DEFAULT_NONCE = __Nonce((ffi.NULL, ffi.NULL))
     sha256 = __HasherSHA256()
 
 

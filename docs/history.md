@@ -8,6 +8,9 @@ Important changes are emphasized.
 
 ## Unreleased
 
+- **Breaking:** Drop support for Python 3.7
+- Upgrade [libsecp256k1][] to version 0.4.1
+
 ## 18.0.0
 
 - Support Schnorr signatures

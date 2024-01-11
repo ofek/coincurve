@@ -250,8 +250,7 @@ class BuildCFFIForSharedLib(_build_ext):
     def build_extensions(self):
         build_script = os.path.join('_cffi_build', 'build_shared.py')
         c_file = self.extensions[0].sources[0]
-        python_exe = shutil.which('python', path=os.environ['PATH'])
-        subprocess.run([python_exe, build_script, c_file, '0'], shell=False, check=True)  # noqa S603
+        subprocess.run([sys.executable, build_script, c_file, '0'], shell=False, check=True)  # noqa S603
         super().build_extensions()
 
 

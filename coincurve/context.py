@@ -2,7 +2,7 @@ from os import urandom
 from threading import Lock
 from typing import Optional
 
-from coincurve.flags import CONTEXT_NONE, CONTEXT_FLAGS
+from coincurve.flags import CONTEXT_FLAGS, CONTEXT_NONE
 
 from ._libsecp256k1 import ffi, lib
 

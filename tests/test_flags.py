@@ -1,13 +1,15 @@
 from coincurve.flags import (
-    CONTEXT_NONE,
     CONTEXT_FLAGS,
+    CONTEXT_NONE,
     EC_COMPRESSED,
     EC_UNCOMPRESSED,
 )
 
 
 def test_context_flags():
-    expected_flags = {CONTEXT_NONE,}
+    expected_flags = {
+        CONTEXT_NONE,
+    }
     assert CONTEXT_FLAGS == expected_flags
 
 

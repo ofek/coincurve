@@ -5,5 +5,5 @@ set -x
 
 PYTHON_VERSION=$1
 
-docker container run --rm scikit-learn/minimal-windows \
+docker container run --rm coincurve/minimal-windows \
     powershell -Command "pytest"

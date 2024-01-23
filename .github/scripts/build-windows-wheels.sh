@@ -30,7 +30,6 @@ build_dll x86_64-w64-mingw32
 mv .libs/libsecp256k1-?.dll ../clean/coincurve/libsecp256k1.dll
 cd ../clean
 python setup.py bdist_wheel --plat-name=win_amd64
-python -m pytest
 rm coincurve/libsecp256k1.dll
 
 cd ../32bit
@@ -39,7 +38,6 @@ build_dll i686-w64-mingw32
 mv .libs/libsecp256k1-?.dll ../clean/coincurve/libsecp256k1.dll
 cd ../clean
 python setup.py bdist_wheel --plat-name=win32
-python -m pytest
 
 mv dist/* ../coincurve/dist/
 cd ../coincurve

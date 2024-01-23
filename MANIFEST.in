@@ -1,5 +1,7 @@
 include coincurve/py.typed
 include setup_support.py
 recursive-include _cffi_build *.py *.h
+prune /*
 graft libsecp256k1
+prune /*
 

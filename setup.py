@@ -49,7 +49,7 @@ if [int(i) for i in setuptools_version.split('.', 2)[:2]] < [3, 3]:
 def download_library(command):
     if command.dry_run:
         return
-    libdir = absolute('libsecp256k1')
+    libdir = 'libsecp256k1'
     if os.path.exists(os.path.join(libdir, 'autogen.sh')):
         # Library already downloaded
         return
@@ -128,11 +128,11 @@ class build_clib(_build_clib):
         if not has_system_lib():
             download_library(self)
 
-        return [
-            absolute(os.path.join(root, filename))
-            for root, _, filenames in os.walk(absolute('libsecp256k1'))
-            for filename in filenames
-        ]
+        # return [
+        #     absolute(os.path.join(root, filename))
+        #     for root, _, filenames in os.walk(absolute('libsecp256k1'))
+        #     for filename in filenames
+        # ]
 
     def build_libraries(self, libraries):
         raise Exception('build_libraries')
@@ -261,8 +261,6 @@ if has_system_lib():
             return not has_system_lib()
 
     # --- SECP256K1 package definitions ---
-    secp256k1_package = 'libsecp256k1'
-
     extension = Extension(
         name='coincurve._libsecp256k1',
         sources=[os.path.join('coincurve', '_libsecp256k1.c')],

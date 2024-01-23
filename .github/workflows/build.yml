@@ -101,10 +101,14 @@ jobs:
     steps:
     - uses: actions/checkout@v4
 
+    - name: Remove libsecp256k1
+      run: rm -rf libsecp256k1 coincurve.egg_info
+
     - name: Build wheels
       uses: pypa/cibuildwheel@v2.16.2
       env:
         CIBW_BEFORE_TEST_WINDOWS: bash {project}/.github/scripts/build-minimal-windows-image.sh 312
+        CIBW_REPAIR_WHEEL_COMMAND_WINDOWS: bash {project}/.github/repair-windows-wheels.sh {wheel} {dest_dir}
         CIBW_TEST_COMMAND_WINDOWS: bash {project}/.github/scripts/test-windows-wheels.sh 312
         CIBW_TEST_REQUIRES: pytest pytest-benchmark
         CIBW_TEST_COMMAND: python -m pytest {project}/tests

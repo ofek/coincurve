@@ -102,7 +102,7 @@ jobs:
     - uses: actions/checkout@v4
 
     - name: Remove libsecp256k1
-      run: rm -rf libsecp256k1 coincurve.egg_info
+      run: rm libsecp256k1 coincurve.egg_info
 
     - name: Build wheels
       uses: pypa/cibuildwheel@v2.16.2

@@ -92,6 +92,29 @@ jobs:
         path: wheelhouse/*.whl
         if-no-files-found: error
 
+  windows-wheels-standard:
+    name: Build Windows wheels
+    needs:
+    - test
+    runs-on: windows-latest
+
+    steps:
+    - uses: actions/checkout@v4
+
+    - name: Build wheels
+      uses: pypa/cibuildwheel@v2.16.2
+      env:
+        CIBW_BEFORE_TEST_WINDOWS: bash {project}/.github/scripts/build-minimal-windows-image.sh 312
+        CIBW_TEST_COMMAND_WINDOWS: bash {project}/.github/scripts/test-windows-wheels.sh 312
+        CIBW_TEST_REQUIRES: pytest pytest-benchmark
+        CIBW_TEST_COMMAND: python -m pytest {project}/tests
+
+    - uses: actions/upload-artifact@v3
+      with:
+        name: artifacts
+        path: wheelhouse/*.whl
+        if-no-files-found: error
+
   macos-wheels-x86-64:
     name: Build macOS wheels
     needs:

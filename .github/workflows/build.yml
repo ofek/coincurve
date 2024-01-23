@@ -85,7 +85,7 @@ jobs:
       env:
         CIBW_TEST_REQUIRES: pytest
         CIBW_TEST_COMMAND: >
-          python -m pytest {project}/tests
+          python -m pytest
 
     - uses: actions/upload-artifact@v3
       with:

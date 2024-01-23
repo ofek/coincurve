@@ -1,3 +1,5 @@
+import os
+import sys
 from os import urandom
 
 import pytest
@@ -16,7 +18,16 @@ from coincurve.utils import (
     validate_secret,
     verify_signature,
 )
-from tests.samples import MESSAGE, PRIVATE_KEY_DER, PUBLIC_KEY_COMPRESSED, PUBLIC_KEY_UNCOMPRESSED, SIGNATURE
+
+sys.path.insert(0, os.path.abspath(os.path.join(os.path.dirname(__file__), '..')))
+
+from tests.samples import (  # noqa: E402
+    MESSAGE,
+    PRIVATE_KEY_DER,
+    PUBLIC_KEY_COMPRESSED,
+    PUBLIC_KEY_UNCOMPRESSED,
+    SIGNATURE,
+)
 
 
 class TestPadScalar:

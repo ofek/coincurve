@@ -1,3 +1,5 @@
+import os
+import sys
 from hashlib import sha512
 from os import urandom
 
@@ -6,7 +8,11 @@ import pytest
 from coincurve.ecdsa import deserialize_recoverable, recover
 from coincurve.keys import PrivateKey, PublicKey, PublicKeyXOnly
 from coincurve.utils import bytes_to_int, int_to_bytes_padded, verify_signature
-from tests.samples import (
+
+sys.path.insert(0, os.path.abspath(os.path.join(os.path.dirname(__file__), '..')))
+
+
+from tests.samples import (  # noqa: E402
     MESSAGE,
     PRIVATE_KEY_BYTES,
     PRIVATE_KEY_DER,

@@ -1,5 +1,11 @@
+import os
+import sys
+
 from coincurve import PrivateKey, PublicKey, verify_signature
-from tests.samples import MESSAGE, PRIVATE_KEY_BYTES, PUBLIC_KEY_COMPRESSED, SIGNATURE
+
+sys.path.insert(0, os.path.abspath(os.path.join(os.path.dirname(__file__), '..')))
+
+from tests.samples import MESSAGE, PRIVATE_KEY_BYTES, PUBLIC_KEY_COMPRESSED, SIGNATURE  # noqa: E402
 
 
 def test_verify_signature_util(benchmark):

@@ -4,6 +4,7 @@ import shutil
 import subprocess
 from contextlib import contextmanager, suppress
 from tempfile import mkdtemp
+from setuptools._distutils import log
 
 
 @contextmanager
@@ -62,6 +63,7 @@ def _find_lib():
     from cffi import FFI
 
     try:
+        log.debug('Trying to find libsecp256k1 using pkg-config')
         subprocess.check_output(['pkg-config', '--exists', 'libsecp256k1'])  # noqa S603
 
         includes = subprocess.check_output(['pkg-config', '--cflags-only-I', 'libsecp256k1'])  # noqa S603

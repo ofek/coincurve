@@ -163,7 +163,7 @@ class build_clib(_build_clib):
             log.info('Using system library')
             return
 
-        build_temp = os.path.abspath(self.build_temp)
+        # build_temp = os.path.abspath(self.build_temp)
         build_external_library = os.path.join(cwd, 'build_external_library')
         built_lib_dir = os.path.join(build_external_library, LIB_NAME)
         installed_lib_dir = os.path.abspath(self.build_clib)

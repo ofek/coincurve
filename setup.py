@@ -164,6 +164,7 @@ class build_clib(_build_clib):
             # configure script hasn't been generated yet
             autogen = absolute('libsecp256k1/autogen.sh')
             os.chmod(absolute(autogen), 0o700)
+            log.debug(f"Calling autogen.sh in {absolute('libsecp256k1')}")
             subprocess.check_call([autogen], cwd=absolute('libsecp256k1'))  # noqa S603
 
         for filename in [

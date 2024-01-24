@@ -101,6 +101,8 @@ jobs:
     steps:
     - uses: actions/checkout@v4
 
+    - uses: actions/setup-python@v3
+
     - name: Remove libsecp256k1
       run: |
         Get-ChildItem -Recurse -Filter *.egg-info | Remove-Item -Force

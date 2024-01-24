@@ -36,7 +36,9 @@ def redirect(stdchannel, dest_filename):
 
 def absolute(*paths):
     op = os.path
-    return op.realpath(op.abspath(op.join(op.dirname(__file__), *paths)))
+    path = op.join(op.dirname(__file__), *paths)
+    normalized_path = op.normpath(path)
+    return op.realpath(op.abspath(normalized_path))
 
 
 def build_flags(library, type_, path):

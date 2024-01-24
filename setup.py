@@ -144,6 +144,7 @@ class build_clib(_build_clib):
         return build_flags('libsecp256k1', 'l', os.path.abspath(self.build_temp))
 
     def run(self):
+        log.info('SECP256K1 build options:')
         if has_system_lib():
             log.info('Using system library')
             return
@@ -156,10 +157,12 @@ class build_clib(_build_clib):
             if e.errno != errno.EEXIST:
                 raise
 
+        log.info('Source files')
         if not os.path.exists(absolute('libsecp256k1')):
             # library needs to be downloaded
             self.get_source_files()
 
+        log.info('autogen.sh')
         if not os.path.exists(absolute('libsecp256k1/configure')):
             # configure script hasn't been generated yet
             autogen = absolute('libsecp256k1/autogen.sh')

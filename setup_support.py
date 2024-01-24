@@ -36,8 +36,12 @@ def redirect(stdchannel, dest_filename):
 
 def absolute(*paths):
     op = os.path
+    log.info(f'{paths}')
     path = op.join(op.dirname(__file__), *paths)
+    log.info(f'{path}')
     normalized_path = op.normpath(path)
+    log.info(f'{normalized_path}')
+    log.info(f'{op.realpath(op.abspath(normalized_path))}')
     return op.realpath(op.abspath(normalized_path))
 
 

@@ -1,6 +1,7 @@
 import errno
 import os
 import os.path
+import pathlib
 import platform
 import shutil
 import subprocess
@@ -36,6 +37,7 @@ MAKE = 'gmake' if platform.system() in ['FreeBSD', 'OpenBSD'] else 'make'
 # Version of libsecp256k1 to download if none exists in the `libsecp256k1` directory
 UPSTREAM_REF = os.getenv('COINCURVE_UPSTREAM_TAG') or '1ad5185cd42c0636104129fcc9f6a4bf9c67cc40'
 
+LIB_NAME = 'libsecp256k1'
 LIB_TARBALL_URL = f'https://github.com/bitcoin-core/secp256k1/archive/{UPSTREAM_REF}.tar.gz'
 
 # We require setuptools >= 3.3
@@ -46,33 +48,43 @@ if [int(i) for i in setuptools_version.split('.', 2)[:2]] < [3, 3]:
     )
 
 
-def download_library(command):
+def download_library(command, libdir=LIB_NAME, force=False):
     if command.dry_run:
         return
-    libdir = 'libsecp256k1'
+
+    if force:
+        shutil.rmtree(libdir, ignore_errors=True)
+
     if os.path.exists(os.path.join(libdir, 'autogen.sh')):
         # Library already downloaded
         return
-    if not os.path.exists(libdir):
-        command.announce('downloading libsecp256k1 source code', level=log.INFO)
-        try:
-            import requests
-            try:
-                r = requests.get(LIB_TARBALL_URL, stream=True, timeout=10)
-                status_code = r.status_code
-                if status_code == 200:
-                    content = BytesIO(r.raw.read())
-                    content.seek(0)
-                    with tarfile.open(fileobj=content) as tf:
-                        dirname = tf.getnames()[0].partition('/')[0]
-                        tf.extractall()
-                    shutil.move(dirname, libdir)
-                else:
-                    raise SystemExit('Unable to download secp256k1 library: HTTP-Status: %d', status_code)
-            except requests.exceptions.RequestException as e:
-                raise SystemExit('Unable to download secp256k1 library: %s', str(e))
-        except ImportError as e:
-            raise SystemExit('Unable to download secp256k1 library: %s', str(e))
+
+    # Ensure the path exists
+    os.makedirs(libdir, exist_ok=True)
+
+    # _download will use shutil.move, thus remove the directory
+    os.rmdir(libdir)
+
+    command.announce(f'Downloading {LIB_NAME} source code', level=log.INFO)
+    from requests.exceptions import RequestException
+    try:
+        _download_library(libdir)
+    except RequestException as e:
+        raise SystemExit(f'Unable to download {LIB_NAME} library: {e!s}', ) from e
+
+
+def _download_library(libdir):
+    import requests
+    r = requests.get(LIB_TARBALL_URL, stream=True, timeout=10)
+    status_code = r.status_code
+    if status_code != 200:
+        raise SystemExit(f'Unable to download {LIB_NAME} library: HTTP-Status: {status_code}')
+    content = BytesIO(r.raw.read())
+    content.seek(0)
+    with tarfile.open(fileobj=content) as tf:
+        dirname = tf.getnames()[0].partition('/')[0]
+        tf.extractall()
+    shutil.move(dirname, libdir)
 
 
 class egg_info(_egg_info):
@@ -88,7 +100,7 @@ class dist_info(_dist_info):
     def run(self):
         # Ensure library has been downloaded (sdist might have been skipped)
         if not has_system_lib():
-            download_library(self)
+            download_library(self, force=True)
 
         _dist_info.run(self)
 
@@ -96,7 +108,7 @@ class dist_info(_dist_info):
 class sdist(_sdist):
     def run(self):
         if not has_system_lib():
-            download_library(self)
+            download_library(self, force=True)
         _sdist.run(self)
 
 
@@ -141,53 +153,45 @@ class build_clib(_build_clib):
         raise Exception('check_library_list')
 
     def get_library_names(self):
-        return build_flags('libsecp256k1', 'l', os.path.abspath(self.build_temp))
+        return build_flags(LIB_NAME, 'l', os.path.join(os.path.abspath(self.build_clib), 'lib', 'pkgconfig'))
 
     def run(self):
+        cwd = pathlib.Path().absolute()
+
         log.info('SECP256K1 build options:')
         if has_system_lib():
             log.info('Using system library')
             return
 
         build_temp = os.path.abspath(self.build_temp)
+        build_external_library = os.path.join(cwd, 'build_external_library')
+        built_lib_dir = os.path.join(build_external_library, LIB_NAME)
+        installed_lib_dir = os.path.abspath(self.build_clib)
 
         try:
-            os.makedirs(build_temp)
+            os.makedirs(build_external_library)
         except OSError as e:
             if e.errno != errno.EEXIST:
                 raise
 
-        log.info('Source files')
-        if not os.path.exists(absolute('libsecp256k1')):
-            # library needs to be downloaded
-            self.get_source_files()
+        download_library(self, libdir=built_lib_dir)
 
-        log.info('autogen.sh')
-        if not os.path.exists(absolute('libsecp256k1/configure')):
-            # configure script hasn't been generated yet
-            autogen = absolute('libsecp256k1/autogen.sh')
-            os.chmod(absolute(autogen), 0o700)
-            log.debug(f"Calling autogen.sh in {absolute('libsecp256k1')}")
-
-            # Check if bash exists
-            bash_path = shutil.which('bash')
-            if bash_path is None:
-                subprocess.check_call([autogen], cwd=absolute('libsecp256k1'))  # noqa S603
-            else:
-                subprocess.check_call([bash_path, '-c', autogen], cwd=absolute('libsecp256k1'))  # noqa S603
+        autoreconf = 'autoreconf -if --warnings=all'
+        bash = shutil.which('bash')
+        subprocess.check_call([bash, '-c', autoreconf], cwd=built_lib_dir)  # noqa S603
 
         for filename in [
-            'libsecp256k1/configure',
-            'libsecp256k1/build-aux/compile',
-            'libsecp256k1/build-aux/config.guess',
-            'libsecp256k1/build-aux/config.sub',
-            'libsecp256k1/build-aux/depcomp',
-            'libsecp256k1/build-aux/install-sh',
-            'libsecp256k1/build-aux/missing',
-            'libsecp256k1/build-aux/test-driver',
+            os.path.join(built_lib_dir, 'configure'),
+            os.path.join(built_lib_dir, 'build-aux', 'compile'),
+            os.path.join(built_lib_dir, 'build-aux', 'config.guess'),
+            os.path.join(built_lib_dir, 'build-aux', 'config.sub'),
+            os.path.join(built_lib_dir, 'build-aux', 'depcomp'),
+            os.path.join(built_lib_dir, 'build-aux', 'install-sh'),
+            os.path.join(built_lib_dir, 'build-aux', 'missing'),
+            os.path.join(built_lib_dir, 'build-aux', 'test-driver'),
         ]:
             try:
-                os.chmod(absolute(filename), 0o700)
+                os.chmod(filename, 0o700)
             except OSError as e:
                 # some of these files might not exist depending on autoconf version
                 if e.errno != errno.ENOENT:
@@ -196,7 +200,7 @@ class build_clib(_build_clib):
                     raise
 
         cmd = [
-            absolute('libsecp256k1/configure'),
+            'configure',
             '--disable-shared',
             '--enable-static',
             '--disable-dependency-tracking',
@@ -205,7 +209,7 @@ class build_clib(_build_clib):
             '--enable-module-recovery',
             '--enable-module-schnorrsig',
             '--prefix',
-            os.path.abspath(self.build_clib),
+            installed_lib_dir.replace('\\', '/'),
             '--enable-experimental',
             '--enable-module-ecdh',
             '--enable-benchmark=no',
@@ -216,16 +220,22 @@ class build_clib(_build_clib):
             cmd.append(f"--host={os.environ['COINCURVE_CROSS_HOST']}")
 
         log.debug(f"Running configure: {' '.join(cmd)}")
-        subprocess.check_call(cmd, cwd=build_temp)  # noqa S603
+        # Prepend the working directory to the PATH
+        os.environ['PATH'] = built_lib_dir + os.pathsep + os.environ['PATH']
+        subprocess.check_call([bash, '-c', ' '.join(cmd)], cwd=built_lib_dir)  # noqa S603
 
-        subprocess.check_call([MAKE], cwd=build_temp)  # noqa S603
-        subprocess.check_call([MAKE, 'check'], cwd=build_temp)  # noqa S603
-        subprocess.check_call([MAKE, 'install'], cwd=build_temp)  # noqa S603
+        subprocess.check_call([MAKE], cwd=built_lib_dir)  # noqa S603
+        subprocess.check_call([MAKE, 'install'], cwd=built_lib_dir)  # noqa S603
 
-        self.build_flags['include_dirs'].extend(build_flags('libsecp256k1', 'I', build_temp))
-        self.build_flags['library_dirs'].extend(build_flags('libsecp256k1', 'L', build_temp))
+        self.build_flags['include_dirs'].extend(build_flags(LIB_NAME,
+                                                            'I',
+                                                            os.path.join(installed_lib_dir, 'lib', 'pkgconfig')))
+        self.build_flags['library_dirs'].extend(build_flags(LIB_NAME,
+                                                            'L',
+                                                            os.path.join(installed_lib_dir, 'lib', 'pkgconfig')))
         if not has_system_lib():
             self.build_flags['define'].append(('CFFI_ENABLE_RECOVERY', None))
+        self.announce('build_clib Done', level=log.INFO)
 
 
 class build_ext(_build_ext):
@@ -248,7 +258,7 @@ class develop(_develop):
         if not has_system_lib():
             raise DistutilsError(
                 "This library is not usable in 'develop' mode when using the "
-                'bundled libsecp256k1. See README for details.'
+                f'bundled {LIB_NAME}. See README for details.'
             )
         _develop.run(self)
 
@@ -344,8 +354,9 @@ else:
 setup(
     name='coincurve',
     version='19.0.0',
+    install_requires=['asn1crypto', 'cffi>=1.3.0'],
 
-    packages=find_packages(exclude=('_cffi_build', '_cffi_build.*', 'libsecp256k1', 'tests')),
+    packages=find_packages(exclude=('_cffi_build', '_cffi_build.*', LIB_NAME, 'tests')),
     package_data=package_data,
 
     distclass=Distribution,

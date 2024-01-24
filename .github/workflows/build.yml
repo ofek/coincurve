@@ -107,12 +107,10 @@ jobs:
       run: |
         Get-ChildItem -Recurse -Filter *.egg-info | Remove-Item -Force
 
-    - name: Install unix build tools
-      run: python -m pip install automake libtool m2-base m2-bash m2-libtool m2-m4 m2-make m2-sed m2-tar m2-autoconf m2-automake-wrapper m2-gzip cibuildwheel
-
     - name: Build wheels
       uses: pypa/cibuildwheel@v2.16.2
       env:
+        CIBW_BEFORE_ALL: choco install -y --no-progress --no-color automake libtool bash m4 make sed tar autoconf gzip
         CIBW_BEFORE_TEST_WINDOWS: bash {project}/.github/scripts/build-minimal-windows-image.sh 312
         CIBW_REPAIR_WHEEL_COMMAND_WINDOWS: bash {project}/.github/repair-windows-wheels.sh {wheel} {dest_dir}
         CIBW_TEST_COMMAND_WINDOWS: bash {project}/.github/scripts/test-windows-wheels.sh 312

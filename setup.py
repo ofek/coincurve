@@ -274,6 +274,7 @@ class BuildCFFIForSharedLib(_build_ext):
         super().build_extensions()
 
 
+log.info(f'Sys Libs: {has_system_lib()}')
 if has_system_lib():
 
     class Distribution(_Distribution):
@@ -320,6 +321,7 @@ if has_system_lib():
     )
 
 else:
+    log.info(f'Windows: {BUILDING_FOR_WINDOWS}')
     if BUILDING_FOR_WINDOWS:
 
         class Distribution(_Distribution):
@@ -377,6 +379,7 @@ else:
                 return not has_system_lib()
 
 
+        log.info(f'Building for what: {BUILDING_FOR_WINDOWS}:{os.name}:{sys.platform}')
         setup_kwargs = dict(
             setup_requires=['cffi>=1.3.0', 'requests'],
             ext_package='coincurve',

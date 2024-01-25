@@ -329,8 +329,10 @@ else:
 
         package_data['coincurve'].append('libsecp256k1.dll')
 
+        log.info(f'Building for Windows: {os.name}:{sys.platform}')
         if os.name == 'nt' or sys.platform == 'win32':
             # Native build on Windows
+            log.info('Building for Windows')
             extension = Extension(
                 name='coincurve._libsecp256k1',
                 sources=[os.path.join('coincurve', '_libsecp256k1.c')],
@@ -345,6 +347,7 @@ else:
                 subprocess.check_output(['pkg-config', '--libs-only-l', 'libsecp256k1']).strip().decode('utf-8'),  # noqa S603
             ]
 
+            log.info(f'links: {extension.extra_link_args}')
             # Apparently, the linker on Windows interprets -lxxx as xxx.lib, not libxxx.lib
             for i, v in enumerate(extension.__dict__.get('extra_link_args')):
                 extension.__dict__['extra_link_args'][i] = v.replace('-L', '/LIBPATH:')

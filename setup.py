@@ -311,7 +311,7 @@ if has_system_lib():
         ext_modules=[extension],
         cmdclass={
             'build_clib': build_clib,
-            'build_ext': BuildCFFIForSharedLib,
+            'build_ext': build_ext,
             'develop': develop,
             'egg_info': egg_info,
             'sdist': sdist,
@@ -328,7 +328,44 @@ else:
 
 
         package_data['coincurve'].append('libsecp256k1.dll')
-        setup_kwargs = {}
+
+        if os.name == 'nt' or sys.platform == 'win32':
+            # Native build on Windows
+            extension = Extension(
+                name='coincurve._libsecp256k1',
+                sources=[os.path.join('coincurve', '_libsecp256k1.c')],
+                # ABI?: py_limited_api=True,
+            )
+
+            extension.extra_compile_args = [
+                subprocess.check_output(['pkg-config', '--cflags-only-I', 'libsecp256k1']).strip().decode('utf-8')  # noqa S603
+            ]
+            extension.extra_link_args = [
+                subprocess.check_output(['pkg-config', '--libs-only-L', 'libsecp256k1']).strip().decode('utf-8'),  # noqa S603
+                subprocess.check_output(['pkg-config', '--libs-only-l', 'libsecp256k1']).strip().decode('utf-8'),  # noqa S603
+            ]
+
+            # Apparently, the linker on Windows interprets -lxxx as xxx.lib, not libxxx.lib
+            for i, v in enumerate(extension.__dict__.get('extra_link_args')):
+                extension.__dict__['extra_link_args'][i] = v.replace('-L', '/LIBPATH:')
+
+                # We may not need this. SECP256K1 builds with gcc -> libsecp256k1.a
+                # if v.startswith('-l'):
+                #     v = v.replace('-l', 'lib')
+                #     extension.__dict__['extra_link_args'][i] = f'{v}.lib'
+
+            setup_kwargs = dict(
+                ext_modules=[extension],
+                cmdclass={
+                    'build_clib': build_clib,
+                    'build_ext': BuildCFFIForSharedLib,
+                    'egg_info': egg_info,
+                    'sdist': sdist,
+                    'bdist_wheel': bdist_wheel,
+                },
+            )
+        else:
+            setup_kwargs = {}
 
     else:
 

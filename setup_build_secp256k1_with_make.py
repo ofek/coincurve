@@ -45,7 +45,7 @@ class BuildClibWithMake(_build_clib):
         return build_flags(LIB_NAME, 'l', os.path.join(os.path.abspath(self.build_clib), 'lib', 'pkgconfig'))
 
     def run(self):
-        from setup import LIB_NAME
+        from setup import LIB_NAME, MAKE
 
         cwd = pathlib.Path().absolute()
 

@@ -51,12 +51,14 @@ class BuildCFFIForStaticLib(_build_ext):
     def build_extensions(self):
         from setup_support import absolute
 
-        log.info(f'Cmdline CFFI Static for: '
-                 f'         OS:{os.name}'
-                 f'   Platform:{sys.platform}'
-                 f'   Compiler:{(self.compiler.compiler[0])}'
-                 f'        CWD: {pathlib.Path().absolute()}'
-                 f'     Source: {self.extensions[0].sources[0]}:{absolute(self.extensions[0].sources[0])}')
+        log.info(
+            f'Cmdline CFFI Static for: '
+            f'         OS:{os.name}'
+            f'   Platform:{sys.platform}'
+            f'   Compiler:{(self.compiler.compiler[0])}'
+            f'        CWD: {pathlib.Path().absolute()}'
+            f'     Source: {self.extensions[0].sources[0]}:{absolute(self.extensions[0].sources[0])}'
+        )
         build_script = os.path.join('_cffi_build', 'build.py')
 
         _update_extensions_for_msvc(self.extensions[0], self.compiler.compiler[0])

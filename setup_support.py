@@ -2,7 +2,9 @@ import glob
 import os
 import shutil
 import subprocess
+import tarfile
 from contextlib import contextmanager, suppress
+from io import BytesIO
 from tempfile import mkdtemp
 
 from setuptools._distutils import log
@@ -104,3 +106,53 @@ def detect_dll():
         if fn.endswith('.dll'):
             return True
     return False
+
+
+def download_library(command, libdir=None, force=False):
+    if libdir is None:
+        from setup import LIB_NAME, LIB_TARBALL_URL
+
+        libdir = LIB_NAME
+
+    if command.dry_run:
+        return
+
+    if force:
+        shutil.rmtree(libdir, ignore_errors=True)
+
+    if os.path.exists(os.path.join(libdir, 'autogen.sh')):
+        # Library already downloaded
+        return
+
+    # Ensure the path exists
+    os.makedirs(libdir, exist_ok=True)
+
+    # _download will use shutil.move, thus remove the directory
+    os.rmdir(libdir)
+
+    command.announce(f'Downloading {libdir} source code', level=log.INFO)
+
+    from requests.exceptions import RequestException
+
+    try:
+        _download_library(libdir)
+    except RequestException as e:
+        raise SystemExit(
+            f'Unable to download {libdir} library: {e!s}',
+        ) from e
+
+
+def _download_library(libdir):
+    import requests
+    from setup import LIB_TARBALL_URL
+
+    r = requests.get(LIB_TARBALL_URL, stream=True, timeout=10)
+    status_code = r.status_code
+    if status_code != 200:
+        raise SystemExit(f'Unable to download {libdir} library: HTTP-Status: {status_code}')
+    content = BytesIO(r.raw.read())
+    content.seek(0)
+    with tarfile.open(fileobj=content) as tf:
+        dirname = tf.getnames()[0].partition('/')[0]
+        tf.extractall()
+    shutil.move(dirname, libdir)

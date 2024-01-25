@@ -1,8 +1,8 @@
 import errno
 import os
 import pathlib
-import subprocess
 import shutil
+import subprocess
 
 from setuptools._distutils import log
 from setuptools.command.build_clib import build_clib as _build_clib

@@ -64,9 +64,8 @@ class BuildCFFIForStaticLib(_build_ext):
         _update_extensions_for_msvc(self.extensions[0], self.compiler.compiler[0])
         c_file = self.extensions[0].sources[0] = absolute(self.extensions[0].sources[0])
 
-        log.info(
-            f'\n     C-file: {c_file}'
-        )
+        log.info(f'\n     C-file: {c_file}')
+
         subprocess.run([sys.executable, build_script, c_file, '1'], shell=False, check=True)  # noqa S603
         super().build_extensions()
 

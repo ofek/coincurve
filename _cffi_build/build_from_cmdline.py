@@ -49,7 +49,6 @@ def mk_ffi(sources: List[Source],
     Create an FFI object.
 
     :param sources: A list of Source namedtuples.
-    :param libraries: A list of libraries to link against.
     :param static_lib: Whether to generate a static lib in Windows.
     :param name: The name of the FFI object.
     :return: An FFI object.

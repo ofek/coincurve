@@ -126,4 +126,5 @@ class BuildClibWithMake(_build_clib):
         )
         if not has_system_lib():
             self.build_flags['define'].append(('CFFI_ENABLE_RECOVERY', None))
+
         self.announce('build_clib Done', level=log.INFO)

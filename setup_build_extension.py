@@ -51,7 +51,23 @@ def _update_extension_for_c_library(extension):
     return extension
 
 
-class BuildCFFIForSharedLib(_build_ext):
+class BuildCFFISetuptools(_build_ext):
+    def run(self):
+        if self.distribution.has_c_libraries():
+            log.info('   Locally built C-lib')
+            _build_clib: BuildClibWithMake = cast(self.get_finalized_command('build_clib'), BuildClibWithMake)
+            self.include_dirs.append(os.path.join(_build_clib.build_clib, 'include'))
+            self.include_dirs.extend(_build_clib.build_flags['include_dirs'])
+
+            self.library_dirs.insert(0, os.path.join(_build_clib.build_clib, 'lib'))
+            self.library_dirs.extend(_build_clib.build_flags['library_dirs'])
+
+            self.define = _build_clib.build_flags['define']
+
+        return _build_ext.run(self)
+
+
+class BuildCFFIForSharedLib(BuildCFFISetuptools):
     def build_extensions(self):
         from setup_support import absolute
 
@@ -59,7 +75,7 @@ class BuildCFFIForSharedLib(_build_ext):
             f'Cmdline CFFI Shared for: '
             f'\n         OS:{os.name}'
             f'\n   Platform:{sys.platform}'
-            f'\n   Compiler:{(self.compiler.compiler[0])}'
+            f'\n   Compiler:{(self.compiler)}'
             f'\n        CWD: {pathlib.Path().absolute()}'
             f'\n     Source: {absolute(self.extensions[0].sources[0])}'
         )
@@ -75,7 +91,7 @@ class BuildCFFIForSharedLib(_build_ext):
         super().build_extensions()
 
 
-class BuildCFFIForStaticLib(_build_ext):
+class BuildCFFIForStaticLib(BuildCFFISetuptools):
     def build_extensions(self):
         from setup_support import absolute
 
@@ -83,7 +99,7 @@ class BuildCFFIForStaticLib(_build_ext):
             f'Cmdline CFFI Static for: '
             f'\n         OS:{os.name}'
             f'\n   Platform:{sys.platform}'
-            f'\n   Compiler:{(self.compiler.compiler[0])}'
+            f'\n   Compiler:{(self.compiler)}'
             f'\n        CWD: {pathlib.Path().absolute()}'
             f'\n     Source: {absolute(self.extensions[0].sources[0])}'
         )
@@ -97,20 +113,3 @@ class BuildCFFIForStaticLib(_build_ext):
         _update_extension_for_msvc(self.extensions[0], self.compiler.compiler[0])
 
         super().build_extensions()
-
-
-class BuildCFFISetuptools(_build_ext):
-    def run(self):
-        log.info(f'Setuptools CFFI static for: {os.name}:{sys.platform}:{(self.compiler.compiler[0])}')
-        if self.distribution.has_c_libraries():
-            log.info('   Locally built C-lib')
-            _build_clib: BuildClibWithMake = cast(self.get_finalized_command('build_clib'), BuildClibWithMake)
-            self.include_dirs.append(os.path.join(_build_clib.build_clib, 'include'))
-            self.include_dirs.extend(_build_clib.build_flags['include_dirs'])
-
-            self.library_dirs.insert(0, os.path.join(_build_clib.build_clib, 'lib'))
-            self.library_dirs.extend(_build_clib.build_flags['library_dirs'])
-
-            self.define = _build_clib.build_flags['define']
-
-        return _build_ext.run(self)

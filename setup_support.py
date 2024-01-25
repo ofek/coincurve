@@ -110,7 +110,7 @@ def detect_dll():
 
 def download_library(command, libdir=None, force=False):
     if libdir is None:
-        from setup import LIB_NAME, LIB_TARBALL_URL
+        from setup import LIB_NAME
 
         libdir = LIB_NAME
 
@@ -144,6 +144,7 @@ def download_library(command, libdir=None, force=False):
 
 def _download_library(libdir):
     import requests
+
     from setup import LIB_TARBALL_URL
 
     r = requests.get(LIB_TARBALL_URL, stream=True, timeout=10)

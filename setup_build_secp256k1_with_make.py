@@ -25,6 +25,7 @@ class BuildClibWithMake(_build_clib):
 
     def get_source_files(self):
         from setup import LIB_NAME
+
         # Ensure library has been downloaded (sdist might have been skipped)
         if not has_system_lib():
             download_library(self)
@@ -39,10 +40,12 @@ class BuildClibWithMake(_build_clib):
 
     def get_library_names(self):
         from setup import LIB_NAME
+
         return build_flags(LIB_NAME, 'l', os.path.join(os.path.abspath(self.build_clib), 'lib', 'pkgconfig'))
 
     def run(self):
         from setup import LIB_NAME
+
         cwd = pathlib.Path().absolute()
 
         log.info('SECP256K1 build options:')

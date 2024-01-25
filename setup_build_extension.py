@@ -13,7 +13,7 @@ if TYPE_CHECKING:
 def _update_extensions_for_msvc(extension, compiler):
     if compiler == 'gcc':
         return
-    
+
     path_to_lib = ''
     for i, v in enumerate(extension.__dict__.get('extra_link_args')):
         # Replace -L with /LIBPATH: for MSVC
@@ -36,10 +36,10 @@ class BuildCFFIForSharedLib(_build_ext):
     def build_extensions(self):
         log.info(f'Cmdline CFFI Shared for: {os.name}:{sys.platform}:{(self.compiler.compiler[0])}')
         build_script = os.path.join('_cffi_build', 'build_from_cmdline.py')
-        
+
         _update_extensions_for_msvc(self.extensions[0], self.compiler.compiler[0])
         c_file = self.extensions[0].sources[0]
-        
+
         subprocess.run([sys.executable, build_script, c_file, '0'], shell=False, check=True)  # noqa S603
         super().build_extensions()
 
@@ -51,7 +51,7 @@ class BuildCFFIForStaticLib(_build_ext):
 
         _update_extensions_for_msvc(self.extensions[0], self.compiler.compiler[0])
         c_file = self.extensions[0].sources[0]
-        
+
         subprocess.run([sys.executable, build_script, c_file, '1'], shell=False, check=True)  # noqa S603
         super().build_extensions()
 

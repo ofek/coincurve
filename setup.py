@@ -1,17 +1,16 @@
 import os.path
 import platform
 import shutil
-import subprocess
 import sys
 
 from setuptools import Distribution as _Distribution, setup, find_packages, __version__ as setuptools_version
 from setuptools._distutils import log
 from setuptools._distutils.errors import DistutilsError
-from setuptools.extension import Extension
 from setuptools.command.develop import develop as _develop
 from setuptools.command.dist_info import dist_info as _dist_info
 from setuptools.command.egg_info import egg_info as _egg_info
 from setuptools.command.sdist import sdist as _sdist
+from setuptools.extension import Extension
 
 try:
     from wheel.bdist_wheel import bdist_wheel as _bdist_wheel
@@ -93,8 +92,8 @@ class Distribution(_Distribution):
         return not has_system_lib()
 
 
-pkgconfig = shutil.which('pkg-config')
-if pkgconfig is None:
+PKGCONFIG = shutil.which('pkg-config')
+if PKGCONFIG is None:
     raise DistutilsError('pkg-config is required')
 
 package_data = {'coincurve': ['py.typed']}
@@ -117,14 +116,6 @@ if has_system_lib():
     from setup_build_extension import BuildCFFIForStaticLib
 
     log.info('Using system library')
-
-    extension.extra_compile_args = [
-        subprocess.check_output([pkgconfig, '--cflags-only-I', 'libsecp256k1']).strip().decode('utf-8')  # noqa S603
-    ]
-    extension.extra_link_args = [
-        subprocess.check_output([pkgconfig, '--libs-only-L', 'libsecp256k1']).strip().decode('utf-8'),  # noqa S603
-        subprocess.check_output([pkgconfig, '--libs-only-l', 'libsecp256k1']).strip().decode('utf-8'),  # noqa S603
-    ]
 
     setup_kwargs = dict(
         ext_modules=[extension],

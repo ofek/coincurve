@@ -13,9 +13,6 @@ from setuptools.command.dist_info import dist_info as _dist_info
 from setuptools.command.egg_info import egg_info as _egg_info
 from setuptools.command.sdist import sdist as _sdist
 
-from setup_build_extension import BuildCFFIForStaticLib
-from setup_build_secp256k1_with_make import BuildClibWithMake
-
 try:
     from wheel.bdist_wheel import bdist_wheel as _bdist_wheel
 except ImportError:
@@ -117,6 +114,8 @@ extension = Extension(
 # Building for any OS, use system libsecp256k1
 
 if has_system_lib():
+    from setup_build_extension import BuildCFFIForStaticLib
+
     log.info('Using system library')
 
     extension.extra_compile_args = [
@@ -139,6 +138,8 @@ if has_system_lib():
     )
 
 else:
+    from setup_build_extension import BuildCFFIForStaticLib
+    from setup_build_secp256k1_with_make import BuildClibWithMake
     setup_kwargs = dict(
         ext_modules=[extension],
         cmdclass={

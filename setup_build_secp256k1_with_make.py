@@ -1,6 +1,7 @@
 import errno
 import os
 import pathlib
+import subprocess
 import shutil
 
 from setuptools._distutils import log

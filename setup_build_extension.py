@@ -7,9 +7,6 @@ from typing import TYPE_CHECKING, cast
 from setuptools._distutils import log
 from setuptools.command.build_ext import build_ext as _build_ext
 
-if TYPE_CHECKING:
-    from setup_build_secp256k1_with_make import BuildClibWithMake
-
 
 def _update_extension_for_msvc(extension, compiler):
     if compiler == 'gcc':
@@ -54,8 +51,10 @@ def _update_extension_for_c_library(extension):
 class BuildCFFISetuptools(_build_ext):
     def run(self):
         if self.distribution.has_c_libraries():
+            from setup_build_secp256k1_with_make import BuildClibWithMake
+
             log.info('   Locally built C-lib')
-            _build_clib: BuildClibWithMake = cast(self.get_finalized_command('build_clib'), BuildClibWithMake)
+            _build_clib: BuildClibWithMake = cast(BuildClibWithMake, self.get_finalized_command('build_clib'))
             self.include_dirs.append(os.path.join(_build_clib.build_clib, 'include'))
             self.include_dirs.extend(_build_clib.build_flags['include_dirs'])
 
@@ -67,7 +66,23 @@ class BuildCFFISetuptools(_build_ext):
         return _build_ext.run(self)
 
 
-class BuildCFFIForSharedLib(BuildCFFISetuptools):
+class _BuildCFFILib(BuildCFFISetuptools):
+    def build_extensions(self):
+        from setup_support import absolute
+
+        build_script = os.path.join('_cffi_build', 'build_from_cmdline.py')
+
+        c_file = self.extensions[0].sources[0] = absolute(self.extensions[0].sources[0])
+
+        subprocess.run([sys.executable, build_script, c_file, self.lib_type], shell=False, check=True)  # noqa S603
+
+        _update_extension_for_c_library(self.extensions[0])
+        _update_extension_for_msvc(self.extensions[0], self.compiler.compiler[0])
+
+        super().build_extensions()
+
+
+class BuildCFFIForSharedLib(_BuildCFFILib):
     def build_extensions(self):
         from setup_support import absolute
 
@@ -79,19 +94,11 @@ class BuildCFFIForSharedLib(BuildCFFISetuptools):
             f'\n        CWD: {pathlib.Path().absolute()}'
             f'\n     Source: {absolute(self.extensions[0].sources[0])}'
         )
-        build_script = os.path.join('_cffi_build', 'build_from_cmdline.py')
-
-        c_file = self.extensions[0].sources[0] = absolute(self.extensions[0].sources[0])
-
-        subprocess.run([sys.executable, build_script, c_file, '0'], shell=False, check=True)  # noqa S603
-
-        _update_extension_for_c_library(self.extensions[0])
-        _update_extension_for_msvc(self.extensions[0], self.compiler.compiler[0])
-
+        self.lib_type = '0'
         super().build_extensions()
 
 
-class BuildCFFIForStaticLib(BuildCFFISetuptools):
+class BuildCFFIForStaticLib(_BuildCFFILib):
     def build_extensions(self):
         from setup_support import absolute
 
@@ -103,13 +110,5 @@ class BuildCFFIForStaticLib(BuildCFFISetuptools):
             f'\n        CWD: {pathlib.Path().absolute()}'
             f'\n     Source: {absolute(self.extensions[0].sources[0])}'
         )
-        build_script = os.path.join('_cffi_build', 'build_from_cmdline.py')
-
-        c_file = self.extensions[0].sources[0] = absolute(self.extensions[0].sources[0])
-
-        subprocess.run([sys.executable, build_script, c_file, '1'], shell=False, check=True)  # noqa S603
-
-        _update_extension_for_c_library(self.extensions[0])
-        _update_extension_for_msvc(self.extensions[0], self.compiler.compiler[0])
-
+        self.lib_type = '1'
         super().build_extensions()

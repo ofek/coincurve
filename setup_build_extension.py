@@ -59,11 +59,14 @@ class BuildCFFIForStaticLib(_build_ext):
             f'\n        CWD: {pathlib.Path().absolute()}'
             f'\n     Source: {absolute(self.extensions[0].sources[0])}'
         )
-        build_script = os.path.join('_cffi_build', 'build.py')
+        build_script = os.path.join('_cffi_build', 'build_from_cmdline.py')
 
         _update_extensions_for_msvc(self.extensions[0], self.compiler.compiler[0])
         c_file = self.extensions[0].sources[0] = absolute(self.extensions[0].sources[0])
 
+        log.info(
+            f'\n     C-file: {c_file}'
+        )
         subprocess.run([sys.executable, build_script, c_file, '1'], shell=False, check=True)  # noqa S603
         super().build_extensions()
 

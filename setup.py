@@ -140,6 +140,9 @@ if has_system_lib():
 else:
     from setup_build_extension import BuildCFFIForStaticLib
     from setup_build_secp256k1_with_make import BuildClibWithMake
+
+    log.info('Building SECP256K1 locally')
+
     setup_kwargs = dict(
         ext_modules=[extension],
         cmdclass={

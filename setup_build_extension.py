@@ -2,7 +2,7 @@ import os
 import pathlib
 import subprocess
 import sys
-from typing import TYPE_CHECKING, cast
+from typing import cast
 
 from setuptools._distutils import log
 from setuptools.command.build_ext import build_ext as _build_ext

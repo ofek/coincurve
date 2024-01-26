@@ -8,7 +8,8 @@ from setuptools.command.build_ext import build_ext as _build_ext
 
 
 def _update_extension_for_msvc(extension, compiler):
-    if compiler == 'gcc':
+    # MSVCCompiler for VisualC on Windows
+    if compiler == 'UnixCCompiler':
         return
 
     path_to_lib = ''
@@ -80,10 +81,10 @@ class _BuildCFFILib(BuildCFFISetuptools):
         from setup.setup_support import absolute
 
         log.info(
-            f'Cmdline CFFI Shared for: '
+            f'Cmdline CFFI build:'
             f'\n         OS:{os.name}'
             f'\n   Platform:{sys.platform}'
-            f'\n   Compiler:{(self.compiler.compiler[0])}'
+            f'\n   Compiler:{self.compiler.__class__.__name__}'
             f'\n        CWD: {pathlib.Path().absolute()}'
             f'\n     Source: {absolute(self.extensions[0].sources[0])}'
         )
@@ -91,18 +92,20 @@ class _BuildCFFILib(BuildCFFISetuptools):
 
         c_file = self.extensions[0].sources[0]
         subprocess.run([sys.executable, build_script, c_file, self.lib_type], shell=False, check=True)  # noqa S603
-        _update_extension_for_msvc(self.extensions[0], self.compiler.compiler[0])
+        _update_extension_for_msvc(self.extensions[0], self.compiler.__class__.__name__)
 
         super().build_extensions()
 
 
 class BuildCFFIForSharedLib(_BuildCFFILib):
     def build_extensions(self):
+        log.info('Building dynamic library')
         self.lib_type = '0'
         super().build_extensions()
 
 
 class BuildCFFIForStaticLib(_BuildCFFILib):
     def build_extensions(self):
+        log.info('Building static library')
         self.lib_type = '1'
         super().build_extensions()

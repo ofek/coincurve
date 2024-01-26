@@ -106,30 +106,33 @@ def main():
 
     # Cases to consider:
     # . Building for any OS, use system libsecp256k1
-    # . Building for Windows Native, build secp256k1 locally
-    # . Building for Windows with cross-compile, build secp256k1 locally
-    # . Building for other OS, build secp256k1 locally
-
-    # Building for any OS, use system libsecp256k1
+    # . Building for any OS, build secp256k1 locally
 
     if has_system_lib():
-        log.info('Using system library')
+        # Building for any OS, use system libsecp256k1
 
-        setup_kwargs['cmdclass'] |= dict(
+        log.info('Using system library')
+        build_cmd = dict(
             build_ext=BuildCFFIForStaticLib,
         )
+
     else:
+        # Building for any OS, building libsecp256k1 with make
         from setup.setup_build_secp256k1_with_make import BuildClibWithMake
 
         log.info('Building SECP256K1 locally')
-
-        setup_kwargs['cmdclass'] |= dict(
+        build_cmd = dict(
             build_clib=BuildClibWithMake,
             build_ext=BuildCFFIForStaticLib,
         )
 
         if BUILDING_FOR_WINDOWS:
             package_data['coincurve'].append('libsecp256k1.dll')
+
+    if sys.version_info >= (3, 9):
+        setup_kwargs['cmdclass'] |= build_cmd
+    else:
+        setup_kwargs['cmdclass'].update(build_cmd)  # type: ignore
 
     setup(
         name='coincurve',

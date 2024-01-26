@@ -1,6 +1,4 @@
 import os.path
-import platform
-import shutil
 import sys
 
 from setuptools import Distribution as _Distribution, setup, find_packages, __version__ as setuptools_version
@@ -18,19 +16,11 @@ except ImportError:
     _bdist_wheel = None
 
 sys.path.append(os.path.abspath(os.path.dirname(__file__)))
-from setup_support import detect_dll, has_system_lib, download_library  # noqa: E402
+
+from setup.setup_config import LIB_NAME, PKGCONFIG  # noqa: E402
+from setup.setup_support import detect_dll, has_system_lib, download_library  # noqa: E402
 
 BUILDING_FOR_WINDOWS = detect_dll()
-
-MAKE = 'gmake' if platform.system() in ['FreeBSD', 'OpenBSD'] else 'make'
-
-# IMPORTANT: keep in sync with .github/workflows/build.yml
-#
-# Version of libsecp256k1 to download if none exists in the `libsecp256k1` directory
-UPSTREAM_REF = os.getenv('COINCURVE_UPSTREAM_TAG') or '1ad5185cd42c0636104129fcc9f6a4bf9c67cc40'
-
-LIB_NAME = 'libsecp256k1'
-LIB_TARBALL_URL = f'https://github.com/bitcoin-core/secp256k1/archive/{UPSTREAM_REF}.tar.gz'
 
 # We require setuptools >= 3.3
 if [int(i) for i in setuptools_version.split('.', 2)[:2]] < [3, 3]:
@@ -40,51 +30,49 @@ if [int(i) for i in setuptools_version.split('.', 2)[:2]] < [3, 3]:
     )
 
 
-class egg_info(_egg_info):
+class EggInfo(_egg_info):
     def run(self):
         # Ensure library has been downloaded (sdist might have been skipped)
         if not has_system_lib():
             download_library(self)
 
-        _egg_info.run(self)
+        super().run()
 
 
-class dist_info(_dist_info):
+class DistInfo(_dist_info):
     def run(self):
-        # Ensure library has been downloaded (sdist might have been skipped)
         if not has_system_lib():
-            download_library(self, force=True)
+            download_library(self)
+        super().run()
 
-        _dist_info.run(self)
 
-
-class sdist(_sdist):
+class Sdist(_sdist):
     def run(self):
         if not has_system_lib():
             download_library(self, force=True)
-        _sdist.run(self)
+        super().run()
 
 
 if _bdist_wheel:
 
-    class bdist_wheel(_bdist_wheel):
+    class BdistWheel(_bdist_wheel):
         def run(self):
             if not has_system_lib():
                 download_library(self)
-            _bdist_wheel.run(self)
+            super().run()
 
 else:
-    bdist_wheel = None
+    BdistWheel = None
 
 
-class develop(_develop):
+class Develop(_develop):
     def run(self):
         if not has_system_lib():
             raise DistutilsError(
                 "This library is not usable in 'develop' mode when using the "
                 f'bundled {LIB_NAME}. See README for details.'
             )
-        _develop.run(self)
+        super().run()
 
 
 class Distribution(_Distribution):
@@ -92,73 +80,72 @@ class Distribution(_Distribution):
         return not has_system_lib()
 
 
-PKGCONFIG = shutil.which('pkg-config')
-if PKGCONFIG is None:
-    raise DistutilsError('pkg-config is required')
+def main():
+    if PKGCONFIG is None:
+        raise DistutilsError('pkg-config is required')
 
-package_data = {'coincurve': ['py.typed']}
+    package_data = {'coincurve': ['py.typed']}
 
-extension = Extension(
-    name='coincurve._libsecp256k1',
-    sources=[os.path.join('coincurve', '_libsecp256k1.c')],
-    # ABI?: py_limited_api=True,
-)
-
-# Cases to consider:
-# . Building for any OS, use system libsecp256k1
-# . Building for Windows Native, build secp256k1 locally
-# . Building for Windows with cross-compile, build secp256k1 locally
-# . Building for other OS, build secp256k1 locally
-
-# Building for any OS, use system libsecp256k1
-
-if has_system_lib():
-    from setup_build_extension import BuildCFFIForStaticLib
-
-    log.info('Using system library')
+    extension = Extension(
+        name='coincurve._libsecp256k1',
+        sources=[os.path.join('coincurve', '_libsecp256k1.c')],
+        # ABI?: py_limited_api=True,
+    )
 
     setup_kwargs = dict(
         ext_modules=[extension],
         cmdclass={
-            'build_clib': None,
-            'build_ext': BuildCFFIForStaticLib,
-            'develop': develop,
-            'egg_info': egg_info,
-            'sdist': sdist,
-            'bdist_wheel': bdist_wheel,
-        },
+            'develop': Develop,
+            'egg_info': EggInfo,
+            'sdist': Sdist,
+            'bdist_wheel': BdistWheel,
+        }
     )
 
-else:
-    from setup_build_extension import BuildCFFIForStaticLib
-    from setup_build_secp256k1_with_make import BuildClibWithMake
+    from setup.setup_build_extension import BuildCFFIForStaticLib
 
-    log.info('Building SECP256K1 locally')
+    # Cases to consider:
+    # . Building for any OS, use system libsecp256k1
+    # . Building for Windows Native, build secp256k1 locally
+    # . Building for Windows with cross-compile, build secp256k1 locally
+    # . Building for other OS, build secp256k1 locally
 
-    setup_kwargs = dict(
-        ext_modules=[extension],
-        cmdclass={
-            'build_clib': BuildClibWithMake,
-            'build_ext': BuildCFFIForStaticLib,
-            'develop': develop,
-            'egg_info': egg_info,
-            'sdist': sdist,
-            'bdist_wheel': bdist_wheel,
-        },
+    # Building for any OS, use system libsecp256k1
+
+    if has_system_lib():
+        log.info('Using system library')
+
+        setup_kwargs['cmdclass'] |= dict(
+            build_ext=BuildCFFIForStaticLib,
+        )
+    else:
+        from setup.setup_build_secp256k1_with_make import BuildClibWithMake
+
+        log.info('Building SECP256K1 locally')
+
+        setup_kwargs['cmdclass'] |= dict(
+            build_clib=BuildClibWithMake,
+            build_ext=BuildCFFIForStaticLib,
+        )
+
+        if BUILDING_FOR_WINDOWS:
+            package_data['coincurve'].append('libsecp256k1.dll')
+
+    setup(
+        name='coincurve',
+        version='19.0.0',
+        requires=['asn1crypto', 'cffi(>=1.3.0)'],
+
+        packages=find_packages(exclude=('_cffi_build', '_cffi_build.*', LIB_NAME, 'tests')),
+        package_data=package_data,
+        include_package_data=True,
+
+        distclass=Distribution,
+        zip_safe=False,
+
+        **setup_kwargs,
     )
 
-    if BUILDING_FOR_WINDOWS:
-        package_data['coincurve'].append('libsecp256k1.dll')
 
-setup(
-    name='coincurve',
-    version='19.0.0',
-    requires=['asn1crypto', 'cffi(>=1.3.0)'],
-
-    packages=find_packages(exclude=('_cffi_build', '_cffi_build.*', LIB_NAME, 'tests')),
-    package_data=package_data,
-
-    distclass=Distribution,
-    zip_safe=False,
-    **setup_kwargs
-)
+if __name__ == '__main__':
+    main()

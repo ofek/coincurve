@@ -7,7 +7,7 @@ import subprocess
 from setuptools._distutils import log
 from setuptools.command.build_clib import build_clib as _build_clib
 
-from setup_support import absolute, build_flags, download_library, has_system_lib
+from setup.setup_support import absolute, build_flags, download_library, has_system_lib
 
 
 class BuildClibWithMake(_build_clib):
@@ -25,7 +25,7 @@ class BuildClibWithMake(_build_clib):
             self.build_flags = {'include_dirs': [], 'library_dirs': [], 'define': []}
 
     def get_source_files(self):
-        from setup import LIB_NAME
+        from setup.setup_config import LIB_NAME
 
         # Ensure library has been downloaded (sdist might have been skipped)
         if not has_system_lib():
@@ -40,12 +40,12 @@ class BuildClibWithMake(_build_clib):
         raise NotImplementedError('check_library_list')
 
     def get_library_names(self):
-        from setup import LIB_NAME
+        from setup.setup_config import LIB_NAME
 
         return build_flags(LIB_NAME, 'l', os.path.join(os.path.abspath(self.build_clib), 'lib', 'pkgconfig'))
 
     def run(self):
-        from setup import LIB_NAME, MAKE
+        from setup.setup_config import LIB_NAME, MAKE
 
         cwd = pathlib.Path().absolute()
 

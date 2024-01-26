@@ -45,6 +45,7 @@ def absolute(*paths):
 
 def build_flags(library, type_, path):
     """Return separated build flags from pkg-config output"""
+    from setup.setup_config import PKGCONFIG
 
     pkg_config_path = [path]
     if 'PKG_CONFIG_PATH' in os.environ:
@@ -55,29 +56,38 @@ def build_flags(library, type_, path):
 
     options = {'I': '--cflags-only-I', 'L': '--libs-only-L', 'l': '--libs-only-l'}
     env = dict(os.environ, PKG_CONFIG_PATH=':'.join(pkg_config_path))
-    flags = subprocess.check_output(['pkg-config', '--static', options[type_], library], env=env)  # noqa S603
+
+    try:
+        subprocess.check_output([PKGCONFIG, '--exists', library], env=env)  # noqa S603
+    except subprocess.CalledProcessError:
+        log.warn(f'{PKGCONFIG} failed to locate {library} with path={path}')
+        return []
+
+    flags = subprocess.check_output([PKGCONFIG, '--static', options[type_], library], env=env)  # noqa S603
     flags = list(flags.decode('UTF-8').split())
 
     return [flag.strip(f'-{type_}') for flag in flags]
 
 
 def _find_lib():
+    from setup.setup_config import PKGCONFIG
+
     if 'COINCURVE_IGNORE_SYSTEM_LIB' in os.environ:
         return False
 
-    from cffi import FFI
-
     try:
         log.debug('Trying to find libsecp256k1 using pkg-config')
-        subprocess.check_output(['pkg-config', '--exists', 'libsecp256k1'])  # noqa S603
+        subprocess.check_output([PKGCONFIG, '--exists', 'libsecp256k1'])  # noqa S603
 
-        includes = subprocess.check_output(['pkg-config', '--cflags-only-I', 'libsecp256k1'])  # noqa S603
+        includes = subprocess.check_output([PKGCONFIG, '--cflags-only-I', 'libsecp256k1'])  # noqa S603
         includes = includes.strip().decode('utf-8')
 
         return os.path.exists(os.path.join(includes[2:], 'secp256k1_ecdh.h'))
 
     except (OSError, subprocess.CalledProcessError):
         if 'LIB_DIR' in os.environ:
+            from cffi import FFI
+
             for path in glob.glob(os.path.join(os.environ['LIB_DIR'], '*secp256k1*')):
                 with suppress(OSError):
                     FFI().dlopen(path)
@@ -98,15 +108,12 @@ def has_system_lib():
 
 def detect_dll():
     here = os.path.dirname(os.path.abspath(__file__))
-    for fn in os.listdir(os.path.join(here, 'coincurve')):
-        if fn.endswith('.dll'):
-            return True
-    return False
+    return any(fn.endswith('.dll') for fn in os.listdir(os.path.join(here, '..', 'coincurve')))
 
 
 def download_library(command, libdir=None, force=False):
     if libdir is None:
-        from setup import LIB_NAME
+        from setup.setup_config import LIB_NAME
 
         libdir = LIB_NAME
 
@@ -141,7 +148,7 @@ def download_library(command, libdir=None, force=False):
 def _download_library(libdir):
     import requests
 
-    from setup import LIB_TARBALL_URL
+    from setup.setup_config import LIB_TARBALL_URL
 
     r = requests.get(LIB_TARBALL_URL, stream=True, timeout=10)
     status_code = r.status_code

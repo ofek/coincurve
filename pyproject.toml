@@ -101,6 +101,7 @@ inline-quotes = "single"
 
 [tool.ruff.per-file-ignores]
 "setup.py" = ["B", "C", "I", "N", "U"]
+"setup/*" = ["B", "C", "I", "N", "U"]
 # Tests can use assertions
 "tests/*" = ["S101"]
 "tests/**/*" = ["S101"]

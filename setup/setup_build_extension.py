@@ -14,6 +14,8 @@ def _update_extension_for_msvc(extension, compiler):
 
     path_to_lib = ''
     for i, v in enumerate(extension.__dict__.get('extra_link_args')):
+        log.info(f'extra_link_args[{i}]: {v}')
+
         # Replace -L with /LIBPATH: for MSVC
         if v.startswith('-L'):
             path_to_lib = v[2:]

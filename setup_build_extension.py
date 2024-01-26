@@ -53,8 +53,11 @@ class BuildCFFISetuptools(_build_ext):
         if self.distribution.has_c_libraries():
             from setup_build_secp256k1_with_make import BuildClibWithMake
 
-            log.info('   Locally built C-lib')
-            _build_clib: BuildClibWithMake = cast(BuildClibWithMake, self.get_finalized_command('build_clib'))
+            log.info('Locally built C-lib')
+            log.info(f'{self.get_finalized_command("build_clib")}')
+            log.info(f'{self.get_finalized_command("BuildClibWithMake")}')
+            _build_clib: BuildClibWithMake = cast(BuildClibWithMake, self.get_finalized_command('BuildClibWithMake'))
+            # _build_clib = self.get_finalized_command('build_clib')
             self.include_dirs.append(os.path.join(_build_clib.build_clib, 'include'))
             self.include_dirs.extend(_build_clib.build_flags['include_dirs'])
 

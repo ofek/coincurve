@@ -120,6 +120,7 @@ if has_system_lib():
     setup_kwargs = dict(
         ext_modules=[extension],
         cmdclass={
+            'build_clib': None,
             'build_ext': BuildCFFIForStaticLib,
             'develop': develop,
             'egg_info': egg_info,

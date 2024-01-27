@@ -8,13 +8,15 @@ from setuptools.command.build_ext import build_ext as _build_ext
 
 
 def _update_extension_for_msvc(extension, compiler):
+    log.info(f'compiler: {compiler}')
+    [log.info(f'extra_link_args[{i}]: {v}') for i, v in enumerate(extension.__dict__.get('extra_link_args'))]
+
     # MSVCCompiler for VisualC on Windows
     if compiler == 'UnixCCompiler':
         return
 
     path_to_lib = ''
     for i, v in enumerate(extension.__dict__.get('extra_link_args')):
-        log.info(f'extra_link_args[{i}]: {v}')
 
         # Replace -L with /LIBPATH: for MSVC
         if v.startswith('-L'):
@@ -30,8 +32,6 @@ def _update_extension_for_msvc(extension, compiler):
 
             if os.path.isfile(path_to_lib + v + '.a'):
                 extension.__dict__['extra_link_args'][i] = f'{v}.a'
-
-    return extension
 
 
 def _update_extension_for_c_library(extension, c_lib_path=None, c_flags=None):
@@ -94,6 +94,10 @@ class _BuildCFFILib(BuildCFFISetuptools):
 
         c_file = self.extensions[0].sources[0]
         subprocess.run([sys.executable, build_script, c_file, self.lib_type], shell=False, check=True)  # noqa S603
+        log.info('CFFI build complete')
+
+
+        log.info(f'{self.extensions}')
         _update_extension_for_msvc(self.extensions[0], self.compiler.__class__.__name__)
 
         super().build_extensions()

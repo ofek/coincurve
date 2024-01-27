@@ -43,9 +43,12 @@ def absolute(*paths):
     return op.realpath(op.abspath(normalized_path))
 
 
-def build_flags(library, type_, path=None):
+def build_flags(library, type_, path=None, compiler=None):
     """Return separated build flags from pkg-config output"""
     from setup.setup_config import PKGCONFIG
+
+    if type_ not in ('I', 'L', 'l', 'X'):
+        raise ValueError(f'Unknown type {type_}')
 
     pkg_config_path = [path]
     if 'PKG_CONFIG_PATH' in os.environ:
@@ -54,7 +57,7 @@ def build_flags(library, type_, path=None):
         pkg_config_path.append(os.environ['LIB_DIR'])
         pkg_config_path.append(os.path.join(os.environ['LIB_DIR'], 'pkgconfig'))
 
-    options = {'I': '--cflags-only-I', 'L': '--libs-only-L', 'l': '--libs-only-l'}
+    query = {'I': '--cflags-only-I', 'L': '--libs-only-L', 'l': '--libs-only-l', 'X': '--libs'}
     env = dict(os.environ, PKG_CONFIG_PATH=':'.join(pkg_config_path))
 
     try:
@@ -63,7 +66,8 @@ def build_flags(library, type_, path=None):
         log.warn(f'{PKGCONFIG} failed to locate {library} with path={path}')
         return []
 
-    flags = subprocess.check_output([PKGCONFIG, '--static', options[type_], library], env=env)  # noqa S603
+    os_opt = '--msvc-syntax' if os.name == 'nt' and compiler == 'MSVCCompiler' else ''
+    flags = subprocess.check_output([PKGCONFIG, os_opt, '--static', query[type_], library], env=env)  # noqa S603
     flags = list(flags.decode('UTF-8').split())
 
     return [flag.strip(f'-{type_}') for flag in flags]
@@ -170,6 +174,7 @@ def exact_library_name(library, path):
         f'lib{library}.lib',  # Windows unix-style lib... (shared or static)
         f'{library}.lib',  # Windows win-style .lib (shared or static)
     ):
-        if os.path.isfile(os.path.join(path, 'lib', file)):
-            return file, os.path.join(path, 'lib', file)
+        if os.path.isfile(os.path.join(path, file)):
+            return file, os.path.join(path, file)
+
     raise SystemExit(f'Unable to find library {library} in {path}')

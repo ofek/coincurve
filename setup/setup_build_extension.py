@@ -72,25 +72,31 @@ def _update_extension_for_c_library(extension, c_lib_path=None, c_flags=None):
 
 
 class BuildCFFISetuptools(_build_ext):
+    static = False
+
     def build_extensions(self):
+        from setup.setup_config import LIB_NAME
+        from setup.setup_support import build_flags
+
+        pkg_dir = None
+        compiler = self.compiler.__class__.__name__
+
         if self.distribution.has_c_libraries():
             log.info('build_extensions: Locally built C-lib')
-            _build_clib = self.get_finalized_command('build_clib')
+            pkg_dir = self.get_finalized_command('build_clib').pkgconfig_dir
 
-            _update_extension_for_c_library(self.extensions[0], str(_build_clib.build_clib), _build_clib.build_flags)
-            # This should not be needed
-            # _update_extension_for_msvc(self.extensions[0], self.compiler.__class__.__name__)
+        self.extensions[0].include_dirs.extend(build_flags(LIB_NAME, 'I', pkg_dir, compiler))
+        # self.extensions[0].extra_compile_args.extend(build_flags(LIB_NAME, 'I', pkg_dir, compiler))
+        libdir = build_flags(LIB_NAME, 'L', pkg_dir, compiler)
+        _, link_args = exact_library_name(build_flags(LIB_NAME, 'l', pkg_dir, compiler)[0], libdir[0])
+
+        self.extensions[0].library_dirs.extend(libdir)
+        self.extensions[0].extra_link_args.append(link_args)
 
         super().build_extensions()
 
-    def get_library_names(self):
-        log.info('get_library_names - build_ext -')
-        return None
-
 
 class _BuildCFFILib(BuildCFFISetuptools):
-    lib_type = '0'
-
     def build_extensions(self):
         from setup.setup_support import absolute
 
@@ -105,7 +111,8 @@ class _BuildCFFILib(BuildCFFISetuptools):
         build_script = absolute(os.path.join('../_cffi_build', 'build_from_cmdline.py'))
 
         c_file = self.extensions[0].sources[0]
-        subprocess.run([sys.executable, build_script, c_file, self.lib_type], shell=False, check=True)  # noqa S603
+        args = [sys.executable, build_script, c_file, '1' if self.static else '0']
+        subprocess.run(args, shell=False, check=True)  # noqa S603
         log.info('CFFI build completed')
 
         super().build_extensions()
@@ -114,12 +121,12 @@ class _BuildCFFILib(BuildCFFISetuptools):
 class BuildCFFIForSharedLib(_BuildCFFILib):
     def build_extensions(self):
         log.info('Building dynamic library')
-        self.lib_type = '0'
+        self.static = False
         super().build_extensions()
 
 
 class BuildCFFIForStaticLib(_BuildCFFILib):
     def build_extensions(self):
         log.info('Building static library')
-        self.lib_type = '1'
+        self.static = True
         super().build_extensions()

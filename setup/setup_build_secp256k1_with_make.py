@@ -14,6 +14,7 @@ class BuildClibWithMake(_build_clib):
     def __init__(self, dist):
         super().__init__(dist)
         self.build_flags = None
+        self.pkgconfig_dir = None
 
     def initialize_options(self: _build_clib):
         _build_clib.initialize_options(self)
@@ -47,7 +48,7 @@ class BuildClibWithMake(_build_clib):
         raise NotImplementedError('check_library_list')
 
     def get_library_names(self):
-        return []
+        return None
 
     def run(self):
         from setup.setup_config import LIB_NAME, MAKE
@@ -59,7 +60,6 @@ class BuildClibWithMake(_build_clib):
             log.info('Using system library')
             return
 
-        # build_temp = os.path.abspath(self.build_temp)
         build_external_library = os.path.join(cwd, 'build_external_library')
         built_lib_dir = os.path.join(build_external_library, LIB_NAME)
         installed_lib_dir = os.path.abspath(self.build_clib)
@@ -135,22 +135,25 @@ class BuildClibWithMake(_build_clib):
         with open('_build_clib_install.log', 'w') as outfile:
             subprocess.check_call([MAKE, 'install'], cwd=built_lib_dir, stdout=outfile)  # noqa S603
 
-        self.build_flags['include_dirs'].extend(
-            build_flags(LIB_NAME, 'I', os.path.join(installed_lib_dir, 'lib', 'pkgconfig'))
-        )
-        self.build_flags['library_dirs'].extend(
-            build_flags(LIB_NAME, 'L', os.path.join(installed_lib_dir, 'lib', 'pkgconfig'))
-        )
+        self.pkgconfig_dir = os.path.join(installed_lib_dir, 'lib', 'pkgconfig')
 
-        library_names = build_flags(LIB_NAME, 'l', os.path.join(installed_lib_dir, 'lib', 'pkgconfig'))
-        self.build_flags['libraries'].extend(library_names)
+        if 0:
+            self.build_flags['include_dirs'].extend(
+                build_flags(LIB_NAME, 'I', os.path.join(installed_lib_dir, 'lib', 'pkgconfig'))
+            )
+            self.build_flags['library_dirs'].extend(
+                build_flags(LIB_NAME, 'L', os.path.join(installed_lib_dir, 'lib', 'pkgconfig'))
+            )
 
-        if not has_system_lib():
-            self.build_flags['define'].append(('CFFI_ENABLE_RECOVERY', None))
+            library_names = build_flags(LIB_NAME, 'l', os.path.join(installed_lib_dir, 'lib', 'pkgconfig'))
+            self.build_flags['libraries'].extend(library_names)
 
-        for lib in library_names:
-            name, fullname = exact_library_name(lib, installed_lib_dir)
-            self.build_flags['library_names'].append(name)
-            self.build_flags['library_fullnames'].append(fullname)
+            if not has_system_lib():
+                self.build_flags['define'].append(('CFFI_ENABLE_RECOVERY', None))
+
+            for lib in library_names:
+                name, fullname = exact_library_name(lib, installed_lib_dir)
+                self.build_flags['library_names'].append(name)
+                self.build_flags['library_fullnames'].append(fullname)
 
         self.announce('build_clib Done', level=log.INFO)

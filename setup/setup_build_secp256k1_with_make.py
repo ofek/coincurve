@@ -22,7 +22,12 @@ class BuildClibWithMake(_build_clib):
     def finalize_options(self: _build_clib):
         _build_clib.finalize_options(self)
         if self.build_flags is None:
-            self.build_flags = {'include_dirs': [], 'library_dirs': [], 'libraries': [], 'define': []}
+            self.build_flags = {
+                'include_dirs': [],
+                'library_dirs': [],
+                'libraries': [],
+                'library_names': [],
+                'define': []}
 
     def get_source_files(self):
         from setup.setup_config import LIB_NAME
@@ -42,7 +47,6 @@ class BuildClibWithMake(_build_clib):
     def get_library_names(self):
         from setup.setup_config import LIB_NAME
 
-        log.info(f'\n\n\nget_library_names: hopefully not called: {LIB_NAME}\n\n\n')
         return build_flags(LIB_NAME, 'l', os.path.join(os.path.abspath(self.build_clib), 'lib', 'pkgconfig'))
 
     def run(self):
@@ -50,7 +54,7 @@ class BuildClibWithMake(_build_clib):
 
         cwd = pathlib.Path().absolute()
 
-        log.info('SECP256K1 build options:')
+        log.info(f'{LIB_NAME} C library build:')
         if has_system_lib():
             log.info('Using system library')
             return
@@ -70,7 +74,10 @@ class BuildClibWithMake(_build_clib):
 
         autoreconf = 'autoreconf -if --warnings=all'
         bash = shutil.which('bash')
-        subprocess.check_call([bash, '-c', autoreconf], cwd=built_lib_dir)  # noqa S603
+
+        self.announce('   autoreconf', level=log.INFO)
+        with open('_build_clib_autoreconf.log', "w") as outfile:
+            subprocess.check_call([bash, '-c', autoreconf], cwd=built_lib_dir, stdout=outfile, stderr=outfile)  # noqa S603
 
         for filename in [
             os.path.join(built_lib_dir, 'configure'),
@@ -107,17 +114,25 @@ class BuildClibWithMake(_build_clib):
             '--enable-benchmark=no',
             '--enable-tests=no',
             '--enable-exhaustive-tests=no',
+            '--silent',
         ]
         if 'COINCURVE_CROSS_HOST' in os.environ:
             cmd.append(f"--host={os.environ['COINCURVE_CROSS_HOST']}")
 
-        log.debug(f"Running configure: {' '.join(cmd)}")
         # Prepend the working directory to the PATH
         os.environ['PATH'] = built_lib_dir + os.pathsep + os.environ['PATH']
-        subprocess.check_call([bash, '-c', ' '.join(cmd)], cwd=built_lib_dir)  # noqa S603
 
-        subprocess.check_call([MAKE], cwd=built_lib_dir)  # noqa S603
-        subprocess.check_call([MAKE, 'install'], cwd=built_lib_dir)  # noqa S603
+        self.announce('   configure', level=log.INFO)
+        with open('_build_clib_configure.log', "w") as outfile:
+            subprocess.check_call([bash, '-c', ' '.join(cmd)], cwd=built_lib_dir, stdout=outfile)  # noqa S603
+
+        self.announce('   make', level=log.INFO)
+        with open('_build_clib_make.log', "w") as outfile:
+            subprocess.check_call([MAKE,  '--silent'], cwd=built_lib_dir, stdout=outfile)  # noqa S603
+
+        self.announce('   make install', level=log.INFO)
+        with open('_build_clib_install.log', "w") as outfile:
+            subprocess.check_call([MAKE, 'install'], cwd=built_lib_dir, stdout=outfile)  # noqa S603
 
         self.build_flags['include_dirs'].extend(
             build_flags(LIB_NAME, 'I', os.path.join(installed_lib_dir, 'lib', 'pkgconfig'))
@@ -125,10 +140,25 @@ class BuildClibWithMake(_build_clib):
         self.build_flags['library_dirs'].extend(
             build_flags(LIB_NAME, 'L', os.path.join(installed_lib_dir, 'lib', 'pkgconfig'))
         )
-        self.build_flags['libraries'].extend(
-            build_flags(LIB_NAME, 'l', os.path.join(installed_lib_dir, 'lib', 'pkgconfig'))
-        )
+
+        library_names = build_flags(LIB_NAME, 'l', os.path.join(installed_lib_dir, 'lib', 'pkgconfig'))
+        self.build_flags['libraries'].extend(library_names)
+
         if not has_system_lib():
             self.build_flags['define'].append(('CFFI_ENABLE_RECOVERY', None))
+
+        # We need to get the exact name of the library that was built
+        for n in library_names:
+            for f in (
+                    f'lib{n}.dylib',  # MacOS shared - not needed
+                    f'lib{n}.so',  # Linux shared
+                    f'lib{n}.a',  # Linux static
+                    f'lib{n}.lib',  # Windows unix-style lib... (shared or static)
+                    f'{n}.lib',  # Windows win-style .lib (shared or static)
+            ):
+                if os.path.isfile(os.path.join(installed_lib_dir, 'lib', f)):
+                    self.build_flags['library_names'].append(os.path.join(installed_lib_dir, 'lib', f))
+                    self.announce('   success', level=log.INFO)
+                    break
 
         self.announce('build_clib Done', level=log.INFO)

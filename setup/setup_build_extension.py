@@ -17,6 +17,7 @@ def _update_extension_for_msvc(extension, compiler):
         return
 
     path_to_lib = ''
+
     for i, v in enumerate(extension.__dict__.get('extra_link_args')):
 
         # Replace -L with /LIBPATH: for MSVC
@@ -36,7 +37,8 @@ def _update_extension_for_msvc(extension, compiler):
 
 
 def _update_extension_for_c_library(extension, c_lib_path=None, c_flags=None):
-    from setup.setup_config import PKGCONFIG
+    from setup.setup_config import LIB_NAME
+    from setup.setup_support import build_flags
 
     log.info(f'Update include/lib for C-lib linking: {c_lib_path}{c_flags}')
     if c_lib_path:
@@ -44,25 +46,28 @@ def _update_extension_for_c_library(extension, c_lib_path=None, c_flags=None):
         extension.__dict__.get('include_dirs').append(os.path.join(c_lib_path, 'include'))
         extension.__dict__.get('include_dirs').extend(c_flags['include_dirs'])
 
-        extension.__dict__.get('library_dirs').insert(0, os.path.join(c_lib_path, 'lib'))
-        extension.__dict__.get('library_dirs').extend(c_flags['library_dirs'])
+        # extension.__dict__.get('library_dirs').insert(0, os.path.join(c_lib_path, 'lib'))
+        # extension.__dict__.get('library_dirs').extend(c_flags['library_dirs'])
 
-        extension.__dict__.get('libraries').append(c_flags['libraries'])
+        extension.__dict__.get('libraries').extend(c_flags['library_names'])
 
         extension.__dict__['define'] = c_flags['define']
         return
 
     try:
         # Update include/lib for C-lib linking. Append to the 'extra' args
-        extension.__dict__.get('extra_compile_args').append(
-            subprocess.check_output([PKGCONFIG, '--cflags-only-I', 'libsecp256k1']).strip().decode('utf-8')  # noqa S603
-        )
-        extension.__dict__.get('extra_link_args').append(
-            subprocess.check_output([PKGCONFIG, '--libs-only-L', 'libsecp256k1']).strip().decode('utf-8'),  # noqa S603
-        )
-        extension.__dict__.get('extra_link_args').append(
-            subprocess.check_output([PKGCONFIG, '--libs-only-l', 'libsecp256k1']).strip().decode('utf-8'),  # noqa S603
-        )
+        extension.__dict__.get('include_dirs').extend(build_flags(LIB_NAME, 'I'))
+        extension.__dict__.get('library_dirs').extend(build_flags(LIB_NAME, 'L'))
+        extension.__dict__.get('libraries').extend(build_flags(LIB_NAME, 'l'))
+        # extension.__dict__.get('extra_compile_args').append(
+        #     subprocess.check_output([PKGCONFIG, '--cflags-only-I', 'libsecp256k1']).strip().decode('utf-8')  # noqa S603
+        # )
+        # extension.__dict__.get('extra_link_args').append(
+        #     subprocess.check_output([PKGCONFIG, '--libs-only-L', 'libsecp256k1']).strip().decode('utf-8'),  # noqa S603
+        # )
+        # extension.__dict__.get('extra_link_args').append(
+        #     subprocess.check_output([PKGCONFIG, '--libs-only-l', 'libsecp256k1']).strip().decode('utf-8'),  # noqa S603
+        # )
     except subprocess.CalledProcessError as e:
         log.error(f'Error: {e}')
         raise e

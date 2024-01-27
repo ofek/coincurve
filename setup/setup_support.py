@@ -43,7 +43,7 @@ def absolute(*paths):
     return op.realpath(op.abspath(normalized_path))
 
 
-def build_flags(library, type_, path):
+def build_flags(library, type_, path=None):
     """Return separated build flags from pkg-config output"""
     from setup.setup_config import PKGCONFIG
 

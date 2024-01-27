@@ -42,7 +42,6 @@ def _update_extension_for_c_library(extension, c_lib_path=None, c_flags=None):
     from setup.setup_config import LIB_NAME
     from setup.setup_support import build_flags
 
-    log.info(f'Update include/lib for C-lib linking: {c_lib_path}{c_flags}')
     if c_lib_path:
         # Update include/lib for C-lib linking.
         extension.__dict__.get('include_dirs').append(os.path.join(c_lib_path, 'include'))
@@ -76,7 +75,8 @@ class BuildCFFISetuptools(_build_ext):
             _build_clib = self.get_finalized_command('build_clib')
 
             _update_extension_for_c_library(self.extensions[0], str(_build_clib.build_clib), _build_clib.build_flags)
-            _update_extension_for_msvc(self.extensions[0], self.compiler.__class__.__name__)
+            # This should not be needed
+            # _update_extension_for_msvc(self.extensions[0], self.compiler.__class__.__name__)
 
         super().build_extensions()
 

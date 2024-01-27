@@ -46,7 +46,7 @@ class BuildClibWithMake(_build_clib):
         raise NotImplementedError('check_library_list')
 
     def get_library_names(self):
-        return
+        return []
 
     def run(self):
         from setup.setup_config import LIB_NAME, MAKE

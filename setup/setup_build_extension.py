@@ -67,7 +67,9 @@ class BuildCFFISetuptools(_build_ext):
         if self.distribution.has_c_libraries():
             log.info('build_extensions: Locally built C-lib')
             _build_clib = self.get_finalized_command('build_clib')
+
             _update_extension_for_c_library(self.extensions[0], str(_build_clib.build_clib), _build_clib.build_flags)
+            _update_extension_for_msvc(self.extensions[0], self.compiler.__class__.__name__)
 
         super().build_extensions()
 
@@ -94,10 +96,7 @@ class _BuildCFFILib(BuildCFFISetuptools):
 
         c_file = self.extensions[0].sources[0]
         subprocess.run([sys.executable, build_script, c_file, self.lib_type], shell=False, check=True)  # noqa S603
-        log.info('CFFI build complete')
-
-        log.info(f'{self.extensions}')
-        _update_extension_for_msvc(self.extensions[0], self.compiler.__class__.__name__)
+        log.info('CFFI build completed')
 
         super().build_extensions()
 

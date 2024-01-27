@@ -27,7 +27,8 @@ class BuildClibWithMake(_build_clib):
                 'library_dirs': [],
                 'libraries': [],
                 'library_names': [],
-                'define': []}
+                'define': [],
+            }
 
     def get_source_files(self):
         from setup.setup_config import LIB_NAME
@@ -76,8 +77,9 @@ class BuildClibWithMake(_build_clib):
         bash = shutil.which('bash')
 
         self.announce('   autoreconf', level=log.INFO)
-        with open('_build_clib_autoreconf.log', "w") as outfile:
-            subprocess.check_call([bash, '-c', autoreconf], cwd=built_lib_dir, stdout=outfile, stderr=outfile)  # noqa S603
+        args = [bash, '-c', autoreconf]
+        with open('_build_clib_autoreconf.log', 'w') as outfile:
+            subprocess.check_call(args, cwd=built_lib_dir, stdout=outfile, stderr=outfile)  # noqa S603
 
         for filename in [
             os.path.join(built_lib_dir, 'configure'),
@@ -123,15 +125,15 @@ class BuildClibWithMake(_build_clib):
         os.environ['PATH'] = built_lib_dir + os.pathsep + os.environ['PATH']
 
         self.announce('   configure', level=log.INFO)
-        with open('_build_clib_configure.log', "w") as outfile:
+        with open('_build_clib_configure.log', 'w') as outfile:
             subprocess.check_call([bash, '-c', ' '.join(cmd)], cwd=built_lib_dir, stdout=outfile)  # noqa S603
 
         self.announce('   make', level=log.INFO)
-        with open('_build_clib_make.log', "w") as outfile:
-            subprocess.check_call([MAKE,  '--silent'], cwd=built_lib_dir, stdout=outfile)  # noqa S603
+        with open('_build_clib_make.log', 'w') as outfile:
+            subprocess.check_call([MAKE, '--silent'], cwd=built_lib_dir, stdout=outfile)  # noqa S603
 
         self.announce('   make install', level=log.INFO)
-        with open('_build_clib_install.log', "w") as outfile:
+        with open('_build_clib_install.log', 'w') as outfile:
             subprocess.check_call([MAKE, 'install'], cwd=built_lib_dir, stdout=outfile)  # noqa S603
 
         self.build_flags['include_dirs'].extend(
@@ -150,11 +152,11 @@ class BuildClibWithMake(_build_clib):
         # We need to get the exact name of the library that was built
         for n in library_names:
             for f in (
-                    f'lib{n}.dylib',  # MacOS shared - not needed
-                    f'lib{n}.so',  # Linux shared
-                    f'lib{n}.a',  # Linux static
-                    f'lib{n}.lib',  # Windows unix-style lib... (shared or static)
-                    f'{n}.lib',  # Windows win-style .lib (shared or static)
+                f'lib{n}.dylib',  # MacOS shared - not needed
+                f'lib{n}.so',  # Linux shared
+                f'lib{n}.a',  # Linux static
+                f'lib{n}.lib',  # Windows unix-style lib... (shared or static)
+                f'{n}.lib',  # Windows win-style .lib (shared or static)
             ):
                 if os.path.isfile(os.path.join(installed_lib_dir, 'lib', f)):
                     self.build_flags['library_names'].append(os.path.join(installed_lib_dir, 'lib', f))

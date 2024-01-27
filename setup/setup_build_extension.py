@@ -96,7 +96,6 @@ class _BuildCFFILib(BuildCFFISetuptools):
         subprocess.run([sys.executable, build_script, c_file, self.lib_type], shell=False, check=True)  # noqa S603
         log.info('CFFI build complete')
 
-
         log.info(f'{self.extensions}')
         _update_extension_for_msvc(self.extensions[0], self.compiler.__class__.__name__)
 

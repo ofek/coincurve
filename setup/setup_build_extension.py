@@ -9,6 +9,7 @@ from setuptools.command.build_ext import build_ext as _build_ext
 
 def _update_extension_for_msvc(extension, compiler):
     log.info(f'compiler: {compiler}')
+    log.info(f'extension: {extension.__dict__}')
     [log.info(f'extra_link_args[{i}]: {v}') for i, v in enumerate(extension.__dict__.get('extra_link_args'))]
 
     # MSVCCompiler for VisualC on Windows
@@ -37,6 +38,7 @@ def _update_extension_for_msvc(extension, compiler):
 def _update_extension_for_c_library(extension, c_lib_path=None, c_flags=None):
     from setup.setup_config import PKGCONFIG
 
+    log.info('Update include/lib for C-lib linking: {c_lib_path}{c_flags}')
     if c_lib_path:
         extension.__dict__.get('include_dirs').append(os.path.join(c_lib_path, 'include'))
         extension.__dict__.get('include_dirs').extend(c_flags['include_dirs'])

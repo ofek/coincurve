@@ -27,6 +27,7 @@ class BuildClibWithMake(_build_clib):
                 'library_dirs': [],
                 'libraries': [],
                 'library_names': [],
+                'library_fullnames': [],
                 'define': [],
             }
 
@@ -147,7 +148,9 @@ class BuildClibWithMake(_build_clib):
         if not has_system_lib():
             self.build_flags['define'].append(('CFFI_ENABLE_RECOVERY', None))
 
-        for n in library_names:
-            self.build_flags['library_names'].append(exact_library_name(n, installed_lib_dir))
+        for lib in library_names:
+            name, fullname = exact_library_name(lib, installed_lib_dir)
+            self.build_flags['library_names'].append(name)
+            self.build_flags['library_fullnames'].append(fullname)
 
         self.announce('build_clib Done', level=log.INFO)

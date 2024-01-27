@@ -47,10 +47,13 @@ def _update_extension_for_c_library(extension, c_lib_path=None, c_flags=None):
         extension.__dict__.get('include_dirs').append(os.path.join(c_lib_path, 'include'))
         extension.__dict__.get('include_dirs').extend(c_flags['include_dirs'])
 
+        extension.__dict__.get('library_dirs').insert(0, os.path.join(c_lib_path, 'lib'))
+        extension.__dict__.get('library_dirs').extend(c_flags['library_dirs'])
+
         # This class will call build_clib.get_library_names() to get the list of libraries to link
         # However, this would require the build_clib to know the linking compiler.
         # Instead, we simply use build_clib detection of the installed libraries and add them directly
-        extension.__dict__.get('extra_link_args').extend(c_flags['library_names'])
+        extension.__dict__.get('extra_link_args').extend(c_flags['library_fullnames'])
 
         extension.__dict__['define'] = c_flags['define']
         return

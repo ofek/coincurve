@@ -171,5 +171,5 @@ def exact_library_name(library, path):
         f'{library}.lib',  # Windows win-style .lib (shared or static)
     ):
         if os.path.isfile(os.path.join(path, 'lib', file)):
-            return os.path.join(path, 'lib', file)
+            return file, os.path.join(path, 'lib', file)
     raise SystemExit(f'Unable to find library {library} in {path}')

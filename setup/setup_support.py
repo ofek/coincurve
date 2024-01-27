@@ -160,3 +160,16 @@ def _download_library(libdir):
         dirname = tf.getnames()[0].partition('/')[0]
         tf.extractall()
     shutil.move(dirname, libdir)
+
+
+def exact_library_name(library, path):
+    for file in (
+        f'lib{library}.dylib',  # MacOS shared - not needed
+        f'lib{library}.so',  # Linux shared
+        f'lib{library}.a',  # Linux static
+        f'lib{library}.lib',  # Windows unix-style lib... (shared or static)
+        f'{library}.lib',  # Windows win-style .lib (shared or static)
+    ):
+        if os.path.isfile(os.path.join(path, 'lib', file)):
+            return os.path.join(path, 'lib', file)
+    raise SystemExit(f'Unable to find library {library} in {path}')

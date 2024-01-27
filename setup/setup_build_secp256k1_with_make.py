@@ -7,7 +7,7 @@ import subprocess
 from setuptools._distutils import log
 from setuptools.command.build_clib import build_clib as _build_clib
 
-from setup.setup_support import absolute, build_flags, download_library, has_system_lib
+from setup.setup_support import absolute, build_flags, download_library, has_system_lib, exact_library_name
 
 
 class BuildClibWithMake(_build_clib):
@@ -46,9 +46,7 @@ class BuildClibWithMake(_build_clib):
         raise NotImplementedError('check_library_list')
 
     def get_library_names(self):
-        from setup.setup_config import LIB_NAME
-
-        return build_flags(LIB_NAME, 'l', os.path.join(os.path.abspath(self.build_clib), 'lib', 'pkgconfig'))
+        return
 
     def run(self):
         from setup.setup_config import LIB_NAME, MAKE
@@ -149,18 +147,7 @@ class BuildClibWithMake(_build_clib):
         if not has_system_lib():
             self.build_flags['define'].append(('CFFI_ENABLE_RECOVERY', None))
 
-        # We need to get the exact name of the library that was built
         for n in library_names:
-            for f in (
-                f'lib{n}.dylib',  # MacOS shared - not needed
-                f'lib{n}.so',  # Linux shared
-                f'lib{n}.a',  # Linux static
-                f'lib{n}.lib',  # Windows unix-style lib... (shared or static)
-                f'{n}.lib',  # Windows win-style .lib (shared or static)
-            ):
-                if os.path.isfile(os.path.join(installed_lib_dir, 'lib', f)):
-                    self.build_flags['library_names'].append(os.path.join(installed_lib_dir, 'lib', f))
-                    self.announce('   success', level=log.INFO)
-                    break
+            self.build_flags['library_names'].append(exact_library_name(n, installed_lib_dir))
 
         self.announce('build_clib Done', level=log.INFO)

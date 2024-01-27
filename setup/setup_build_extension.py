@@ -6,6 +6,8 @@ import sys
 from setuptools._distutils import log
 from setuptools.command.build_ext import build_ext as _build_ext
 
+from setup.setup_support import exact_library_name
+
 
 def _update_extension_for_msvc(extension, compiler):
     log.info(f'compiler: {compiler}')
@@ -46,10 +48,10 @@ def _update_extension_for_c_library(extension, c_lib_path=None, c_flags=None):
         extension.__dict__.get('include_dirs').append(os.path.join(c_lib_path, 'include'))
         extension.__dict__.get('include_dirs').extend(c_flags['include_dirs'])
 
-        # extension.__dict__.get('library_dirs').insert(0, os.path.join(c_lib_path, 'lib'))
-        # extension.__dict__.get('library_dirs').extend(c_flags['library_dirs'])
-
-        extension.__dict__.get('libraries').extend(c_flags['library_names'])
+        # This class will call build_clib.get_library_names() to get the list of libraries to link
+        # However, this would require the build_clib to know the linking compiler.
+        # Instead, we simply use build_clib detection of the installed libraries and add them directly
+        extension.__dict__.get('extra_link_args').extend(c_flags['library_names'])
 
         extension.__dict__['define'] = c_flags['define']
         return
@@ -57,17 +59,11 @@ def _update_extension_for_c_library(extension, c_lib_path=None, c_flags=None):
     try:
         # Update include/lib for C-lib linking. Append to the 'extra' args
         extension.__dict__.get('include_dirs').extend(build_flags(LIB_NAME, 'I'))
-        extension.__dict__.get('library_dirs').extend(build_flags(LIB_NAME, 'L'))
-        extension.__dict__.get('libraries').extend(build_flags(LIB_NAME, 'l'))
-        # extension.__dict__.get('extra_compile_args').append(
-        #     subprocess.check_output([PKGCONFIG, '--cflags-only-I', 'libsecp256k1']).strip().decode('utf-8')  # noqa S603
-        # )
-        # extension.__dict__.get('extra_link_args').append(
-        #     subprocess.check_output([PKGCONFIG, '--libs-only-L', 'libsecp256k1']).strip().decode('utf-8'),  # noqa S603
-        # )
-        # extension.__dict__.get('extra_link_args').append(
-        #     subprocess.check_output([PKGCONFIG, '--libs-only-l', 'libsecp256k1']).strip().decode('utf-8'),  # noqa S603
-        # )
+
+        # We need to decipher the name of the library from the pkg-config output
+        for path in build_flags(LIB_NAME, 'L'):
+            for lib in build_flags(LIB_NAME, 'l'):
+                extension.__dict__.get('extra_link_args').append(exact_library_name(lib, path))
     except subprocess.CalledProcessError as e:
         log.error(f'Error: {e}')
         raise e
@@ -84,9 +80,9 @@ class BuildCFFISetuptools(_build_ext):
 
         super().build_extensions()
 
-    def run(self):
-        log.info('run build_ext')
-        super().run()
+    def get_library_names(self):
+        log.info('get_library_names - build_ext -')
+        return None
 
 
 class _BuildCFFILib(BuildCFFISetuptools):

@@ -40,16 +40,20 @@ def _update_extension_for_c_library(extension, c_lib_path=None, c_flags=None):
 
     log.info(f'Update include/lib for C-lib linking: {c_lib_path}{c_flags}')
     if c_lib_path:
+        # Update include/lib for C-lib linking.
         extension.__dict__.get('include_dirs').append(os.path.join(c_lib_path, 'include'))
         extension.__dict__.get('include_dirs').extend(c_flags['include_dirs'])
 
         extension.__dict__.get('library_dirs').insert(0, os.path.join(c_lib_path, 'lib'))
         extension.__dict__.get('library_dirs').extend(c_flags['library_dirs'])
 
+        extension.__dict__.get('libraries').append(c_flags['libraries'])
+
         extension.__dict__['define'] = c_flags['define']
         return
 
     try:
+        # Update include/lib for C-lib linking. Append to the 'extra' args
         extension.__dict__.get('extra_compile_args').append(
             subprocess.check_output([PKGCONFIG, '--cflags-only-I', 'libsecp256k1']).strip().decode('utf-8')  # noqa S603
         )

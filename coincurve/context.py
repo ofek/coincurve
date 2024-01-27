@@ -2,13 +2,13 @@ from os import urandom
 from threading import Lock
 from typing import Optional
 
-from coincurve.flags import CONTEXT_ALL, CONTEXT_FLAGS
+from coincurve.flags import CONTEXT_FLAGS, CONTEXT_NONE
 
 from ._libsecp256k1 import ffi, lib
 
 
 class Context:
-    def __init__(self, seed: Optional[bytes] = None, flag=CONTEXT_ALL, name: str = ''):
+    def __init__(self, seed: Optional[bytes] = None, flag=CONTEXT_NONE, name: str = ''):
         if flag not in CONTEXT_FLAGS:
             raise ValueError(f'{flag} is an invalid context flag.')
         self._lock = Lock()

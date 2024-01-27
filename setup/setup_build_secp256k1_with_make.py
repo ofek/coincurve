@@ -22,7 +22,7 @@ class BuildClibWithMake(_build_clib):
     def finalize_options(self: _build_clib):
         _build_clib.finalize_options(self)
         if self.build_flags is None:
-            self.build_flags = {'include_dirs': [], 'library_dirs': [], 'define': []}
+            self.build_flags = {'include_dirs': [], 'library_dirs': [], 'libraries': [], 'define': []}
 
     def get_source_files(self):
         from setup.setup_config import LIB_NAME
@@ -42,6 +42,7 @@ class BuildClibWithMake(_build_clib):
     def get_library_names(self):
         from setup.setup_config import LIB_NAME
 
+        log.info(f'\n\n\nget_library_names: hopefully not called: {LIB_NAME}\n\n\n')
         return build_flags(LIB_NAME, 'l', os.path.join(os.path.abspath(self.build_clib), 'lib', 'pkgconfig'))
 
     def run(self):

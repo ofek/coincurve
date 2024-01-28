@@ -15,4 +15,3 @@ MAKE = 'gmake' if platform.system() in ['FreeBSD', 'OpenBSD'] else 'make'
 PKGCONFIG = shutil.which('pkg-config')
 COMPILER = sysconfig.get_config_var('CC')
 EXTRA_COMPILE_ARGS = sysconfig.get_config_var('CFLAGS').split()
-

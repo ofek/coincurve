@@ -116,14 +116,14 @@ class BuildClibWithMake(_build_clib):
             '--enable-exhaustive-tests=no',
         ]
 
-        # I don't actually want to build with MSVC
-        if os.name == 'nt':
-            cmd.extend(
-                (
-                    'CC=cl.exe',
-                    'CFLAGS="/nologo /O2 /MT /W3 /EHsc /DNDEBUG"',
-                )
-            )
+        # I don't actually want to build with MSVC - does not work anyway
+        # if os.name == 'nt':
+        #     cmd.extend(
+        #         (
+        #             'CC=cl.exe',
+        #             'CFLAGS="/nologo /O2 /MT /W3 /EHsc /DNDEBUG"',
+        #         )
+        #     )
 
         if 'COINCURVE_CROSS_HOST' in os.environ:
             cmd.append(f"--host={os.environ['COINCURVE_CROSS_HOST']}")

@@ -41,7 +41,7 @@ class BuildCFFISetuptools(_build_ext):
             if compiler == 'MSVCCompiler':
                 if lib_file.endswith('.a'):
                     _a = lib_file
-                    lib_file = lib_file.replace('.a', '.lib')
+                    # lib_file = lib_file.replace('.a', '.lib')
                     os.rename(os.path.join(lib_dir, _a), os.path.join(lib_dir, lib_file))
                 link_args_msvc.append(lib_file)
             else:

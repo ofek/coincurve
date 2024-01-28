@@ -116,6 +116,9 @@ class BuildClibWithMake(_build_clib):
             '--enable-exhaustive-tests=no',
         ]
 
+        if os.name == 'nt':
+            cmd.append('--host=x86_64-pc-mingw64')
+
         # I don't actually want to build with MSVC - does not work anyway
         # if os.name == 'nt':
         #     cmd.extend(

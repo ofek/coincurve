@@ -21,13 +21,15 @@ env:
   CIBW_ENVIRONMENT_PASS_LINUX: >
     COINCURVE_UPSTREAM_REF
     COINCURVE_IGNORE_SYSTEM_LIB
-  CIBW_TEST_COMMAND: >
-    python -c
-    "from coincurve import PrivateKey;
-    a=PrivateKey();
-    b=PrivateKey();
-    assert a.ecdh(b.public_key.format())==b.ecdh(a.public_key.format())
-    "
+  # CIBW_TEST_COMMAND: >
+  #   python -c
+  #   "from coincurve import PrivateKey;
+  #   a=PrivateKey();
+  #   b=PrivateKey();
+  #   assert a.ecdh(b.public_key.format())==b.ecdh(a.public_key.format())
+  #   "
+  CIBW_TEST_REQUIRES: pytest pytest-benchmark
+  CIBW_TEST_COMMAND: python -m pytest {project}/tests
   CIBW_TEST_SKIP: "*-macosx_arm64"
   CIBW_SKIP: >
       pp*

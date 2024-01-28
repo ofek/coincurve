@@ -22,6 +22,9 @@ from setup.setup_support import detect_dll, has_system_lib, download_library  # 
 
 BUILDING_FOR_WINDOWS = detect_dll()
 
+os.environ['CC'] = 'gcc'
+# os.environ['SETUPTOOLS_DEBUG'] = '1'
+
 # We require setuptools >= 3.3
 if [int(i) for i in setuptools_version.split('.', 2)[:2]] < [3, 3]:
     raise SystemExit(

@@ -1,3 +1,4 @@
+import logging
 import os
 import pathlib
 import subprocess
@@ -17,7 +18,13 @@ class BuildCFFISetuptools(_build_ext):
         from setup.setup_support import build_flags
 
         pkg_dir = None
+
         compiler = self.compiler.__class__.__name__
+
+        logging.info(f'build_extensions: {vars(self.compiler)}')
+        # Ok, let's go the easy way
+        # self.compiler.set_executable('compiler', 'gcc')
+        # self.compiler.set_executable('linker_exe', 'gcc')
 
         log.info('Building Extension (coincurve._libsecp256k1):')
         log.info(f'   - extension compiler: {compiler}')

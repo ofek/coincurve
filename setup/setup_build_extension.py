@@ -91,8 +91,8 @@ class BuildCFFISetuptools(_build_ext):
         lib_file, lib_fp = exact_library_name(build_flags(LIB_NAME, 'l', pkg_dir)[0], lib_dir[0])
 
         if compiler == 'MSVCCompiler':
-            link_args = f'/LIBPATH:{lib_dir[0]} {lib_file}'
-            self.extensions[0].extra_link_args.append(link_args)
+            link_args = f'/LIBPATH:{lib_dir[0].strip()} {lib_file}'
+            self.extensions[0].extra_link_args.insert(0, link_args)
         else:
             self.extensions[0].extra_link_args.append(lib_fp)
 

@@ -118,6 +118,7 @@ class BuildClibWithMake(_build_clib):
 
         if os.name == 'nt':
             cmd.append('CC=cl.exe')
+            cmd.append('CFLAGS=/nologo /O2 /MT /W3 /EHsc /DNDEBUG')
 
         if 'COINCURVE_CROSS_HOST' in os.environ:
             cmd.append(f"--host={os.environ['COINCURVE_CROSS_HOST']}")

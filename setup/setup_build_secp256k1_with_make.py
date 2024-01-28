@@ -116,10 +116,10 @@ class BuildClibWithMake(_build_clib):
             '--enable-exhaustive-tests=no',
         ]
 
+        # I don't actually want to build with MSVC
         if os.name == 'nt':
             cmd.extend(
                 (
-                    '--build=x86_64-w64-msvc',
                     'CC=cl.exe',
                     'CFLAGS="/nologo /O2 /MT /W3 /EHsc /DNDEBUG"',
                 )

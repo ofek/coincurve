@@ -85,13 +85,16 @@ class BuildCFFISetuptools(_build_ext):
             log.info('build_extensions: Locally built C-lib')
             pkg_dir = self.get_finalized_command('build_clib').pkgconfig_dir
 
-        self.extensions[0].include_dirs.extend(build_flags(LIB_NAME, 'I', pkg_dir, compiler))
-        # self.extensions[0].extra_compile_args.extend(build_flags(LIB_NAME, 'I', pkg_dir, compiler))
-        libdir = build_flags(LIB_NAME, 'L', pkg_dir, compiler)
-        _, link_args = exact_library_name(build_flags(LIB_NAME, 'l', pkg_dir, compiler)[0], libdir[0])
+        self.extensions[0].include_dirs.extend(build_flags(LIB_NAME, 'I', pkg_dir))
 
-        self.extensions[0].library_dirs.extend(libdir)
-        self.extensions[0].extra_link_args.append(link_args)
+        lib_dir = build_flags(LIB_NAME, 'L', pkg_dir)
+        lib_file, lib_fp = exact_library_name(build_flags(LIB_NAME, 'l', pkg_dir)[0], lib_dir[0])
+
+        if compiler == 'MSVCCompiler':
+            link_args = f'/LIBPATH:{lib_dir} {lib_file}'
+            self.extensions[0].extra_link_args.append(link_args)
+        else:
+            self.extensions[0].extra_link_args.append(lib_fp)
 
         super().build_extensions()
 

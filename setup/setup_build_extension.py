@@ -101,9 +101,12 @@ class BuildCFFISetuptools(_build_ext):
                 self.extensions[0].extra_link_args.append(lib_fp)
 
         if compiler == 'MSVCCompiler':
-            self.extensions[0].extra_compile_args.insert(0, '/MT')
-            self.extensions[0].extra_link_args.insert(0, link_args_msvc)
-            self.extensions[0].extra_link_args.append(' /verbose:lib')
+            # Reference:
+            # https://cibuildwheel.readthedocs.io/en/1.x/faq/#importerror-dll-load-failed-the-specific-module-could-not-be-found-error-on-windows
+            self.extensions[0].extra_compile_args.extend(['/MT', '/d2FH4-'])
+
+            self.extensions[0].extra_link_args.append('/VERBOSE:LIB')
+            self.extensions[0].extra_link_args.append(link_args_msvc)
 
             log.info(f'build_extensions: MSVCCompiler: {link_args_msvc}')
 

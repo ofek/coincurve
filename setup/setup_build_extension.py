@@ -90,7 +90,7 @@ class BuildCFFISetuptools(_build_ext):
         self.define = _build_clib.build_flags['define']
 
         lib_dir = build_flags(LIB_NAME, 'L', pkg_dir)[0]
-        link_args_msvc = '/LIBPATH:' + lib_dir.replace("/", "\\")
+        link_args_msvc = '/LIBPATH:' + lib_dir.replace('/', '\\')
 
         for _l in build_flags(LIB_NAME, 'l', pkg_dir):
             lib_file, lib_fp = exact_library_name(_l, lib_dir)
@@ -103,7 +103,7 @@ class BuildCFFISetuptools(_build_ext):
         if compiler == 'MSVCCompiler':
             self.extensions[0].extra_compile_args.insert(0, '/MT')
             self.extensions[0].extra_link_args.insert(0, link_args_msvc)
-            self.extensions[0].extra_link_args.append(" /verbose:lib")
+            self.extensions[0].extra_link_args.append(' /verbose:lib')
 
             log.info(f'build_extensions: MSVCCompiler: {link_args_msvc}')
 

@@ -101,7 +101,7 @@ class BuildCFFISetuptools(_build_ext):
                 self.extensions[0].extra_link_args.append(lib_fp)
 
         if compiler == 'MSVCCompiler':
-            self.extensions[0].extra_compile_args.append("/MT")
+            self.extensions[0].extra_compile_args.append('/MT')
             self.extensions[0].extra_link_args.insert(0, link_args_msvc)
             log.info(f'build_extensions: MSVCCompiler: {link_args_msvc}')
 

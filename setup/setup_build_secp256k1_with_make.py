@@ -1,4 +1,5 @@
 import errno
+import logging
 import os
 import pathlib
 import shutil
@@ -113,11 +114,10 @@ class BuildClibWithMake(_build_clib):
             '--enable-benchmark=no',
             '--enable-tests=no',
             '--enable-exhaustive-tests=no',
-            '--silent',
         ]
 
-        # if os.name == 'nt':
-        #     cmd.append('CC=cl')
+        if os.name == 'nt':
+            cmd.append('CC=cl.exe')
 
         if 'COINCURVE_CROSS_HOST' in os.environ:
             cmd.append(f"--host={os.environ['COINCURVE_CROSS_HOST']}")
@@ -127,11 +127,18 @@ class BuildClibWithMake(_build_clib):
 
         self.announce('   configure', level=log.INFO)
         with open('_build_clib_configure.log', 'w') as outfile:
-            subprocess.check_call([bash, '-c', ' '.join(cmd)], cwd=built_lib_dir, stdout=outfile)  # noqa S603
+            try:
+                subprocess.check_call([bash, '-c', ' '.join(cmd)], cwd=built_lib_dir, stdout=outfile)  # noqa S603
+            except subprocess.CalledProcessError as e:
+                logging.error(f"An error occurred during the configure step: {e}")
+                with open('_build_clib_configure.log', 'r') as infile:
+                    log_contents = infile.read()
+                    logging.error(f"Configure log:\n{log_contents}")
+                raise e
 
         self.announce('   make', level=log.INFO)
         with open('_build_clib_make.log', 'w') as outfile:
-            subprocess.check_call([MAKE, '--silent'], cwd=built_lib_dir, stdout=outfile)  # noqa S603
+            subprocess.check_call([MAKE], cwd=built_lib_dir, stdout=outfile)  # noqa S603
 
         self.announce('   make install', level=log.INFO)
         with open('_build_clib_install.log', 'w') as outfile:

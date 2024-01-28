@@ -24,11 +24,6 @@ class BuildClibWithMake(_build_clib):
         _build_clib.finalize_options(self)
         if self.build_flags is None:
             self.build_flags = {
-                'include_dirs': [],
-                'library_dirs': [],
-                'libraries': [],
-                'library_names': [],
-                'library_fullnames': [],
                 'define': [],
             }
 
@@ -137,6 +132,9 @@ class BuildClibWithMake(_build_clib):
 
         self.pkgconfig_dir = os.path.join(installed_lib_dir, 'lib', 'pkgconfig')
 
+        if not has_system_lib():
+            self.build_flags['define'].append(('CFFI_ENABLE_RECOVERY', None))
+
         if 0:
             self.build_flags['include_dirs'].extend(
                 build_flags(LIB_NAME, 'I', os.path.join(installed_lib_dir, 'lib', 'pkgconfig'))
@@ -148,8 +146,6 @@ class BuildClibWithMake(_build_clib):
             library_names = build_flags(LIB_NAME, 'l', os.path.join(installed_lib_dir, 'lib', 'pkgconfig'))
             self.build_flags['libraries'].extend(library_names)
 
-            if not has_system_lib():
-                self.build_flags['define'].append(('CFFI_ENABLE_RECOVERY', None))
 
             for lib in library_names:
                 name, fullname = exact_library_name(lib, installed_lib_dir)

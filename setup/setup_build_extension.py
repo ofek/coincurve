@@ -46,11 +46,11 @@ class BuildCFFISetuptools(_build_ext):
             lib_file, lib_fp = exact_library_name(_l, lib_dir)
 
             if compiler == 'MSVCCompiler':
-                if lib_file.endswith('.a'):
-                    _a = lib_file
-                    # lib_file = lib_file.replace('.a', '.lib')
-                    os.rename(os.path.join(lib_dir, _a), os.path.join(lib_dir, lib_file))
-                link_args_msvc.append(lib_file)
+                #if lib_file.endswith('.a'):
+                #    _a = lib_file
+                #    # lib_file = lib_file.replace('.a', '.lib')
+                #    os.rename(os.path.join(lib_dir, _a), os.path.join(lib_dir, lib_file))
+                link_args_msvc.append(lib_file.replace('.a', ''))
             else:
                 self.extensions[0].extra_link_args.append(lib_fp)
 

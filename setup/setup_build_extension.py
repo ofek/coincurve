@@ -75,11 +75,16 @@ class BuildCFFISetuptools(_build_ext):
     static = False
 
     def build_extensions(self):
-        from setup.setup_config import LIB_NAME
+        from setup.setup_config import LIB_NAME, COMPILER, EXTRA_COMPILE_ARGS
         from setup.setup_support import build_flags
 
         pkg_dir = None
         compiler = self.compiler.__class__.__name__
+
+        log.info('Building Extension (coincurve._libsecp256k1):')
+        log.info(f'   - extension compiler: {compiler}')
+        log.info(f'   - system compiler: {COMPILER}')
+        log.info(f'   - extra compile args: {EXTRA_COMPILE_ARGS}')
 
         if self.distribution.has_c_libraries():
             log.info('build_extensions: Locally built C-lib')
@@ -96,6 +101,10 @@ class BuildCFFISetuptools(_build_ext):
             lib_file, lib_fp = exact_library_name(_l, lib_dir)
 
             if compiler == 'MSVCCompiler':
+                if lib_file.endswith('.a'):
+                    _a = lib_file
+                    lib_file = lib_file.replace('.a', '.lib')
+                    os.rename(os.path.join(lib_dir, _a), os.path.join(lib_dir, lib_file))
                 link_args_msvc += f' {lib_file}'
             else:
                 self.extensions[0].extra_link_args.append(lib_fp)

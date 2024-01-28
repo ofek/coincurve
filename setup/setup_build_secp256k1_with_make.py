@@ -46,11 +46,14 @@ class BuildClibWithMake(_build_clib):
         return None
 
     def run(self):
-        from setup.setup_config import LIB_NAME, MAKE
+        from setup.setup_config import LIB_NAME, MAKE, COMPILER, EXTRA_COMPILE_ARGS
 
         cwd = pathlib.Path().absolute()
 
         log.info(f'{LIB_NAME} C library build:')
+        log.info(f'   - compiler: {COMPILER}')
+        log.info(f'   - extra compile args: {EXTRA_COMPILE_ARGS}')
+
         if has_system_lib():
             log.info('Using system library')
             return

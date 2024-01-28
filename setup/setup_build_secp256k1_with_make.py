@@ -116,8 +116,8 @@ class BuildClibWithMake(_build_clib):
             '--silent',
         ]
 
-        if os.name == 'nt':
-            cmd.append('CC=cl')
+        # if os.name == 'nt':
+        #     cmd.append('CC=cl')
 
         if 'COINCURVE_CROSS_HOST' in os.environ:
             cmd.append(f"--host={os.environ['COINCURVE_CROSS_HOST']}")

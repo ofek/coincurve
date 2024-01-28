@@ -87,7 +87,7 @@ class BuildCFFISetuptools(_build_ext):
             pkg_dir = _build_clib.pkgconfig_dir
 
         self.extensions[0].include_dirs.extend(build_flags(LIB_NAME, 'I', pkg_dir))
-        self.extensions[0].define.append(_build_clib.define)
+        self.define = _build_clib.build_flags.define
 
         lib_dir = build_flags(LIB_NAME, 'L', pkg_dir)
         lib_file, lib_fp = exact_library_name(build_flags(LIB_NAME, 'l', pkg_dir)[0], lib_dir[0])

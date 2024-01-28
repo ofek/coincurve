@@ -7,7 +7,7 @@ import subprocess
 from setuptools._distutils import log
 from setuptools.command.build_clib import build_clib as _build_clib
 
-from setup.setup_support import absolute, build_flags, download_library, has_system_lib, exact_library_name
+from setup.setup_support import absolute, download_library, has_system_lib
 
 
 class BuildClibWithMake(_build_clib):
@@ -134,22 +134,5 @@ class BuildClibWithMake(_build_clib):
 
         if not has_system_lib():
             self.build_flags['define'].append(('CFFI_ENABLE_RECOVERY', None))
-
-        if 0:
-            self.build_flags['include_dirs'].extend(
-                build_flags(LIB_NAME, 'I', os.path.join(installed_lib_dir, 'lib', 'pkgconfig'))
-            )
-            self.build_flags['library_dirs'].extend(
-                build_flags(LIB_NAME, 'L', os.path.join(installed_lib_dir, 'lib', 'pkgconfig'))
-            )
-
-            library_names = build_flags(LIB_NAME, 'l', os.path.join(installed_lib_dir, 'lib', 'pkgconfig'))
-            self.build_flags['libraries'].extend(library_names)
-
-
-            for lib in library_names:
-                name, fullname = exact_library_name(lib, installed_lib_dir)
-                self.build_flags['library_names'].append(name)
-                self.build_flags['library_fullnames'].append(fullname)
 
         self.announce('build_clib Done', level=log.INFO)

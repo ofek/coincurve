@@ -167,6 +167,9 @@ def _download_library(libdir):
 
 
 def exact_library_name(library, path):
+    # strip lib prefix and .so/.dylib/.dll suffix
+    library = os.path.splitext(library)[0]
+
     for file in (
         f'lib{library}.dylib',  # MacOS shared - not needed
         f'lib{library}.so',  # Linux shared

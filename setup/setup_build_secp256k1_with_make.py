@@ -130,10 +130,10 @@ class BuildClibWithMake(_build_clib):
             try:
                 subprocess.check_call([bash, '-c', ' '.join(cmd)], cwd=built_lib_dir, stdout=outfile)  # noqa S603
             except subprocess.CalledProcessError as e:
-                logging.error(f"An error occurred during the configure step: {e}")
+                logging.error(f'An error occurred during the configure step: {e}')
                 with open('_build_clib_configure.log', 'r') as infile:
                     log_contents = infile.read()
-                    logging.error(f"Configure log:\n{log_contents}")
+                    logging.error(f'Configure log:\n{log_contents}')
                 raise e
 
         self.announce('   make', level=log.INFO)

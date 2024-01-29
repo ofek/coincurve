@@ -121,7 +121,7 @@ class build_clib(_build_clib):
     def finalize_options(self):
         _build_clib.finalize_options(self)
         if self.build_flags is None:
-            self.build_flags = {'include_dirs': [], 'library_dirs': [], 'define': []}
+            self.build_flags = {'include_dirs': [], 'library_dirs': [], 'define': [], 'libraries': []}
 
     def get_source_files(self):
         # Ensure library has been downloaded (sdist might have been skipped)
@@ -214,6 +214,9 @@ class build_clib(_build_clib):
 
         self.build_flags['include_dirs'].extend(build_flags('libsecp256k1', 'I', build_temp))
         self.build_flags['library_dirs'].extend(build_flags('libsecp256k1', 'L', build_temp))
+        self.build_flags['libraries'].extend(build_flags('libsecp256k1', 'l', build_temp))
+        self.pkgconfig_dir = build_temp
+
         if not has_system_lib():
             self.build_flags['define'].append(('CFFI_ENABLE_RECOVERY', None))
 
@@ -221,6 +224,9 @@ class build_clib(_build_clib):
 class build_ext(_build_ext):
     def run(self):
         if self.distribution.has_c_libraries():
+            # Make sure the ABI mode is overwritten
+            self.extensions[0].py_limited_api = False
+
             _build_clib = self.get_finalized_command('build_clib')
             self.include_dirs.append(os.path.join(_build_clib.build_clib, 'include'))
             self.include_dirs.extend(_build_clib.build_flags['include_dirs'])
@@ -257,7 +263,7 @@ class BuildCFFIForSharedLib(_build_ext):
 extension = Extension(
     name='coincurve._libsecp256k1',
     sources=[os.path.join('coincurve', '_libsecp256k1.c')],
-    # ABI?: py_limited_api=True,
+    py_limited_api=False,
 )
 
 if has_system_lib():

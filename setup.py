@@ -4,20 +4,20 @@ import os.path
 import platform
 import shutil
 import subprocess
+import sys
 import tarfile
 from io import BytesIO
-import sys
 
 from setuptools import Distribution as _Distribution, setup, find_packages, __version__ as setuptools_version
 from setuptools._distutils import log
 from setuptools._distutils.errors import DistutilsError
 from setuptools.command.build_clib import build_clib as _build_clib
 from setuptools.command.build_ext import build_ext as _build_ext
-from setuptools.extension import Extension
 from setuptools.command.develop import develop as _develop
 from setuptools.command.dist_info import dist_info as _dist_info
 from setuptools.command.egg_info import egg_info as _egg_info
 from setuptools.command.sdist import sdist as _sdist
+from setuptools.extension import Extension
 
 try:
     from wheel.bdist_wheel import bdist_wheel as _bdist_wheel
@@ -252,12 +252,63 @@ class develop(_develop):
 package_data = {'coincurve': ['py.typed']}
 
 
-class BuildCFFIForSharedLib(_build_ext):
-    def build_extensions(self):
+class _BuildExtensionFromCFFI(_build_ext):
+    static_lib = None
+
+    def build_extension(self, ext):
+        log.info(
+            f'Extension build:'
+            f'\n         OS:{os.name}'
+            f'\n   Platform:{sys.platform}'
+            f'\n   Compiler:{self.compiler.__class__.__name__}'
+            f'\n     Static:{self.static_lib}'
+        )
+        pkg_dir = self.get_finalized_command('build_clib').pkgconfig_dir or None
+
+        # Enforce API interface
+        ext.py_limited_api = False
+
+        log.info(f'{vars(ext)}')
+        if pkg_dir is not None:
+            ext.include_dirs.extend(build_flags('libsecp256k1', 'I', pkg_dir))
+            ext.library_dirs.extend(build_flags('libsecp256k1', 'L', pkg_dir))
+
+            libraries = build_flags('libsecp256k1', 'l', pkg_dir)
+            log.info(f'  Libraries:{libraries}')
+
+            if self.compiler.__class__.__name__ == 'UnixCCompiler':
+
+                if self.static_lib:
+                    # It is possible that the library was compiled without fPIC option
+                    for lib in libraries:
+                        ext.extra_link_args.extend(['-Wl,-Bstatic', f'-l{lib}', '-Wl,-Bdynamic'])
+                else:
+                    ext.extra_link_args.extend(libraries)
+
+        super().build_extension(ext)
+
+
+class _BuildCFFI(_BuildExtensionFromCFFI):
+    def build_extension(self, ext):
+        log.info(
+            f'Cmdline CFFI build:'
+            f'\n     Source: {absolute(ext.sources[0])}'
+        )
+
         build_script = os.path.join('_cffi_build', 'build_shared.py')
-        c_file = self.extensions[0].sources[0]
-        subprocess.run([sys.executable, build_script, c_file, '0'], shell=False, check=True)  # noqa S603
-        super().build_extensions()
+        for c_file in ext.sources:
+            cmd = [sys.executable, build_script, c_file, '1' if self.static_lib else '0']
+            subprocess.run(cmd, shell=False, check=True)  # noqa S603
+
+        super().build_extension(ext)
+
+
+class BuildCFFIForSharedLib(_BuildCFFI):
+    static_lib = False
+
+
+class BuildCFFIForStaticLib(_BuildCFFI):
+    static_lib = True
 
 
 extension = Extension(

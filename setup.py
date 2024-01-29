@@ -254,20 +254,21 @@ class BuildCFFIForSharedLib(_build_ext):
         super().build_extensions()
 
 
+extension = Extension(
+    name='coincurve._libsecp256k1',
+    sources=[os.path.join('coincurve', '_libsecp256k1.c')],
+    # ABI?: py_limited_api=True,
+)
+
 if has_system_lib():
 
     class Distribution(_Distribution):
         def has_c_libraries(self):
             return not has_system_lib()
 
+
     # --- SECP256K1 package definitions ---
     secp256k1_package = 'libsecp256k1'
-
-    extension = Extension(
-        name='coincurve._libsecp256k1',
-        sources=[os.path.join('coincurve', '_libsecp256k1.c')],
-        # ABI?: py_limited_api=True,
-    )
 
     extension.extra_compile_args = [
         subprocess.check_output(['pkg-config', '--cflags-only-I', 'libsecp256k1']).strip().decode('utf-8')  # noqa S603
@@ -331,14 +332,20 @@ else:
             },
         )
 
-setup(
-    name='coincurve',
-    version='19.0.0',
 
-    packages=find_packages(exclude=('_cffi_build', '_cffi_build.*', 'libsecp256k1', 'tests')),
-    package_data=package_data,
+def main():
+    setup(
+        name='coincurve',
+        version='19.0.0',
 
-    distclass=Distribution,
-    zip_safe=False,
-    **setup_kwargs
-)
+        packages=find_packages(exclude=('_cffi_build', '_cffi_build.*', 'libsecp256k1', 'tests')),
+        package_data=package_data,
+
+        distclass=Distribution,
+        zip_safe=False,
+        **setup_kwargs
+    )
+
+
+if __name__ == '__main__':
+    main()

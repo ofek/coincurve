@@ -1,8 +1,11 @@
 import glob
+import logging
 import os
 import shutil
 import subprocess
+import tarfile
 from contextlib import contextmanager, suppress
+from io import BytesIO
 from tempfile import mkdtemp
 
 
@@ -95,3 +98,35 @@ def detect_dll():
         if fn.endswith('.dll'):
             return True
     return False
+
+
+def download_library(command):
+    from setup import LIB_TARBALL_URL
+
+    if command.dry_run:
+        return
+
+    libdir = absolute('libsecp256k1')
+    if os.path.exists(os.path.join(libdir, 'autogen.sh')):
+        # Library already downloaded
+        return
+    if not os.path.exists(libdir):
+        command.announce('downloading libsecp256k1 source code', level=logging.INFO)
+        try:
+            import requests
+            try:
+                r = requests.get(LIB_TARBALL_URL, stream=True, timeout=10)
+                status_code = r.status_code
+                if status_code == 200:
+                    content = BytesIO(r.raw.read())
+                    content.seek(0)
+                    with tarfile.open(fileobj=content) as tf:
+                        dirname = tf.getnames()[0].partition('/')[0]
+                        tf.extractall()
+                    shutil.move(dirname, libdir)
+                else:
+                    raise SystemExit('Unable to download secp256k1 library: HTTP-Status: %d', status_code)
+            except requests.exceptions.RequestException as e:
+                raise SystemExit('Unable to download secp256k1 library: %s', str(e))
+        except ImportError as e:
+            raise SystemExit('Unable to download secp256k1 library: %s', str(e))

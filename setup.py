@@ -1,23 +1,15 @@
 import errno
+import logging
 import os
 import os.path
 import platform
-import shutil
 import subprocess
 import sys
-import tarfile
-from io import BytesIO
 
 from setuptools import Distribution as _Distribution, setup, find_packages, __version__ as setuptools_version
-from setuptools._distutils import log
-from setuptools._distutils.errors import DistutilsError
-from setuptools.command.build_clib import build_clib as _build_clib
-from setuptools.command.build_ext import build_ext as _build_ext
-from setuptools.command.develop import develop as _develop
-from setuptools.command.dist_info import dist_info as _dist_info
-from setuptools.command.egg_info import egg_info as _egg_info
-from setuptools.command.sdist import sdist as _sdist
+from setuptools.command import build_clib, build_ext, develop, dist_info, egg_info, sdist
 from setuptools.extension import Extension
+
 
 try:
     from wheel.bdist_wheel import bdist_wheel as _bdist_wheel
@@ -25,7 +17,7 @@ except ImportError:
     _bdist_wheel = None
 
 sys.path.append(os.path.abspath(os.path.dirname(__file__)))
-from setup_support import absolute, build_flags, detect_dll, has_system_lib  # noqa: E402
+from setup_support import absolute, build_flags, detect_dll, download_library, has_system_lib  # noqa: E402
 
 BUILDING_FOR_WINDOWS = detect_dll()
 
@@ -46,36 +38,7 @@ if [int(i) for i in setuptools_version.split('.', 2)[:2]] < [3, 3]:
     )
 
 
-def download_library(command):
-    if command.dry_run:
-        return
-    libdir = absolute('libsecp256k1')
-    if os.path.exists(os.path.join(libdir, 'autogen.sh')):
-        # Library already downloaded
-        return
-    if not os.path.exists(libdir):
-        command.announce('downloading libsecp256k1 source code', level=log.INFO)
-        try:
-            import requests
-            try:
-                r = requests.get(LIB_TARBALL_URL, stream=True, timeout=10)
-                status_code = r.status_code
-                if status_code == 200:
-                    content = BytesIO(r.raw.read())
-                    content.seek(0)
-                    with tarfile.open(fileobj=content) as tf:
-                        dirname = tf.getnames()[0].partition('/')[0]
-                        tf.extractall()
-                    shutil.move(dirname, libdir)
-                else:
-                    raise SystemExit('Unable to download secp256k1 library: HTTP-Status: %d', status_code)
-            except requests.exceptions.RequestException as e:
-                raise SystemExit('Unable to download secp256k1 library: %s', str(e))
-        except ImportError as e:
-            raise SystemExit('Unable to download secp256k1 library: %s', str(e))
-
-
-class egg_info(_egg_info):
+class EggInfo(egg_info.egg_info):
     def run(self):
         # Ensure library has been downloaded (sdist might have been skipped)
         if not has_system_lib():
@@ -84,7 +47,7 @@ class egg_info(_egg_info):
         super().run()
 
 
-class dist_info(_dist_info):
+class DistInfo(dist_info.dist_info):
     def run(self):
         # Ensure library has been downloaded (sdist might have been skipped)
         if not has_system_lib():
@@ -93,33 +56,38 @@ class dist_info(_dist_info):
         super().run()
 
 
-class sdist(_sdist):
+class Sdist(sdist.sdist):
     def run(self):
         if not has_system_lib():
             download_library(self)
+        super().run()
+
+
+class Develop(develop.develop):
+    def run(self):
+        if not has_system_lib():
+            raise RuntimeError(
+                "This library is not usable in 'develop' mode when using the "
+                'bundled libsecp256k1. See README for details.'
+            )
         super().run()
 
 
 if _bdist_wheel:
-
-    class bdist_wheel(_bdist_wheel):
+    class BdistWheel(_bdist_wheel):
         def run(self):
             if not has_system_lib():
                 download_library(self)
             super().run()
 
 
-else:
-    bdist_wheel = None
-
-
-class build_clib(_build_clib):
+class BuildClib(build_clib.build_clib):
     def initialize_options(self):
-        _build_clib.initialize_options(self)
+        super().initialize_options()
         self.build_flags = None
 
     def finalize_options(self):
-        _build_clib.finalize_options(self)
+        super().finalize_options()
         if self.build_flags is None:
             self.build_flags = {'include_dirs': [], 'library_dirs': [], 'define': [], 'libraries': []}
 
@@ -142,7 +110,7 @@ class build_clib(_build_clib):
 
     def run(self):
         if has_system_lib():
-            log.info('Using system library')
+            logging.info('Using system library')
             return
 
         build_temp = os.path.abspath(self.build_temp)
@@ -202,7 +170,7 @@ class build_clib(_build_clib):
         if 'COINCURVE_CROSS_HOST' in os.environ:
             cmd.append(f"--host={os.environ['COINCURVE_CROSS_HOST']}")
 
-        log.debug(f"Running configure: {' '.join(cmd)}")
+        logging.debug(f"Running configure: {' '.join(cmd)}")
         subprocess.check_call(cmd, cwd=build_temp)  # noqa S603
 
         subprocess.check_call([MAKE], cwd=build_temp)  # noqa S603
@@ -218,39 +186,11 @@ class build_clib(_build_clib):
             self.build_flags['define'].append(('CFFI_ENABLE_RECOVERY', None))
 
 
-class build_ext(_build_ext):
-    def run(self):
-        if self.distribution.has_c_libraries():
-            # Make sure the ABI mode is overwritten
-            self.extensions[0].py_limited_api = False
-
-            _build_clib = self.get_finalized_command('build_clib')
-            self.include_dirs.append(os.path.join(_build_clib.build_clib, 'include'))
-            self.include_dirs.extend(_build_clib.build_flags['include_dirs'])
-
-            self.library_dirs.insert(0, os.path.join(_build_clib.build_clib, 'lib'))
-            self.library_dirs.extend(_build_clib.build_flags['library_dirs'])
-
-            self.define = _build_clib.build_flags['define']
-
-        return super().run()
-
-
-class develop(_develop):
-    def run(self):
-        if not has_system_lib():
-            raise DistutilsError(
-                "This library is not usable in 'develop' mode when using the "
-                'bundled libsecp256k1. See README for details.'
-            )
-        super().run()
-
-
-class _BuildExtensionFromCFFI(_build_ext):
+class _BuildExtensionFromCFFI(build_ext.build_ext):
     static_lib = None
 
     def build_extension(self, ext):
-        log.info(
+        logging.info(
             f'Extension build:'
             f'\n         OS:{os.name}'
             f'\n   Platform:{sys.platform}'
@@ -267,15 +207,14 @@ class _BuildExtensionFromCFFI(_build_ext):
             ext.library_dirs.extend(build_flags('libsecp256k1', 'L', pkg_dir))
 
             libraries = build_flags('libsecp256k1', 'l', pkg_dir)
-            log.info(f'  Libraries:{libraries}')
-            log.info(f'    OS name:{os.name}')
-            log.info(f'SYS platform:{sys.platform}')
+            logging.info(f'  Libraries:{libraries}')
 
             if self.compiler.__class__.__name__ == 'UnixCCompiler':
                 if self.static_lib:
                     # It is possible that the library was compiled without fPIC option
                     for lib in libraries:
-                        # On MacOS the option is different
+                        # On MacOS the mix static/dynamic option is different
+                        # It requires a -force_load <full_lib_path> option for each library
                         if sys.platform == 'darwin':
                             for lib_dir in ext.library_dirs:
                                 if os.path.exists(os.path.join(lib_dir, f'lib{lib}.a')):
@@ -287,13 +226,19 @@ class _BuildExtensionFromCFFI(_build_ext):
                             ext.extra_link_args.extend(['-Wl,-Bstatic', f'-l{lib}', '-Wl,-Bdynamic'])
                 else:
                     ext.extra_link_args.extend(libraries)
+            elif self.compiler.__class__.__name__ == 'MSVCCompiler':
+                # This section is not used yet since we still cross-compile on Windows
+                # TODO: write the windows native build here when finalized
+                raise NotImplementedError(f'Unsupported compiler: {self.compiler.__class__.__name__}')
+            else:
+                raise NotImplementedError(f'Unsupported compiler: {self.compiler.__class__.__name__}')
 
         super().build_extension(ext)
 
 
 class _BuildCFFI(_BuildExtensionFromCFFI):
     def build_extension(self, ext):
-        log.info(
+        logging.info(
             f'Cmdline CFFI build:'
             f'\n     Source: {absolute(ext.sources[0])}'
         )
@@ -328,37 +273,17 @@ if has_system_lib():
         def has_c_libraries(self):
             return not has_system_lib()
 
-
-    # --- SECP256K1 package definitions ---
-    secp256k1_package = 'libsecp256k1'
-
-    extension.extra_compile_args = [
-        subprocess.check_output(['pkg-config', '--cflags-only-I', 'libsecp256k1']).strip().decode('utf-8')  # noqa S603
-    ]
-    extension.extra_link_args = [
-        subprocess.check_output(['pkg-config', '--libs-only-L', 'libsecp256k1']).strip().decode('utf-8'),  # noqa S603
-        subprocess.check_output(['pkg-config', '--libs-only-l', 'libsecp256k1']).strip().decode('utf-8'),  # noqa S603
-    ]
-
-    if os.name == 'nt' or sys.platform == 'win32':
-        # Apparently, the linker on Windows interprets -lxxx as xxx.lib, not libxxx.lib
-        for i, v in enumerate(extension.__dict__.get('extra_link_args')):
-            extension.__dict__['extra_link_args'][i] = v.replace('-L', '/LIBPATH:')
-
-            if v.startswith('-l'):
-                v = v.replace('-l', 'lib')
-                extension.__dict__['extra_link_args'][i] = f'{v}.lib'
-
+    # TODO: This has not been tested yet. has_system_lib() does not find conda install lib yet
     setup_kwargs = dict(
         setup_requires=['cffi>=1.3.0', 'requests'],
         ext_modules=[extension],
         cmdclass={
-            'build_clib': build_clib,
+            'build_clib': BuildClib,
             'build_ext': BuildCFFIForSharedLib,
-            'develop': develop,
-            'egg_info': egg_info,
-            'sdist': sdist,
-            'bdist_wheel': bdist_wheel,
+            'develop': Develop,
+            'egg_info': EggInfo,
+            'sdist': Sdist,
+            'bdist_wheel': BdistWheel if _bdist_wheel else None,
         },
     )
 
@@ -384,12 +309,12 @@ else:
             setup_requires=['cffi>=1.3.0', 'requests'],
             ext_modules=[extension],
             cmdclass={
-                'build_clib': build_clib,
+                'build_clib': BuildClib,
                 'build_ext': BuildCFFIForStaticLib,
-                'develop': develop,
-                'egg_info': egg_info,
-                'sdist': sdist,
-                'bdist_wheel': bdist_wheel,
+                'develop': Develop,
+                'egg_info': EggInfo,
+                'sdist': Sdist,
+                'bdist_wheel': BdistWheel if _bdist_wheel else None,
             },
         )
 

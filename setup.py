@@ -277,7 +277,7 @@ class _BuildExtensionFromCFFI(_build_ext):
                     for lib in libraries:
                         # On MacOS the option is different
                         if sys.platform == 'darwin':
-                            ext.extra_link_args.extend(['-Wl,-force_load', f'-l{lib}'])
+                            ext.extra_link_args.extend(['-Wl,-force_load', f'lib{lib}.a'])
                         else:
                             ext.extra_link_args.extend(['-Wl,-Bstatic', f'-l{lib}', '-Wl,-Bdynamic'])
                 else:

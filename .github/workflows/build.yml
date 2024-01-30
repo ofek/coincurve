@@ -115,7 +115,9 @@ jobs:
         python-version: "3.12"
 
     - name: Install build dependencies
-      run: conda install -y binutils m2-autoconf m2-automake-wrapper m2-base m2-bash m2-libtool m2-m4 m2-gzip m2-make m2-sed m2-tar pkg-config
+      run: |
+        conda install -y m2-autoconf m2-automake-wrapper m2-base m2-bash m2-libtool m2-m4 m2-gzip m2-make m2-sed m2-tar pkg-config
+        conda install -y -c conda-forge binutils
 
     - name: Build wheels
       uses: pypa/cibuildwheel@v2.16.2

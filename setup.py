@@ -279,7 +279,9 @@ class _BuildExtensionFromCFFI(_build_ext):
                         if sys.platform == 'darwin':
                             for lib_dir in ext.library_dirs:
                                 if os.path.exists(os.path.join(lib_dir, f'lib{lib}.a')):
-                                    ext.extra_link_args.extend(['-Wl,-force_load', os.path.join(lib_dir, f'lib{lib}.a')])
+                                    ext.extra_link_args.extend(
+                                        ['-Wl,-force_load', os.path.join(lib_dir, f'lib{lib}.a')]
+                                    )
                                     break
                         else:
                             ext.extra_link_args.extend(['-Wl,-Bstatic', f'-l{lib}', '-Wl,-Bdynamic'])

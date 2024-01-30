@@ -191,6 +191,9 @@ class BuildClib(build_clib.build_clib):
 class _BuildExtensionFromCFFI(build_ext.build_ext):
     static_lib = None
 
+    def update_link_args(self, libraries, libraries_dirs, extra_link_args, pkg_dir):
+        raise NotImplementedError('update_link_args')
+
     def build_extension(self, ext):
         logging.info(
             f'Extension build:'
@@ -199,41 +202,26 @@ class _BuildExtensionFromCFFI(build_ext.build_ext):
             f'\n   Compiler:{self.compiler.__class__.__name__}'
             f'\n     Static:{self.static_lib}'
         )
-        pkg_dir = self.get_finalized_command('build_clib').pkgconfig_dir or None
 
         # Enforce API interface
         ext.py_limited_api = False
 
-        if pkg_dir is not None:
+        if hasattr(b := self.get_finalized_command('build_clib'), 'pkgconfig_dir'):
+            # Locally built C-lib
+            pkg_dir = b.pkgconfig_dir
+
             ext.include_dirs.extend(build_flags('libsecp256k1', 'I', pkg_dir))
             ext.library_dirs.extend(build_flags('libsecp256k1', 'L', pkg_dir))
 
             libraries = build_flags('libsecp256k1', 'l', pkg_dir)
             logging.info(f'  Libraries:{libraries}')
 
-            if self.compiler.__class__.__name__ == 'UnixCCompiler':
-                if self.static_lib:
-                    # It is possible that the library was compiled without fPIC option
-                    for lib in libraries:
-                        # On MacOS the mix static/dynamic option is different
-                        # It requires a -force_load <full_lib_path> option for each library
-                        if sys.platform == 'darwin':
-                            for lib_dir in ext.library_dirs:
-                                if os.path.exists(os.path.join(lib_dir, f'lib{lib}.a')):
-                                    ext.extra_link_args.extend(
-                                        ['-Wl,-force_load', os.path.join(lib_dir, f'lib{lib}.a')]
-                                    )
-                                    break
-                        else:
-                            ext.extra_link_args.extend(['-Wl,-Bstatic', f'-l{lib}', '-Wl,-Bdynamic'])
-                else:
-                    ext.extra_link_args.extend(libraries)
-            elif self.compiler.__class__.__name__ == 'MSVCCompiler':
-                # This section is not used yet since we still cross-compile on Windows
-                # TODO: write the windows native build here when finalized
-                raise NotImplementedError(f'Unsupported compiler: {self.compiler.__class__.__name__}')
-            else:
-                raise NotImplementedError(f'Unsupported compiler: {self.compiler.__class__.__name__}')
+            self.update_link_args(libraries, ext.library_dirs, ext.extra_link_args, pkg_dir)
+
+        else:
+            ext.include_dirs.extend(build_flags('libsecp256k1', 'I'))
+            ext.library_dirs.extend(build_flags('libsecp256k1', 'L'))
+            ext.libraries.extend(build_flags('libsecp256k1', 'l'))
 
         super().build_extension(ext)
 
@@ -260,6 +248,28 @@ class BuildCFFIForSharedLib(_BuildCFFI):
 class BuildCFFIForStaticLib(_BuildCFFI):
     static_lib = True
 
+    def update_link_args(self, libraries, libraries_dirs, extra_link_args, pkg_dir):
+        if self.compiler.__class__.__name__ == 'UnixCCompiler':
+            # It is possible that the library was compiled without fPIC option
+            for lib in libraries:
+                # On MacOS the mix static/dynamic option is different
+                # It requires a -force_load <full_lib_path> option for each library
+                if sys.platform == 'darwin':
+                    for lib_dir in libraries_dirs:
+                        if os.path.exists(os.path.join(lib_dir, f'lib{lib}.a')):
+                            extra_link_args.extend(
+                                ['-Wl,-force_load', os.path.join(lib_dir, f'lib{lib}.a')]
+                            )
+                            break
+                else:
+                    extra_link_args.extend(['-Wl,-Bstatic', f'-l{lib}', '-Wl,-Bdynamic'])
+        elif self.compiler.__class__.__name__ == 'MSVCCompiler':
+            # This section is not used yet since we still cross-compile on Windows
+            # TODO: write the windows native build here when finalized
+            raise NotImplementedError(f'Unsupported compiler: {self.compiler.__class__.__name__}')
+        else:
+            raise NotImplementedError(f'Unsupported compiler: {self.compiler.__class__.__name__}')
+
 
 package_data = {'coincurve': ['py.typed']}
 
@@ -274,6 +284,7 @@ if has_system_lib():
     class Distribution(_Distribution):
         def has_c_libraries(self):
             return not has_system_lib()
+
 
     # TODO: This has not been tested yet. has_system_lib() does not find conda install lib yet
     setup_kwargs = dict(

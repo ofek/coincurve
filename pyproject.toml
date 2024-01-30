@@ -89,9 +89,6 @@ unfixable = [
   # Don't touch unused imports
   "F401",
 ]
-extend-exclude = [
-  "_cffi_build/compose_cffi_files.py",
-]
 
 [tool.ruff.isort]
 known-first-party = ["coincurve"]

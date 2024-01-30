@@ -264,7 +264,7 @@ class _BuildExtensionFromCFFI(_build_ext):
 
         if pkg_dir is not None:
             ext.include_dirs.extend(build_flags('libsecp256k1', 'I', pkg_dir))
-            ext.library_dirs.extend(build_flags('libsecp256k1', 'l', pkg_dir))
+            ext.library_dirs.extend(build_flags('libsecp256k1', 'L', pkg_dir))
 
             libraries = build_flags('libsecp256k1', 'l', pkg_dir)
             log.info(f'  Libraries:{libraries}')

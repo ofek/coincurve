@@ -114,6 +114,7 @@ def download_library(command):
         command.announce('downloading libsecp256k1 source code', level=logging.INFO)
         try:
             import requests
+
             try:
                 r = requests.get(LIB_TARBALL_URL, stream=True, timeout=10)
                 status_code = r.status_code
@@ -127,6 +128,6 @@ def download_library(command):
                 else:
                     raise SystemExit('Unable to download secp256k1 library: HTTP-Status: %d', status_code)
             except requests.exceptions.RequestException as e:
-                raise SystemExit('Unable to download secp256k1 library: %s', str(e))
+                raise SystemExit('Unable to download secp256k1 library: %s', str(e)) from e
         except ImportError as e:
-            raise SystemExit('Unable to download secp256k1 library: %s', str(e))
+            raise SystemExit('Unable to download secp256k1 library: %s', str(e)) from e

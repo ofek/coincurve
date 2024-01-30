@@ -276,8 +276,8 @@ class _BuildExtensionFromCFFI(_build_ext):
                     # It is possible that the library was compiled without fPIC option
                     for lib in libraries:
                         # On MacOS the option is different
-                        if sys.platform == 'Darwin':
-                            ext.extra_link_args.extend(['-Wl,-force_load', f'-l{lib}', '-Wl,-Bdynamic'])
+                        if sys.platform == 'darwin':
+                            ext.extra_link_args.extend(['-Wl,-force_load', f'-l{lib}'])
                         else:
                             ext.extra_link_args.extend(['-Wl,-Bstatic', f'-l{lib}', '-Wl,-Bdynamic'])
                 else:

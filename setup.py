@@ -262,20 +262,24 @@ class _BuildExtensionFromCFFI(_build_ext):
         # Enforce API interface
         ext.py_limited_api = False
 
-        log.info(f'{vars(ext)}')
         if pkg_dir is not None:
             ext.include_dirs.extend(build_flags('libsecp256k1', 'I', pkg_dir))
             ext.library_dirs.extend(build_flags('libsecp256k1', 'L', pkg_dir))
 
             libraries = build_flags('libsecp256k1', 'l', pkg_dir)
             log.info(f'  Libraries:{libraries}')
+            log.info(f'    OS name:{os.name}')
+            log.info(f'SYS platform:{sys.platform}')
 
             if self.compiler.__class__.__name__ == 'UnixCCompiler':
-
                 if self.static_lib:
                     # It is possible that the library was compiled without fPIC option
                     for lib in libraries:
-                        ext.extra_link_args.extend(['-Wl,-Bstatic', f'-l{lib}', '-Wl,-Bdynamic'])
+                        # On MacOS the option is different
+                        if sys.platform == 'Darwin':
+                            ext.extra_link_args.extend(['-Wl,-force_load', f'-l{lib}', '-Wl,-Bdynamic'])
+                        else:
+                            ext.extra_link_args.extend(['-Wl,-Bstatic', f'-l{lib}', '-Wl,-Bdynamic'])
                 else:
                     ext.extra_link_args.extend(libraries)
 

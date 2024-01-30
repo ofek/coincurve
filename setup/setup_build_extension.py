@@ -51,8 +51,8 @@ class BuildCFFISetuptools(_build_ext):
                 #     # lib_file = lib_file.replace('.a', '.lib')
                 #     os.rename(os.path.join(lib_dir, _a), os.path.join(lib_dir, lib_file))
                 # self.spwan(['lib', '/DEF:' + lib_fp, '/OUT:' + lib_file.replace('.a', '.lib')])
-                # self.spawn(['ar', '-t', f'{lib_dir}/{lib_file}'])  # using a msys2 command with unix path
-                self.spawn(['dumpbin.exe', '/ALL', f'{lib_dir}/{lib_file}'.replace('/', '\\')])
+                self.spawn(['nm', '-g', f'{lib_dir}/{lib_file}'])  # using a msys2 command with unix path
+                # self.spawn(['dumpbin.exe', '/ALL', f'{lib_dir}/{lib_file}'.replace('/', '\\\\')])
                 link_args_msvc.append(lib_file)
             else:
                 self.extensions[0].extra_link_args.append(lib_fp)

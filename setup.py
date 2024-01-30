@@ -140,9 +140,6 @@ class build_clib(_build_clib):
     def check_library_list(self, libraries):
         raise Exception('check_library_list')
 
-    def get_library_names(self):
-        return build_flags('libsecp256k1', 'l', os.path.abspath(self.build_temp))
-
     def run(self):
         if has_system_lib():
             log.info('Using system library')
@@ -376,11 +373,10 @@ else:
 
         setup_kwargs = dict(
             setup_requires=['cffi>=1.3.0', 'requests'],
-            ext_package='coincurve',
-            cffi_modules=['_cffi_build/build.py:ffi'],
+            ext_modules=[extension],
             cmdclass={
                 'build_clib': build_clib,
-                'build_ext': build_ext,
+                'build_ext': BuildCFFIForStaticLib,
                 'develop': develop,
                 'egg_info': egg_info,
                 'sdist': sdist,

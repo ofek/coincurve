@@ -43,19 +43,18 @@ define_shared_lib = """
 
 
 def mk_ffi(sources: List[Source],
-           static_lib: str = '0',
+           static_lib: bool = False,
            name: str = '_libsecp256k1') -> FFI:
     """
     Create an FFI object.
 
     :param sources: A list of Source namedtuples.
-    :param libraries: A list of libraries to link against.
     :param static_lib: Whether to generate a static lib in Windows.
     :param name: The name of the FFI object.
     :return: An FFI object.
     """
     _ffi = FFI()
-    code = [define_static_lib] if static_lib == '1' else [define_shared_lib]
+    code = [define_static_lib] if static_lib else [define_shared_lib]
 
     for source in sources:
         with open(os.path.join(here, source.h)) as h:
@@ -75,7 +74,7 @@ if __name__ == '__main__':
     logging.info('Starting CFFI build process...')
     parser = argparse.ArgumentParser(description='Generate C code using CFFI.')
     parser.add_argument('c_file', help='Generated C code filename.')
-    parser.add_argument('static_lib', help='Generate static lib in Windows.', default=False)
+    parser.add_argument('static_lib', help='Generate static lib in Windows.', default='0', type=bool)
     args = parser.parse_args()
 
     modules = gather_sources_from_directory(here)

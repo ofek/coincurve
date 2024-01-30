@@ -101,7 +101,6 @@ def detect_dll():
 
 
 def download_library(command):
-    from setup import LIB_TARBALL_URL
 
     if command.dry_run:
         return
@@ -111,11 +110,13 @@ def download_library(command):
         # Library already downloaded
         return
     if not os.path.exists(libdir):
-        command.announce('downloading libsecp256k1 source code', level=logging.INFO)
+        logging.info('downloading libsecp256k1 source code')
         try:
             import requests
 
             try:
+                from setup import LIB_TARBALL_URL
+
                 r = requests.get(LIB_TARBALL_URL, stream=True, timeout=10)
                 status_code = r.status_code
                 if status_code == 200:

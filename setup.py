@@ -185,6 +185,8 @@ class BuildClib(build_clib.build_clib):
         if not has_system_lib():
             self.build_flags['define'].append(('CFFI_ENABLE_RECOVERY', None))
 
+        logging.info('build_clib: Done')
+
 
 class _BuildExtensionFromCFFI(build_ext.build_ext):
     static_lib = None

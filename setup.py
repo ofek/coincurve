@@ -264,7 +264,7 @@ class _BuildExtensionFromCFFI(_build_ext):
 
         if pkg_dir is not None:
             ext.include_dirs.extend(build_flags('libsecp256k1', 'I', pkg_dir))
-            ext.library_dirs.extend(build_flags('libsecp256k1', 'L', pkg_dir))
+            ext.library_dirs.extend(build_flags('libsecp256k1', 'l', pkg_dir))
 
             libraries = build_flags('libsecp256k1', 'l', pkg_dir)
             log.info(f'  Libraries:{libraries}')
@@ -277,7 +277,10 @@ class _BuildExtensionFromCFFI(_build_ext):
                     for lib in libraries:
                         # On MacOS the option is different
                         if sys.platform == 'darwin':
-                            ext.extra_link_args.extend(['-Wl,-force_load', f'lib{lib}.a'])
+                            for lib_dir in ext.library_dirs:
+                                if os.path.exists(os.path.join(lib_dir, f'lib{lib}.a')):
+                                    ext.extra_link_args.extend(['-Wl,-force_load', os.path.join(lib_dir, f'lib{lib}.a')])
+                                    break
                         else:
                             ext.extra_link_args.extend(['-Wl,-Bstatic', f'-l{lib}', '-Wl,-Bdynamic'])
                 else:

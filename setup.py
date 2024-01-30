@@ -81,7 +81,7 @@ class egg_info(_egg_info):
         if not has_system_lib():
             download_library(self)
 
-        _egg_info.run(self)
+        super().run()
 
 
 class dist_info(_dist_info):
@@ -90,14 +90,14 @@ class dist_info(_dist_info):
         if not has_system_lib():
             download_library(self)
 
-        _dist_info.run(self)
+        super().run()
 
 
 class sdist(_sdist):
     def run(self):
         if not has_system_lib():
             download_library(self)
-        _sdist.run(self)
+        super().run()
 
 
 if _bdist_wheel:
@@ -106,7 +106,7 @@ if _bdist_wheel:
         def run(self):
             if not has_system_lib():
                 download_library(self)
-            _bdist_wheel.run(self)
+            super().run()
 
 
 else:
@@ -236,7 +236,7 @@ class build_ext(_build_ext):
 
             self.define = _build_clib.build_flags['define']
 
-        return _build_ext.run(self)
+        return super().run()
 
 
 class develop(_develop):
@@ -246,10 +246,7 @@ class develop(_develop):
                 "This library is not usable in 'develop' mode when using the "
                 'bundled libsecp256k1. See README for details.'
             )
-        _develop.run(self)
-
-
-package_data = {'coincurve': ['py.typed']}
+        super().run()
 
 
 class _BuildExtensionFromCFFI(_build_ext):
@@ -310,6 +307,8 @@ class BuildCFFIForSharedLib(_BuildCFFI):
 class BuildCFFIForStaticLib(_BuildCFFI):
     static_lib = True
 
+
+package_data = {'coincurve': ['py.typed']}
 
 extension = Extension(
     name='coincurve._libsecp256k1',

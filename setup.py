@@ -233,7 +233,7 @@ class _BuildCFFI(_BuildExtensionFromCFFI):
             f'\n     Source: {absolute(ext.sources[0])}'
         )
 
-        build_script = os.path.join('_cffi_build', 'build_shared.py')
+        build_script = os.path.join('_cffi_build', 'build.py')
         for c_file in ext.sources:
             cmd = [sys.executable, build_script, c_file, '1' if self.static_lib else '0']
             subprocess.run(cmd, shell=False, check=True)  # noqa S603

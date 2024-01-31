@@ -1,8 +1,9 @@
-import errno
 import logging
 import os
 import os.path
+import pathlib
 import platform
+import shutil
 import subprocess
 import sys
 
@@ -10,14 +11,15 @@ from setuptools import Distribution as _Distribution, setup, find_packages, __ve
 from setuptools.command import build_clib, build_ext, develop, dist_info, egg_info, sdist
 from setuptools.extension import Extension
 
-
 try:
     from wheel.bdist_wheel import bdist_wheel as _bdist_wheel
 except ImportError:
     _bdist_wheel = None
 
-sys.path.append(os.path.abspath(os.path.dirname(__file__)))
-from setup_support import absolute, build_flags, detect_dll, download_library, has_system_lib  # noqa: E402
+PACKAGE_SETUP_DIR = os.path.abspath(os.path.dirname(__file__))
+sys.path.append(PACKAGE_SETUP_DIR)
+from setup_support import absolute_from_setup_dir, build_flags, detect_dll, download_library, has_system_lib, \
+    execute_command_with_temp_log  # noqa: E402
 
 BUILDING_FOR_WINDOWS = detect_dll()
 
@@ -82,108 +84,88 @@ if _bdist_wheel:
 
 
 class BuildClib(build_clib.build_clib):
-    def initialize_options(self):
-        super().initialize_options()
-        self.build_flags = None
-
-    def finalize_options(self):
-        super().finalize_options()
-        if self.build_flags is None:
-            self.build_flags = {'include_dirs': [], 'library_dirs': [], 'define': [], 'libraries': []}
+    def __init__(self, dist):
+        super().__init__(dist)
+        self.pkgconfig_dir = None
 
     def get_source_files(self):
         # Ensure library has been downloaded (sdist might have been skipped)
         if not has_system_lib():
             download_library(self)
 
-        return [
-            absolute(os.path.join(root, filename))
-            for root, _, filenames in os.walk(absolute('libsecp256k1'))
-            for filename in filenames
-        ]
-
-    def build_libraries(self, libraries):
-        raise Exception('build_libraries')
-
-    def check_library_list(self, libraries):
-        raise Exception('check_library_list')
+        # This seems to create issues in MANIFEST.in
+        return [f for _, _, fs in os.walk(absolute_from_setup_dir('libsecp256k1')) for f in fs]
 
     def run(self):
         if has_system_lib():
             logging.info('Using system library')
             return
 
+        logging.info('SECP256K1 C library build (make):')
+
+        cwd = pathlib.Path().cwd()
         build_temp = os.path.abspath(self.build_temp)
+        os.makedirs(build_temp, exist_ok=True)
 
-        try:
-            os.makedirs(build_temp)
-        except OSError as e:
-            if e.errno != errno.EEXIST:
-                raise
+        lib_src = os.path.join(cwd, 'libsecp256k1')
 
-        if not os.path.exists(absolute('libsecp256k1')):
+        install_dir = str(build_temp).replace('temp', 'lib')
+        install_dir = os.path.join(install_dir, 'coincurve')
+
+        if not os.path.exists(lib_src):
             # library needs to be downloaded
             self.get_source_files()
 
-        if not os.path.exists(absolute('libsecp256k1/configure')):
-            # configure script hasn't been generated yet
-            autogen = absolute('libsecp256k1/autogen.sh')
-            os.chmod(absolute(autogen), 0o700)
-            subprocess.check_call([autogen], cwd=absolute('libsecp256k1'))  # noqa S603
+        autoreconf = 'autoreconf -if --warnings=all'
+        bash = shutil.which('bash')
 
-        for filename in [
-            'libsecp256k1/configure',
-            'libsecp256k1/build-aux/compile',
-            'libsecp256k1/build-aux/config.guess',
-            'libsecp256k1/build-aux/config.sub',
-            'libsecp256k1/build-aux/depcomp',
-            'libsecp256k1/build-aux/install-sh',
-            'libsecp256k1/build-aux/missing',
-            'libsecp256k1/build-aux/test-driver',
-        ]:
-            try:
-                os.chmod(absolute(filename), 0o700)
-            except OSError as e:
-                # some of these files might not exist depending on autoconf version
-                if e.errno != errno.ENOENT:
-                    # If the error isn't 'No such file or directory' something
-                    # else is wrong and we want to know about it
-                    raise
+        logging.info('    autoreconf')
+        execute_command_with_temp_log([bash, '-c', autoreconf], cwd=lib_src)
 
-        cmd = [
-            absolute('libsecp256k1/configure'),
-            '--disable-shared',
-            '--enable-static',
-            '--disable-dependency-tracking',
-            '--with-pic',
-            '--enable-module-extrakeys',
-            '--enable-module-recovery',
-            '--enable-module-schnorrsig',
-            '--prefix',
-            os.path.abspath(self.build_clib),
-            '--enable-experimental',
-            '--enable-module-ecdh',
-            '--enable-benchmark=no',
-            '--enable-tests=no',
-            '--enable-exhaustive-tests=no',
-        ]
-        if 'COINCURVE_CROSS_HOST' in os.environ:
-            cmd.append(f"--host={os.environ['COINCURVE_CROSS_HOST']}")
+        # Keep downloaded source dir pristine (hopefully)
+        try:
+            os.chdir(build_temp)
+            cmd = [
+                absolute_from_setup_dir('libsecp256k1/configure'),
+                '--prefix',
+                install_dir.replace('\\', '/'),
+                '--disable-static',
+                '--disable-dependency-tracking',
+                '--with-pic',
+                '--enable-module-extrakeys',
+                '--enable-module-recovery',
+                '--enable-module-schnorrsig',
+                '--enable-experimental',
+                '--enable-module-ecdh',
+                '--enable-benchmark=no',
+                '--enable-tests=no',
+                '--enable-exhaustive-tests=no',
+            ]
 
-        logging.debug(f"Running configure: {' '.join(cmd)}")
-        subprocess.check_call(cmd, cwd=build_temp)  # noqa S603
+            if 'COINCURVE_CROSS_HOST' in os.environ:
+                cmd.append(f"--host={os.environ['COINCURVE_CROSS_HOST']}")
 
-        subprocess.check_call([MAKE], cwd=build_temp)  # noqa S603
-        subprocess.check_call([MAKE, 'check'], cwd=build_temp)  # noqa S603
-        subprocess.check_call([MAKE, 'install'], cwd=build_temp)  # noqa S603
+            logging.info('    configure')
+            execute_command_with_temp_log([bash, '-c', ' '.join(cmd)])
 
-        self.build_flags['include_dirs'].extend(build_flags('libsecp256k1', 'I', build_temp))
-        self.build_flags['library_dirs'].extend(build_flags('libsecp256k1', 'L', build_temp))
-        self.build_flags['libraries'].extend(build_flags('libsecp256k1', 'l', build_temp))
-        self.pkgconfig_dir = build_temp
+            logging.info('    make')
+            execute_command_with_temp_log([MAKE])
 
-        if not has_system_lib():
-            self.build_flags['define'].append(('CFFI_ENABLE_RECOVERY', None))
+            logging.info('    make check')
+            execute_command_with_temp_log([MAKE, 'check'])
+
+            logging.info('    make install')
+            execute_command_with_temp_log([MAKE, 'install'])
+
+            # logging.info('    make install-libLTLIBRARIES')
+            # execute_command_with_temp_log([MAKE, 'install-libLTLIBRARIES'])
+
+            # logging.info('    make install-pkgconfigDATA')
+            # execute_command_with_temp_log([MAKE, 'install-pkgconfigDATA'])
+        finally:
+            os.chdir(cwd)
+
+        self.pkgconfig_dir = os.path.join(install_dir, 'lib', 'pkgconfig')
 
         logging.info('build_clib: Done')
 
@@ -206,22 +188,20 @@ class _BuildExtensionFromCFFI(build_ext.build_ext):
         # Enforce API interface
         ext.py_limited_api = False
 
+        pkg_dir = '.'  # default to local build (just to initialize the path passed to build_flags)
         if hasattr(b := self.get_finalized_command('build_clib'), 'pkgconfig_dir'):
             # Locally built C-lib
             pkg_dir = b.pkgconfig_dir
 
-            ext.include_dirs.extend(build_flags('libsecp256k1', 'I', pkg_dir))
-            ext.library_dirs.extend(build_flags('libsecp256k1', 'L', pkg_dir))
+        ext.include_dirs.extend(build_flags('libsecp256k1', 'I', pkg_dir))
+        ext.library_dirs.extend(build_flags('libsecp256k1', 'L', pkg_dir))
 
-            libraries = build_flags('libsecp256k1', 'l', pkg_dir)
-            logging.info(f'  Libraries:{libraries}')
+        libraries = build_flags('libsecp256k1', 'l', pkg_dir)
+        logging.info(f'  Libraries:{libraries}')
 
-            self.update_link_args(libraries, ext.library_dirs, ext.extra_link_args, pkg_dir)
-
-        else:
-            ext.include_dirs.extend(build_flags('libsecp256k1', 'I'))
-            ext.library_dirs.extend(build_flags('libsecp256k1', 'L'))
-            ext.libraries.extend(build_flags('libsecp256k1', 'l'))
+        # We do not set ext.libraries, this would add the default link instruction
+        # Instead, we use extra_link_args to customize the link command
+        self.update_link_args(libraries, ext.library_dirs, ext.extra_link_args, pkg_dir)
 
         super().build_extension(ext)
 
@@ -230,7 +210,7 @@ class _BuildCFFI(_BuildExtensionFromCFFI):
     def build_extension(self, ext):
         logging.info(
             f'Cmdline CFFI build:'
-            f'\n     Source: {absolute(ext.sources[0])}'
+            f'\n     Source: {absolute_from_setup_dir(ext.sources[0])}'
         )
 
         build_script = os.path.join('_cffi_build', 'build.py')
@@ -243,6 +223,17 @@ class _BuildCFFI(_BuildExtensionFromCFFI):
 
 class BuildCFFIForSharedLib(_BuildCFFI):
     static_lib = False
+
+    def update_link_args(self, libraries, libraries_dirs, extra_link_args, pkg_dir):
+        if self.compiler.__class__.__name__ == 'UnixCCompiler':
+            extra_link_args.extend([f'-l{lib}' for lib in libraries])
+            extra_link_args.extend(['-Wl,-rpath,${ORIGIN}/lib'])
+        elif self.compiler.__class__.__name__ == 'MSVCCompiler':
+            # This section is not used yet since we still cross-compile on Windows
+            # TODO: write the windows native build here when finalized
+            raise NotImplementedError(f'Unsupported compiler: {self.compiler.__class__.__name__}')
+        else:
+            raise NotImplementedError(f'Unsupported compiler: {self.compiler.__class__.__name__}')
 
 
 class BuildCFFIForStaticLib(_BuildCFFI):
@@ -271,7 +262,7 @@ class BuildCFFIForStaticLib(_BuildCFFI):
             raise NotImplementedError(f'Unsupported compiler: {self.compiler.__class__.__name__}')
 
 
-package_data = {'coincurve': ['py.typed']}
+package_data = {'coincurve': ['py.typed', 'lib/libsecp256k1.so']}
 
 extension = Extension(
     name='coincurve._libsecp256k1',
@@ -323,7 +314,7 @@ else:
             ext_modules=[extension],
             cmdclass={
                 'build_clib': BuildClib,
-                'build_ext': BuildCFFIForStaticLib,
+                'build_ext': BuildCFFIForSharedLib,
                 'develop': Develop,
                 'egg_info': EggInfo,
                 'sdist': Sdist,

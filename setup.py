@@ -156,12 +156,6 @@ class BuildClib(build_clib.build_clib):
 
             logging.info('    make install')
             execute_command_with_temp_log([MAKE, 'install'])
-
-            # logging.info('    make install-libLTLIBRARIES')
-            # execute_command_with_temp_log([MAKE, 'install-libLTLIBRARIES'])
-
-            # logging.info('    make install-pkgconfigDATA')
-            # execute_command_with_temp_log([MAKE, 'install-pkgconfigDATA'])
         finally:
             os.chdir(cwd)
 

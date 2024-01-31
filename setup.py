@@ -210,6 +210,7 @@ class build_clib(_build_clib):
 
         subprocess.check_call([MAKE], cwd=build_temp)  # noqa S603
         subprocess.check_call([MAKE, 'check'], cwd=build_temp)  # noqa S603
+        subprocess.check_call([MAKE, 'uninstall'], cwd=build_temp)  # noqa S603
         subprocess.check_call([MAKE, 'install'], cwd=build_temp)  # noqa S603
 
         self.build_flags['include_dirs'].extend(build_flags('libsecp256k1', 'I', build_temp))

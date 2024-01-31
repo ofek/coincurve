@@ -318,7 +318,6 @@ else:
 
 
         setup_kwargs = dict(
-            setup_requires=['cffi>=1.3.0', 'requests'],
             ext_package='coincurve',
             cffi_modules=['_cffi_build/build.py:ffi'],
             cmdclass={
@@ -332,13 +331,7 @@ else:
         )
 
 setup(
-    name='coincurve',
-    version='19.0.0',
-
-    packages=find_packages(exclude=('_cffi_build', '_cffi_build.*', 'libsecp256k1', 'tests')),
     package_data=package_data,
-
     distclass=Distribution,
-    zip_safe=False,
     **setup_kwargs
 )

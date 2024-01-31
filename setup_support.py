@@ -4,6 +4,7 @@ import os
 import shutil
 import subprocess
 import tarfile
+import tempfile
 from contextlib import contextmanager, suppress
 from io import BytesIO
 from tempfile import mkdtemp
@@ -35,12 +36,14 @@ def redirect(stdchannel, dest_filename):
             dest_file.close()
 
 
-def absolute(*paths):
+def absolute_from_setup_dir(*paths):
+    from setup import PACKAGE_SETUP_DIR
+
     op = os.path
-    return op.realpath(op.abspath(op.join(op.dirname(__file__), *paths)))
+    return op.realpath(op.abspath(op.join(PACKAGE_SETUP_DIR, *paths)))
 
 
-def build_flags(library, type_, path):
+def build_flags(library, type_, path='.'):
     """Return separated build flags from pkg-config output"""
 
     pkg_config_path = [path]
@@ -101,11 +104,10 @@ def detect_dll():
 
 
 def download_library(command):
-
     if command.dry_run:
         return
 
-    libdir = absolute('libsecp256k1')
+    libdir = absolute_from_setup_dir('libsecp256k1')
     if os.path.exists(os.path.join(libdir, 'autogen.sh')):
         # Library already downloaded
         return
@@ -132,3 +134,15 @@ def download_library(command):
                 raise SystemExit('Unable to download secp256k1 library: %s', str(e)) from e
         except ImportError as e:
             raise SystemExit('Unable to download secp256k1 library: %s', str(e)) from e
+
+
+def execute_command_with_temp_log(cmd, cwd=None):
+    with tempfile.NamedTemporaryFile(mode='w+') as temp_log:
+        try:
+            subprocess.check_call(cmd, stdout=temp_log, stderr=temp_log, cwd=cwd)  # noqa S603
+        except subprocess.CalledProcessError as e:
+            logging.error(f'An error occurred during the command execution: {e}')
+            temp_log.seek(0)
+            log_contents = temp_log.read()
+            logging.error(f'Command log:\n{log_contents}')
+            raise e

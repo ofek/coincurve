@@ -227,7 +227,7 @@ class BuildCFFIForSharedLib(_BuildCFFI):
     def update_link_args(self, libraries, libraries_dirs, extra_link_args, pkg_dir):
         if self.compiler.__class__.__name__ == 'UnixCCompiler':
             extra_link_args.extend([f'-l{lib}' for lib in libraries])
-            extra_link_args.extend(['-Wl,-rpath,${ORIGIN}/lib'])
+            extra_link_args.extend(['-Wl,-rpath,$ORIGIN/lib'])
         elif self.compiler.__class__.__name__ == 'MSVCCompiler':
             # This section is not used yet since we still cross-compile on Windows
             # TODO: write the windows native build here when finalized

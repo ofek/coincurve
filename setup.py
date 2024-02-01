@@ -7,7 +7,7 @@ import shutil
 import subprocess
 import sys
 
-from setuptools import Distribution as _Distribution, setup, find_packages, __version__ as setuptools_version
+from setuptools import Distribution as _Distribution, setup, find_packages
 from setuptools.command import build_clib, build_ext, develop, dist_info, egg_info, sdist
 from setuptools.extension import Extension
 

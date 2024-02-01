@@ -24,6 +24,7 @@ from setup_support import absolute_from_setup_dir, build_flags, detect_dll, down
 BUILDING_FOR_WINDOWS = detect_dll()
 
 MAKE = 'gmake' if platform.system() in ['FreeBSD', 'OpenBSD'] else 'make'
+PKGCONFIG = shutil.which('pkg-config')
 
 logging.info(sysconfig.get_config_var('CC'))
 logging.info(sysconfig.get_config_var('CFLAGS'))
@@ -125,9 +126,16 @@ class BuildClibWithCmake(build_clib.build_clib):
         ]
 
         if (x_host := os.environ.get('COINCURVE_CROSS_HOST')) is not None:
-            cmake_args.append(
-                f'-DCMAKE_TOOLCHAIN_FILE=../cmake/{x_host}.toolchain.cmake'
-            )
+            if os.name == 'darwin':
+                # Let's try to not cross-compile on MacOS
+                cmake_args.append(
+                    f'-DCMAKE_OSX_ARCHITECTURES=arm64'
+                )
+                raise RuntimeError('Cross-compiling on MacOS is not supported')
+            else:
+                cmake_args.append(
+                    f'-DCMAKE_TOOLCHAIN_FILE=../cmake/{x_host}.toolchain.cmake'
+                )
 
         elif os.name == 'nt':
             # For windows, select the correct toolchain file
@@ -291,8 +299,12 @@ class BuildCFFIForSharedLib(_BuildCFFI):
     def update_link_args(self, libraries, libraries_dirs, extra_link_args):
         if self.compiler.__class__.__name__ == 'UnixCCompiler':
             extra_link_args.extend([f'-l{lib}' for lib in libraries])
+            logging.info(f'  Link args:{extra_link_args}')
             if os.name == 'darwin':
-                extra_link_args.extend(['-Wl,-rpath,${ORIGIN}/lib'])
+                extra_link_args.extend([
+                    '-Wl,-rpath-link,$ORIGIN/lib',
+                    f'-Wl,-rpath,{self.build_lib}/lib64',
+                ])
             else:
                 extra_link_args.extend([
                     '-Wl,-rpath,$ORIGIN/lib',
@@ -324,6 +336,7 @@ class BuildCFFIForStaticLib(_BuildCFFI):
                             break
                 else:
                     extra_link_args.extend(['-Wl,-Bstatic', f'-l{lib}', '-Wl,-Bdynamic'])
+
         elif self.compiler.__class__.__name__ == 'MSVCCompiler':
             # This section is not used yet since we still cross-compile on Windows
             # TODO: write the windows native build here when finalized

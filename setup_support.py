@@ -45,6 +45,7 @@ def absolute_from_setup_dir(*paths):
 
 def build_flags(library, type_, path='.'):
     """Return separated build flags from pkg-config output"""
+    from setup import PKGCONFIG
 
     pkg_config_path = [path]
     if 'PKG_CONFIG_PATH' in os.environ:
@@ -52,15 +53,12 @@ def build_flags(library, type_, path='.'):
     if 'LIB_DIR' in os.environ:
         pkg_config_path.append(os.environ['LIB_DIR'])
         pkg_config_path.append(os.path.join(os.environ['LIB_DIR'], 'pkgconfig'))
+    if 'CONDA_PREFIX' in os.environ:
+        pkg_config_path.append(os.path.join(os.environ['CONDA_PREFIX'], 'lib', 'pkgconfig'))
 
     options = {'I': '--cflags-only-I', 'L': '--libs-only-L', 'l': '--libs-only-l'}
     env = dict(os.environ, PKG_CONFIG_PATH=':'.join(pkg_config_path))
-    logging.info('Debug info\n\n\n')
-    logging.info(f'DBG:   pkg-config path: {env["PKG_CONFIG_PATH"]}')
-    logging.info(f'DBG:   {path}')
-    logging.info(f'DBG:   {os.path.isfile(os.path.join(path, "libsecp256k1.pc"))}')
-    logging.info('\n\n\n')
-    flags = subprocess.check_output(['pkg-config', options[type_], library], env=env)  # noqa S603
+    flags = subprocess.check_output([PKGCONFIG, options[type_], library], env=env)  # noqa S603
     flags = list(flags.decode('UTF-8').split())
 
     return [flag.strip(f'-{type_}') for flag in flags]
@@ -70,18 +68,26 @@ def _find_lib():
     if 'COINCURVE_IGNORE_SYSTEM_LIB' in os.environ:
         return False
 
-    from cffi import FFI
-
     try:
-        subprocess.check_output(['pkg-config', '--exists', 'libsecp256k1'])  # noqa S603
+        from setup import PKGCONFIG
 
-        includes = subprocess.check_output(['pkg-config', '--cflags-only-I', 'libsecp256k1'])  # noqa S603
+        # Update the environment CONDA_PREFIX to the current environment
+        if 'CONDA_PREFIX' in os.environ:
+            os.environ['PKG_CONFIG_PATH'] = os.path.join(
+                os.environ['CONDA_PREFIX'],
+                'lib',
+                'pkgconfig'
+            ) + ':' + os.environ.get('PKG_CONFIG_PATH', '')
+
+        includes = subprocess.check_output([PKGCONFIG, '--cflags-only-I', 'libsecp256k1'])  # noqa S603
         includes = includes.strip().decode('utf-8')
 
         return os.path.exists(os.path.join(includes[2:], 'secp256k1_ecdh.h'))
 
     except (OSError, subprocess.CalledProcessError):
         if 'LIB_DIR' in os.environ:
+            from cffi import FFI
+
             for path in glob.glob(os.path.join(os.environ['LIB_DIR'], '*secp256k1*')):
                 with suppress(OSError):
                     FFI().dlopen(path)

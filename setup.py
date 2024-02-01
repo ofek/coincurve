@@ -300,8 +300,7 @@ class BuildCFFIForSharedLib(_BuildCFFI):
     def update_link_args(self, libraries, libraries_dirs, extra_link_args):
         if self.compiler.__class__.__name__ == 'UnixCCompiler':
             extra_link_args.extend([f'-l{lib}' for lib in libraries])
-            logging.info(f'  Link args:{extra_link_args}')
-            if os.name == 'darwin':
+            if sys.platform == 'darwin':
                 # It seems that the syntax may be: -Wl,-rpath,@loader_path/lib
                 extra_link_args.extend([
                     '-Wl,-rpath-link,$ORIGIN/lib',
@@ -313,6 +312,12 @@ class BuildCFFIForSharedLib(_BuildCFFI):
                     '-Wl,-rpath,$ORIGIN/lib',
                     '-Wl,-rpath,$ORIGIN/lib64',
                 ])
+            # logging.info("\n\n\n")
+            # logging.info(f'   DBG: Link args: {extra_link_args}')
+            # logging.info(f'   DBG: Link args: {os.name}')
+            # logging.info(f'   DBG: Link args: {sys.platform}')
+            # logging.info("\n\n\n")
+            # raise NotImplementedError('update_link_args')
         elif self.compiler.__class__.__name__ == 'MSVCCompiler':
             # This section is not used yet since we still cross-compile on Windows
             # TODO: write the windows native build here when finalized

@@ -32,14 +32,6 @@ UPSTREAM_REF = os.getenv('COINCURVE_UPSTREAM_TAG') or '1ad5185cd42c0636104129fcc
 
 LIB_TARBALL_URL = f'https://github.com/bitcoin-core/secp256k1/archive/{UPSTREAM_REF}.tar.gz'
 
-# We require setuptools >= 3.3
-if [int(i) for i in setuptools_version.split('.', 2)[:2]] < [3, 3]:
-    raise SystemExit(
-        f'Your setuptools version ({setuptools_version}) is too old to correctly install this package. Please upgrade '
-        f'to a newer version (>= 3.3).'
-    )
-
-
 class EggInfo(egg_info.egg_info):
     def run(self):
         # Ensure library has been downloaded (sdist might have been skipped)

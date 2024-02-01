@@ -56,6 +56,8 @@ def build_flags(library, type_, path='.'):
     options = {'I': '--cflags-only-I', 'L': '--libs-only-L', 'l': '--libs-only-l'}
     env = dict(os.environ, PKG_CONFIG_PATH=':'.join(pkg_config_path))
     logging.info(f'\n\n\npkg-config path: {env["PKG_CONFIG_PATH"]}\n\n\n')
+    logging.info(f'{path}\n\n\n')
+    logging.info(f'{os.path.isfile(os.path.join(path, "libsecp256k1.pc"))}\n\n\n')
     flags = subprocess.check_output(['pkg-config', options[type_], library], env=env)  # noqa S603
     flags = list(flags.decode('UTF-8').split())
 

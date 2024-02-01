@@ -140,6 +140,13 @@ class BuildClibWithCmake(build_clib.build_clib):
             os.chdir(cwd)
 
         self.pkgconfig_dir = os.path.join(install_dir, 'lib', 'pkgconfig')
+        os.environ['PKG_CONFIG_PATH'] = f'{self.pkgconfig_dir}:{os.environ.get("PKG_CONFIG_PATH", "")}'
+
+        logging.info('Debug info\n\n\n')
+        logging.info(f'DBG:   {install_dir}')
+        logging.info(f'DBG:   pkg-config path: {os.environ["PKG_CONFIG_PATH"]}')
+        logging.info(f'DBG:   {os.path.isfile(os.path.join(install_dir, "lib", "pkgconfig", "libsecp256k1.pc"))}')
+        logging.info('\n\n\n')
 
         logging.info('build_clib: Done')
 

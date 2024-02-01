@@ -4,7 +4,6 @@ import os.path
 import pathlib
 import platform
 import shutil
-import subprocess
 import sys
 
 from setuptools import Distribution as _Distribution, setup, find_packages
@@ -31,6 +30,7 @@ MAKE = 'gmake' if platform.system() in ['FreeBSD', 'OpenBSD'] else 'make'
 UPSTREAM_REF = os.getenv('COINCURVE_UPSTREAM_TAG') or '1ad5185cd42c0636104129fcc9f6a4bf9c67cc40'
 
 LIB_TARBALL_URL = f'https://github.com/bitcoin-core/secp256k1/archive/{UPSTREAM_REF}.tar.gz'
+
 
 class EggInfo(egg_info.egg_info):
     def run(self):
@@ -93,7 +93,7 @@ class BuildClibWithCmake(build_clib.build_clib):
             logging.info('Using system library')
             return
 
-        logging.info('SECP256K1 C library build (make):')
+        logging.info('SECP256K1 C library build (CMake):')
 
         cwd = pathlib.Path().cwd()
         build_temp = os.path.abspath(self.build_temp)
@@ -120,9 +120,9 @@ class BuildClibWithCmake(build_clib.build_clib):
             '-DSECP256K1_ENABLE_MODULE_EXTRAKEYS=ON',
         ]
 
-        if (xhost := os.environ.get('COINCURVE_CROSS_HOST')) is not None:
+        if (x_host := os.environ.get('COINCURVE_CROSS_HOST')) is not None:
             cmake_args.append(
-                f'-DCMAKE_TOOLCHAIN_FILE=../cmake/{xhost}.toolchain.cmake'
+                f'-DCMAKE_TOOLCHAIN_FILE=../cmake/{x_host}.toolchain.cmake'
             )
 
         # Keep downloaded source dir pristine (hopefully)
@@ -271,7 +271,7 @@ class _BuildCFFI(_BuildExtensionFromCFFI):
         build_script = os.path.join('_cffi_build', 'build.py')
         for c_file in ext.sources:
             cmd = [sys.executable, build_script, c_file, '1' if self.static_lib else '0']
-            subprocess.run(cmd, shell=False, check=True)  # noqa S603
+            execute_command_with_temp_log(cmd)
 
         super().build_extension(ext)
 

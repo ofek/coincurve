@@ -306,7 +306,7 @@ class BuildCFFIForSharedLib(_BuildCFFI):
                 extra_link_args.extend([
                     '-Wl,-rpath-link,$ORIGIN/lib',
                     f'-Wl,-rpath,{self.build_lib}/lib',
-                    f'-Wl,-rpath,@loader_path/lib',
+                    '-Wl,-rpath,@loader_path/lib',
                 ])
             else:
                 extra_link_args.extend([

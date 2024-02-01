@@ -141,10 +141,14 @@ def download_library(command):
             raise SystemExit('Unable to download secp256k1 library: %s', str(e)) from e
 
 
-def execute_command_with_temp_log(cmd, cwd=None):
+def execute_command_with_temp_log(cmd, cwd=None, debug=False):
     with tempfile.NamedTemporaryFile(mode='w+') as temp_log:
         try:
             subprocess.check_call(cmd, stdout=temp_log, stderr=temp_log, cwd=cwd)  # noqa S603
+            if debug:
+                temp_log.seek(0)
+                log_contents = temp_log.read()
+                logging.debug(f'Command log:\n{log_contents}')
         except subprocess.CalledProcessError as e:
             logging.error(f'An error occurred during the command execution: {e}')
             temp_log.seek(0)

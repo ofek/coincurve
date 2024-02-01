@@ -126,13 +126,14 @@ class BuildClibWithCmake(build_clib.build_clib):
         ]
 
         if (x_host := os.environ.get('COINCURVE_CROSS_HOST')) is not None:
-            if os.name == 'darwin':
+            logging.info(f'Cross-compiling for {x_host}:{os.name}')
+            if platform.system() == 'Darwin' or platform.machine() == 'arm64':
                 # Let's try to not cross-compile on MacOS
                 cmake_args.append(
                     '-DCMAKE_OSX_ARCHITECTURES=arm64'
                 )
-                raise RuntimeError('Cross-compiling on MacOS is not supported')
             else:
+                # Note, only 2 toolchain files are provided (2/1/24)
                 cmake_args.append(
                     f'-DCMAKE_TOOLCHAIN_FILE=../cmake/{x_host}.toolchain.cmake'
                 )
@@ -301,9 +302,11 @@ class BuildCFFIForSharedLib(_BuildCFFI):
             extra_link_args.extend([f'-l{lib}' for lib in libraries])
             logging.info(f'  Link args:{extra_link_args}')
             if os.name == 'darwin':
+                # It seems that the syntax may be: -Wl,-rpath,@loader_path/lib
                 extra_link_args.extend([
                     '-Wl,-rpath-link,$ORIGIN/lib',
-                    f'-Wl,-rpath,{self.build_lib}/lib64',
+                    f'-Wl,-rpath,{self.build_lib}/lib',
+                    f'-Wl,-rpath,@loader_path/lib',
                 ])
             else:
                 extra_link_args.extend([

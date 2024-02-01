@@ -128,11 +128,11 @@ class BuildClibWithCmake(build_clib.build_clib):
         # Keep downloaded source dir pristine (hopefully)
         try:
             os.chdir(build_temp)
-            logging.info('    cmkae config')
-            execute_command_with_temp_log(['cmake', lib_src, *cmake_args])
+            logging.info('    cmake config')
+            execute_command_with_temp_log(['cmake', '-S', lib_src, '-B', '.', *cmake_args])
 
             logging.info('    cmake build')
-            execute_command_with_temp_log(['cmake', '--build', '.'])
+            execute_command_with_temp_log(['cmake', '--build', '.'], debug=True)
 
             logging.info('    cmake install')
             execute_command_with_temp_log(['cmake', '--install', '.'], debug=True)
@@ -142,7 +142,7 @@ class BuildClibWithCmake(build_clib.build_clib):
         self.pkgconfig_dir = os.path.join(install_dir, 'lib', 'pkgconfig')
         os.environ['PKG_CONFIG_PATH'] = f'{self.pkgconfig_dir}:{os.environ.get("PKG_CONFIG_PATH", "")}'
 
-        logging.info('Debug info\n\n\n')
+        logging.info('\n\n\nDebug info')
         logging.info(f'DBG:   {install_dir}')
         logging.info(f'DBG:   pkg-config path: {os.environ["PKG_CONFIG_PATH"]}')
         logging.info(f'DBG:   {os.path.isfile(os.path.join(install_dir, "lib", "pkgconfig", "libsecp256k1.pc"))}')

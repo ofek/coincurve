@@ -125,12 +125,11 @@ class BuildClibWithCmake(build_clib.build_clib):
                 f'-DCMAKE_TOOLCHAIN_FILE=../cmake/{x_host}.toolchain.cmake'
             )
 
-        # Keep downloaded source dir pristine (hopefully)
+        logging.info('    cmake config')
+        execute_command_with_temp_log(['cmake', '-S', lib_src, '-B', build_temp, *cmake_args], debug=True)
+
         try:
             os.chdir(build_temp)
-            logging.info('    cmake config')
-            execute_command_with_temp_log(['cmake', '-S', lib_src, '-B', '.', *cmake_args])
-
             logging.info('    cmake build')
             execute_command_with_temp_log(['cmake', '--build', '.'], debug=True)
 

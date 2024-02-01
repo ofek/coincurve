@@ -148,7 +148,7 @@ def execute_command_with_temp_log(cmd, cwd=None, debug=False):
             if debug:
                 temp_log.seek(0)
                 log_contents = temp_log.read()
-                logging.debug(f'Command log:\n{log_contents}')
+                logging.info(f'Command log:\n{log_contents}')
         except subprocess.CalledProcessError as e:
             logging.error(f'An error occurred during the command execution: {e}')
             temp_log.seek(0)

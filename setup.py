@@ -129,7 +129,7 @@ class BuildClibWithCmake(build_clib.build_clib):
             if os.name == 'darwin':
                 # Let's try to not cross-compile on MacOS
                 cmake_args.append(
-                    f'-DCMAKE_OSX_ARCHITECTURES=arm64'
+                    '-DCMAKE_OSX_ARCHITECTURES=arm64'
                 )
                 raise RuntimeError('Cross-compiling on MacOS is not supported')
             else:

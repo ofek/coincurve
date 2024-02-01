@@ -73,11 +73,11 @@ def _find_lib():
 
         # Update the environment CONDA_PREFIX to the current environment
         if 'CONDA_PREFIX' in os.environ:
-            os.environ['PKG_CONFIG_PATH'] = os.path.join(
-                os.environ['CONDA_PREFIX'],
-                'lib',
-                'pkgconfig'
-            ) + ':' + os.environ.get('PKG_CONFIG_PATH', '')
+            os.environ['PKG_CONFIG_PATH'] = (
+                os.path.join(os.environ['CONDA_PREFIX'], 'lib', 'pkgconfig')
+                + ':'
+                + os.environ.get('PKG_CONFIG_PATH', '')
+            )
 
         includes = subprocess.check_output([PKGCONFIG, '--cflags-only-I', 'libsecp256k1'])  # noqa S603
         includes = includes.strip().decode('utf-8')

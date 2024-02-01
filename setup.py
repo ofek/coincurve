@@ -241,7 +241,7 @@ class BuildClib(build_clib.build_clib):
 class _BuildExtensionFromCFFI(build_ext.build_ext):
     static_lib = None
 
-    def update_link_args(self, libraries, libraries_dirs, extra_link_args, pkg_dir):
+    def update_link_args(self, libraries, libraries_dirs, extra_link_args):
         raise NotImplementedError('update_link_args')
 
     def build_extension(self, ext):
@@ -256,20 +256,16 @@ class _BuildExtensionFromCFFI(build_ext.build_ext):
         # Enforce API interface
         ext.py_limited_api = False
 
-        pkg_dir = '.'  # default to local build (just to initialize the path passed to build_flags)
-        if hasattr(b := self.get_finalized_command('build_clib'), 'pkgconfig_dir'):
-            # Locally built C-lib
-            pkg_dir = b.pkgconfig_dir
+        # PKG_CONFIG_PATH is updated by build_clib if built locally
+        ext.include_dirs.extend(build_flags('libsecp256k1', 'I'))
+        ext.library_dirs.extend(build_flags('libsecp256k1', 'L'))
 
-        ext.include_dirs.extend(build_flags('libsecp256k1', 'I', pkg_dir))
-        ext.library_dirs.extend(build_flags('libsecp256k1', 'L', pkg_dir))
-
-        libraries = build_flags('libsecp256k1', 'l', pkg_dir)
+        libraries = build_flags('libsecp256k1', 'l')
         logging.info(f'  Libraries:{libraries}')
 
         # We do not set ext.libraries, this would add the default link instruction
         # Instead, we use extra_link_args to customize the link command
-        self.update_link_args(libraries, ext.library_dirs, ext.extra_link_args, pkg_dir)
+        self.update_link_args(libraries, ext.library_dirs, ext.extra_link_args)
 
         super().build_extension(ext)
 
@@ -292,7 +288,7 @@ class _BuildCFFI(_BuildExtensionFromCFFI):
 class BuildCFFIForSharedLib(_BuildCFFI):
     static_lib = False
 
-    def update_link_args(self, libraries, libraries_dirs, extra_link_args, pkg_dir):
+    def update_link_args(self, libraries, libraries_dirs, extra_link_args):
         if self.compiler.__class__.__name__ == 'UnixCCompiler':
             extra_link_args.extend([f'-l{lib}' for lib in libraries])
             extra_link_args.extend(['-Wl,-rpath,$ORIGIN/lib'])
@@ -307,7 +303,7 @@ class BuildCFFIForSharedLib(_BuildCFFI):
 class BuildCFFIForStaticLib(_BuildCFFI):
     static_lib = True
 
-    def update_link_args(self, libraries, libraries_dirs, extra_link_args, pkg_dir):
+    def update_link_args(self, libraries, libraries_dirs, extra_link_args):
         if self.compiler.__class__.__name__ == 'UnixCCompiler':
             # It is possible that the library was compiled without fPIC option
             for lib in libraries:
@@ -330,7 +326,7 @@ class BuildCFFIForStaticLib(_BuildCFFI):
             raise NotImplementedError(f'Unsupported compiler: {self.compiler.__class__.__name__}')
 
 
-package_data = {'coincurve': ['py.typed', 'lib/libsecp256k1.*']}
+package_data = {'coincurve': ['py.typed']}
 
 extension = Extension(
     name='coincurve._libsecp256k1',

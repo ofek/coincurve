@@ -5,6 +5,7 @@ import pathlib
 import platform
 import shutil
 import sys
+import sysconfig
 
 from setuptools import Distribution as _Distribution, setup, find_packages
 from setuptools.command import build_clib, build_ext, develop, dist_info, egg_info, sdist
@@ -23,6 +24,9 @@ from setup_support import absolute_from_setup_dir, build_flags, detect_dll, down
 BUILDING_FOR_WINDOWS = detect_dll()
 
 MAKE = 'gmake' if platform.system() in ['FreeBSD', 'OpenBSD'] else 'make'
+
+logging.info(sysconfig.get_config_var('CC'))
+logging.info(sysconfig.get_config_var('CFLAGS'))
 
 # IMPORTANT: keep in sync with .github/workflows/build.yml
 #
@@ -125,27 +129,30 @@ class BuildClibWithCmake(build_clib.build_clib):
                 f'-DCMAKE_TOOLCHAIN_FILE=../cmake/{x_host}.toolchain.cmake'
             )
 
+        elif os.name == 'nt':
+            # For windows, select the correct toolchain file
+            cmake_args.append(
+                '-G "Visual Studio 16 2019" -A x64'
+            )
+
         logging.info('    cmake config')
-        execute_command_with_temp_log(['cmake', '-S', lib_src, '-B', build_temp, *cmake_args], debug=True)
+        execute_command_with_temp_log(['cmake', '-S', lib_src, '-B', build_temp, *cmake_args])
 
         try:
             os.chdir(build_temp)
             logging.info('    cmake build')
-            execute_command_with_temp_log(['cmake', '--build', '.'], debug=True)
+            execute_command_with_temp_log(['cmake', '--build', '.'])
 
             logging.info('    cmake install')
-            execute_command_with_temp_log(['cmake', '--install', '.'], debug=True)
+            execute_command_with_temp_log(['cmake', '--install', '.'])
         finally:
             os.chdir(cwd)
 
-        self.pkgconfig_dir = os.path.join(install_dir, 'lib', 'pkgconfig')
-        os.environ['PKG_CONFIG_PATH'] = f'{self.pkgconfig_dir}:{os.environ.get("PKG_CONFIG_PATH", "")}'
-
-        logging.info('\n\n\nDebug info')
-        logging.info(f'DBG:   {install_dir}')
-        logging.info(f'DBG:   pkg-config path: {os.environ["PKG_CONFIG_PATH"]}')
-        logging.info(f'DBG:   {os.path.isfile(os.path.join(install_dir, "lib", "pkgconfig", "libsecp256k1.pc"))}')
-        logging.info('\n\n\n')
+        self.pkgconfig_dir = [
+            os.path.join(install_dir, 'lib', 'pkgconfig'),
+            os.path.join(install_dir, 'lib64', 'pkgconfig'),
+        ]
+        os.environ['PKG_CONFIG_PATH'] = f'{":".join(self.pkgconfig_dir)}:{os.environ.get("PKG_CONFIG_PATH", "")}'
 
         logging.info('build_clib: Done')
 

@@ -5,7 +5,6 @@ import pathlib
 import platform
 import shutil
 import sys
-import sysconfig
 
 from setuptools import Distribution as _Distribution, setup, find_packages
 from setuptools.command import build_clib, build_ext, develop, dist_info, egg_info, sdist

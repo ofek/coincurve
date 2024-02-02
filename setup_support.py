@@ -137,7 +137,7 @@ def download_library(command):
                     content.seek(0)
                     with tarfile.open(fileobj=content) as tf:
                         dirname = tf.getnames()[0].partition('/')[0]
-                        tf.extractall()
+                        tf.extractall()  # noqa S202
                     shutil.move(dirname, libdir)
                 else:
                     raise SystemExit('Unable to download secp256k1 library: HTTP-Status: %d', status_code)

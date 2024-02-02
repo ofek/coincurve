@@ -1,4 +1,5 @@
 import glob
+import hashlib
 import logging
 import os
 import shutil
@@ -74,9 +75,9 @@ def _find_lib():
         # Update the environment CONDA_PREFIX to the current environment
         if 'CONDA_PREFIX' in os.environ:
             os.environ['PKG_CONFIG_PATH'] = (
-                os.path.join(os.environ['CONDA_PREFIX'], 'lib', 'pkgconfig')
-                + ':'
-                + os.environ.get('PKG_CONFIG_PATH', '')
+                    os.path.join(os.environ['CONDA_PREFIX'], 'lib', 'pkgconfig')
+                    + ':'
+                    + os.environ.get('PKG_CONFIG_PATH', '')
             )
 
         includes = subprocess.check_output([PKGCONFIG, '--cflags-only-I', 'libsecp256k1'])  # noqa S603
@@ -114,37 +115,97 @@ def detect_dll():
     return False
 
 
-def download_library(command):
+# def download_library(command):
+#     if command.dry_run:
+#         return
+#
+#     libdir = absolute_from_setup_dir('libsecp256k1')
+#     if os.path.exists(os.path.join(libdir, 'autogen.sh')):
+#         # Library already downloaded
+#         return
+#     if not os.path.exists(libdir):
+#         logging.info('downloading libsecp256k1 source code')
+#         try:
+#             import requests
+#
+#             try:
+#                 from setup import LIB_TARBALL_URL
+#
+#                 r = requests.get(LIB_TARBALL_URL, stream=True, timeout=10)
+#                 status_code = r.status_code
+#                 if status_code == 200:
+#                     content = BytesIO(r.raw.read())
+#                     content.seek(0)
+#                     with tarfile.open(fileobj=content) as tf:
+#                         dirname = tf.getnames()[0].partition('/')[0]
+#                         tf.extractall()  # noqa S202
+#                     shutil.move(dirname, libdir)
+#                 else:
+#                     raise SystemExit('Unable to download secp256k1 library: HTTP-Status: %d', status_code)
+#             except requests.exceptions.RequestException as e:
+#                 raise SystemExit('Unable to download secp256k1 library: %s', str(e)) from e
+#         except ImportError as e:
+#             raise SystemExit('Unable to download secp256k1 library: %s', str(e)) from e
+
+
+def download_library(command, libdir='libsecp256k1', force=False):
     if command.dry_run:
         return
 
-    libdir = absolute_from_setup_dir('libsecp256k1')
-    if os.path.exists(os.path.join(libdir, 'autogen.sh')):
+    if force:
+        shutil.rmtree(libdir, ignore_errors=True)
+
+    if os.path.exists(os.path.join(libdir, 'autogen.sh')) or os.path.exists(os.path.join(libdir, 'libsecp256k1.pc')):
         # Library already downloaded
         return
-    if not os.path.exists(libdir):
-        logging.info('downloading libsecp256k1 source code')
-        try:
-            import requests
 
-            try:
-                from setup import LIB_TARBALL_URL
+    # Ensure the path exists
+    os.makedirs(libdir, exist_ok=True)
 
-                r = requests.get(LIB_TARBALL_URL, stream=True, timeout=10)
-                status_code = r.status_code
-                if status_code == 200:
-                    content = BytesIO(r.raw.read())
-                    content.seek(0)
-                    with tarfile.open(fileobj=content) as tf:
-                        dirname = tf.getnames()[0].partition('/')[0]
-                        tf.extractall()  # noqa S202
-                    shutil.move(dirname, libdir)
-                else:
-                    raise SystemExit('Unable to download secp256k1 library: HTTP-Status: %d', status_code)
-            except requests.exceptions.RequestException as e:
-                raise SystemExit('Unable to download secp256k1 library: %s', str(e)) from e
-        except ImportError as e:
-            raise SystemExit('Unable to download secp256k1 library: %s', str(e)) from e
+    # _download will use shutil.move, thus remove the directory
+    os.rmdir(libdir)
+
+    logging.info(f'Downloading {libdir} source code')
+
+    from requests.exceptions import RequestException
+
+    try:
+        _download_library(libdir)
+    except RequestException as e:
+        raise SystemExit(
+            f'Unable to download {libdir} library: {e!s}',
+        ) from e
+
+
+def _download_library(libdir):
+    import requests
+    from setup import LIB_TARBALL_URL, LIB_TARBALL_HASH, UPSTREAM_REF
+
+    r = requests.get(LIB_TARBALL_URL, stream=True, timeout=10, verify=True)
+    status_code = r.status_code
+    if status_code != 200:
+        raise SystemExit(f'Unable to download {libdir} library: HTTP-Status: {status_code}')
+
+    content = BytesIO(r.raw.read())
+    content.seek(0)
+
+    # Verify the integrity of the downloaded library
+    sha256_hash = hashlib.sha256(content.getvalue()).hexdigest()
+    if sha256_hash != LIB_TARBALL_HASH:
+        raise SystemExit(f'Integrity check failed for {libdir}{sha256_hash} library: Hash mismatch')
+
+    # Write the content to a file
+    with open(f'{UPSTREAM_REF}.tar.gz', 'wb') as f:
+        f.write(content.getvalue())
+
+    with tarfile.open(f'{UPSTREAM_REF}.tar.gz') as tf:
+        # Limit the extraction to a specific directory
+        tf.extractall()
+
+        # Move the extracted directory to the desired location
+        extracted_dir = tf.getnames()[0].partition('/')[0]
+
+    shutil.move(extracted_dir, libdir)
 
 
 def execute_command_with_temp_log(cmd, cwd=None, debug=False):

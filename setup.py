@@ -33,8 +33,10 @@ logging.info(sysconfig.get_config_var('CFLAGS'))
 #
 # Version of libsecp256k1 to download if none exists in the `libsecp256k1` directory
 UPSTREAM_REF = os.getenv('COINCURVE_UPSTREAM_TAG') or '1ad5185cd42c0636104129fcc9f6a4bf9c67cc40'
+UPSTREAM_HSH = os.getenv('COINCURVE_UPSTREAM_HSH') or 'ba34be4319f505c5766aa80b99cfa696cbb2993bfecf7d7eb8696106c493cb8c'
 
 LIB_TARBALL_URL = f'https://github.com/bitcoin-core/secp256k1/archive/{UPSTREAM_REF}.tar.gz'
+LIB_TARBALL_HASH = f'{UPSTREAM_HSH}'
 
 
 class EggInfo(egg_info.egg_info):
@@ -311,12 +313,6 @@ class BuildCFFIForSharedLib(_BuildCFFI):
                     '-Wl,-rpath,$ORIGIN/lib',
                     '-Wl,-rpath,$ORIGIN/lib64',
                 ])
-            # logging.info("\n\n\n")
-            # logging.info(f'   DBG: Link args: {extra_link_args}')
-            # logging.info(f'   DBG: Link args: {os.name}')
-            # logging.info(f'   DBG: Link args: {sys.platform}')
-            # logging.info("\n\n\n")
-            # raise NotImplementedError('update_link_args')
         elif self.compiler.__class__.__name__ == 'MSVCCompiler':
             # This section is not used yet since we still cross-compile on Windows
             # TODO: write the windows native build here when finalized

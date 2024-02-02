@@ -303,8 +303,8 @@ class BuildCFFIForSharedLib(_BuildCFFI):
             if sys.platform == 'darwin':
                 # It seems that the syntax may be: -Wl,-rpath,@loader_path/lib
                 extra_link_args.extend([
-                    f'-Wl,-rpath,{self.build_lib}/lib',
-                    # '-Wl,-rpath,@loader_path/lib',
+                    # f'-Wl,-rpath,{self.build_lib}/lib',
+                    '-Wl,-rpath,@loader_path/lib',
                 ])
             else:
                 extra_link_args.extend([

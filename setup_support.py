@@ -75,9 +75,9 @@ def _find_lib():
         # Update the environment CONDA_PREFIX to the current environment
         if 'CONDA_PREFIX' in os.environ:
             os.environ['PKG_CONFIG_PATH'] = (
-                os.path.join(os.environ['CONDA_PREFIX'], 'lib', 'pkgconfig')
-                + ':'
-                + os.environ.get('PKG_CONFIG_PATH', '')
+                    os.path.join(os.environ['CONDA_PREFIX'], 'lib', 'pkgconfig')
+                    + ':'
+                    + os.environ.get('PKG_CONFIG_PATH', '')
             )
 
         includes = subprocess.check_output([PKGCONFIG, '--cflags-only-I', 'libsecp256k1'])  # noqa S603
@@ -144,10 +144,18 @@ def download_library(command, lib_dir='libsecp256k1', force=False):
         ) from e
 
 
-def _download_library(lib_dir):
+def _download_library(lib_dir=None):
     import requests
 
-    from setup import LIB_TARBALL_HASH, LIB_TARBALL_URL, UPSTREAM_REF, TAR_NAME
+    from setup import LIB_NAME, LIB_TARBALL_HASH, LIB_TARBALL_URL, TAR_NAME, UPSTREAM_REF
+
+    if lib_dir is None:
+        lib_dir = LIB_NAME
+        try:
+            os.makedirs(lib_dir)
+        except OSError:
+            logging.info(f'Library directory {lib_dir} already exists')
+            return
 
     r = requests.get(LIB_TARBALL_URL, stream=True, timeout=10, verify=True)
     status_code = r.status_code
@@ -169,12 +177,10 @@ def _download_library(lib_dir):
     with tarfile.open(f'{UPSTREAM_REF}.tar.gz') as tf:
         for member in tf.getmembers():
             if member.name.startswith(f'{TAR_NAME}/'):
-                tf.extract(member)
+                member.name = member.name[len(f'{TAR_NAME}/'):]
+                tf.extract(member, path=lib_dir)
 
-        # Move the extracted directory to the desired location
-        extracted_dir = tf.getnames()[0].partition('/')[0]
-
-    shutil.move(extracted_dir, lib_dir)
+    os.remove(f'{UPSTREAM_REF}.tar.gz')
 
 
 def execute_command_with_temp_log(cmd, cwd=None, debug=False):

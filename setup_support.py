@@ -175,9 +175,10 @@ def _download_library(lib_dir=None):
         f.write(content.getvalue())
 
     with tarfile.open(f'{UPSTREAM_REF}.tar.gz') as tf:
+        prefix, prefix_length = f'{TAR_NAME}/', len(f'{TAR_NAME}/')
         for member in tf.getmembers():
-            if member.name.startswith(f'{TAR_NAME}/'):
-                member.name = member.name[len(f'{TAR_NAME}/'):]
+            if member.name.startswith(prefix):
+                member.name = member.name[prefix_length:]
                 tf.extract(member, path=lib_dir)
 
     os.remove(f'{UPSTREAM_REF}.tar.gz')

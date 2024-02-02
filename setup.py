@@ -26,9 +26,6 @@ BUILDING_FOR_WINDOWS = detect_dll()
 MAKE = 'gmake' if platform.system() in ['FreeBSD', 'OpenBSD'] else 'make'
 PKGCONFIG = shutil.which('pkg-config')
 
-logging.info(sysconfig.get_config_var('CC'))
-logging.info(sysconfig.get_config_var('CFLAGS'))
-
 # IMPORTANT: keep in sync with .github/workflows/build.yml
 #
 # Version of libsecp256k1 to download if none exists in the `libsecp256k1` directory
@@ -40,6 +37,7 @@ LIB_TARBALL_HASH = f'{UPSTREAM_HSH}'
 
 TAR_NAME = f'secp256k1-{UPSTREAM_REF}'
 LIB_NAME = 'libsecp256k1'
+
 
 class EggInfo(egg_info.egg_info):
     def run(self):

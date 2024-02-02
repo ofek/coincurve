@@ -115,69 +115,36 @@ def detect_dll():
     return False
 
 
-# def download_library(command):
-#     if command.dry_run:
-#         return
-#
-#     libdir = absolute_from_setup_dir('libsecp256k1')
-#     if os.path.exists(os.path.join(libdir, 'autogen.sh')):
-#         # Library already downloaded
-#         return
-#     if not os.path.exists(libdir):
-#         logging.info('downloading libsecp256k1 source code')
-#         try:
-#             import requests
-#
-#             try:
-#                 from setup import LIB_TARBALL_URL
-#
-#                 r = requests.get(LIB_TARBALL_URL, stream=True, timeout=10)
-#                 status_code = r.status_code
-#                 if status_code == 200:
-#                     content = BytesIO(r.raw.read())
-#                     content.seek(0)
-#                     with tarfile.open(fileobj=content) as tf:
-#                         dirname = tf.getnames()[0].partition('/')[0]
-#                         tf.extractall()  # S202
-#                     shutil.move(dirname, libdir)
-#                 else:
-#                     raise SystemExit('Unable to download secp256k1 library: HTTP-Status: %d', status_code)
-#             except requests.exceptions.RequestException as e:
-#                 raise SystemExit('Unable to download secp256k1 library: %s', str(e)) from e
-#         except ImportError as e:
-#             raise SystemExit('Unable to download secp256k1 library: %s', str(e)) from e
-
-
-def download_library(command, libdir='libsecp256k1', force=False):
+def download_library(command, lib_dir='libsecp256k1', force=False):
     if command.dry_run:
         return
 
     if force:
-        shutil.rmtree(libdir, ignore_errors=True)
+        shutil.rmtree(lib_dir, ignore_errors=True)
 
-    if os.path.exists(os.path.join(libdir, 'autogen.sh')) or os.path.exists(os.path.join(libdir, 'libsecp256k1.pc')):
+    if os.path.exists(os.path.join(lib_dir, 'autogen.sh')) or os.path.exists(os.path.join(lib_dir, 'libsecp256k1.pc')):
         # Library already downloaded
         return
 
     # Ensure the path exists
-    os.makedirs(libdir, exist_ok=True)
+    os.makedirs(lib_dir, exist_ok=True)
 
     # _download will use shutil.move, thus remove the directory
-    os.rmdir(libdir)
+    os.rmdir(lib_dir)
 
-    logging.info(f'Downloading {libdir} source code')
+    logging.info(f'Downloading {lib_dir} source code')
 
     from requests.exceptions import RequestException
 
     try:
-        _download_library(libdir)
+        _download_library(lib_dir)
     except RequestException as e:
         raise SystemExit(
-            f'Unable to download {libdir} library: {e!s}',
+            f'Unable to download {lib_dir} library: {e!s}',
         ) from e
 
 
-def _download_library(libdir):
+def _download_library(lib_dir):
     import requests
 
     from setup import LIB_TARBALL_HASH, LIB_TARBALL_URL, UPSTREAM_REF
@@ -185,7 +152,7 @@ def _download_library(libdir):
     r = requests.get(LIB_TARBALL_URL, stream=True, timeout=10, verify=True)
     status_code = r.status_code
     if status_code != 200:
-        raise SystemExit(f'Unable to download {libdir} library: HTTP-Status: {status_code}')
+        raise SystemExit(f'Unable to download {lib_dir} library: HTTP-Status: {status_code}')
 
     content = BytesIO(r.raw.read())
     content.seek(0)
@@ -193,7 +160,7 @@ def _download_library(libdir):
     # Verify the integrity of the downloaded library
     sha256_hash = hashlib.sha256(content.getvalue()).hexdigest()
     if sha256_hash != LIB_TARBALL_HASH:
-        raise SystemExit(f'Integrity check failed for {libdir}{sha256_hash} library: Hash mismatch')
+        raise SystemExit(f'Integrity check failed for {lib_dir}{sha256_hash} library: Hash mismatch')
 
     # Write the content to a file
     with open(f'{UPSTREAM_REF}.tar.gz', 'wb') as f:
@@ -206,7 +173,7 @@ def _download_library(libdir):
         # Move the extracted directory to the desired location
         extracted_dir = tf.getnames()[0].partition('/')[0]
 
-    shutil.move(extracted_dir, libdir)
+    shutil.move(extracted_dir, lib_dir)
 
 
 def execute_command_with_temp_log(cmd, cwd=None, debug=False):

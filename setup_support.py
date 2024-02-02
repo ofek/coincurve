@@ -75,9 +75,9 @@ def _find_lib():
         # Update the environment CONDA_PREFIX to the current environment
         if 'CONDA_PREFIX' in os.environ:
             os.environ['PKG_CONFIG_PATH'] = (
-                    os.path.join(os.environ['CONDA_PREFIX'], 'lib', 'pkgconfig')
-                    + ':'
-                    + os.environ.get('PKG_CONFIG_PATH', '')
+                os.path.join(os.environ['CONDA_PREFIX'], 'lib', 'pkgconfig')
+                + ':'
+                + os.environ.get('PKG_CONFIG_PATH', '')
             )
 
         includes = subprocess.check_output([PKGCONFIG, '--cflags-only-I', 'libsecp256k1'])  # noqa S603
@@ -138,7 +138,7 @@ def detect_dll():
 #                     content.seek(0)
 #                     with tarfile.open(fileobj=content) as tf:
 #                         dirname = tf.getnames()[0].partition('/')[0]
-#                         tf.extractall()  # noqa S202
+#                         tf.extractall()  # S202
 #                     shutil.move(dirname, libdir)
 #                 else:
 #                     raise SystemExit('Unable to download secp256k1 library: HTTP-Status: %d', status_code)
@@ -179,7 +179,8 @@ def download_library(command, libdir='libsecp256k1', force=False):
 
 def _download_library(libdir):
     import requests
-    from setup import LIB_TARBALL_URL, LIB_TARBALL_HASH, UPSTREAM_REF
+
+    from setup import LIB_TARBALL_HASH, LIB_TARBALL_URL, UPSTREAM_REF
 
     r = requests.get(LIB_TARBALL_URL, stream=True, timeout=10, verify=True)
     status_code = r.status_code
@@ -200,7 +201,7 @@ def _download_library(libdir):
 
     with tarfile.open(f'{UPSTREAM_REF}.tar.gz') as tf:
         # Limit the extraction to a specific directory
-        tf.extractall()
+        tf.extractall(filter='data')
 
         # Move the extracted directory to the desired location
         extracted_dir = tf.getnames()[0].partition('/')[0]

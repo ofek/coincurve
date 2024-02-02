@@ -147,7 +147,7 @@ def download_library(command, lib_dir='libsecp256k1', force=False):
 def _download_library(lib_dir):
     import requests
 
-    from setup import LIB_TARBALL_HASH, LIB_TARBALL_URL, UPSTREAM_REF
+    from setup import LIB_TARBALL_HASH, LIB_TARBALL_URL, UPSTREAM_REF, TAR_NAME
 
     r = requests.get(LIB_TARBALL_URL, stream=True, timeout=10, verify=True)
     status_code = r.status_code
@@ -167,8 +167,9 @@ def _download_library(lib_dir):
         f.write(content.getvalue())
 
     with tarfile.open(f'{UPSTREAM_REF}.tar.gz') as tf:
-        # Limit the extraction to a specific directory
-        tf.extractall(filter='data')
+        for member in tf.getmembers():
+            if member.name.startswith(f'{TAR_NAME}/'):
+                tf.extract(member)
 
         # Move the extracted directory to the desired location
         extracted_dir = tf.getnames()[0].partition('/')[0]

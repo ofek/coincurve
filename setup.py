@@ -38,6 +38,8 @@ UPSTREAM_HSH = os.getenv('COINCURVE_UPSTREAM_HSH') or 'ba34be4319f505c5766aa80b9
 LIB_TARBALL_URL = f'https://github.com/bitcoin-core/secp256k1/archive/{UPSTREAM_REF}.tar.gz'
 LIB_TARBALL_HASH = f'{UPSTREAM_HSH}'
 
+TAR_NAME = f'secp256k1-{UPSTREAM_REF}'
+LIB_NAME = 'libsecp256k1'
 
 class EggInfo(egg_info.egg_info):
     def run(self):

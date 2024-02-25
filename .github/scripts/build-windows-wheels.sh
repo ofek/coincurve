@@ -29,7 +29,7 @@ build_dll x86_64-w64-mingw32
 # Not sure why it ended-up being a -2.dll instead of -0.dll: Researching
 mv .libs/libsecp256k1-?.dll ../clean/coincurve/libsecp256k1.dll
 cd ../clean
-python -m build --wheel -C=plat-name=win_amd64
+python -m build --wheel -C "--plat-name=win_amd64"
 rm coincurve/libsecp256k1.dll
 
 cd ../32bit
@@ -37,7 +37,7 @@ build_dll i686-w64-mingw32
 # Not sure why it ended-up being a -2.dll instead of -0.dll: Researching
 mv .libs/libsecp256k1-?.dll ../clean/coincurve/libsecp256k1.dll
 cd ../clean
-python -m build --wheel -C=plat-name=win32
+python -m build --wheel -C "--plat-name=win32"
 
 mv dist/* ../coincurve/dist/
 cd ../coincurve

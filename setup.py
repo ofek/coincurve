@@ -442,9 +442,6 @@ setup_kwargs = dict(
 
 def main():
     setup(
-        name=PKG_NAME,
-        version='19.0.0',
-
         packages=find_packages(exclude=('_cffi_build', '_cffi_build.*', LIB_NAME, 'tests')),
         package_data=package_data,
 

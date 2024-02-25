@@ -234,10 +234,10 @@ jobs:
     - uses: actions/checkout@v4
 
     - name: Install build dependencies
-      run: python -m pip install --upgrade cffi
+      run: python -m pip install build
 
     - name: Build source distribution
-      run: python setup.py sdist
+      run: python -m build --sdist
 
     - name: Build Windows wheels
       run: ./.github/scripts/build-windows-wheels.sh

@@ -9,7 +9,6 @@ authors = [
   { name="Ofek Lev", email="oss@ofek.dev" },
 ]
 description = "Cross-platform Python CFFI bindings for libsecp256k1"
-license = { file="LICENSE-MIT" }
 keywords = ["secp256k1", "crypto", "elliptic curves", "bitcoin", "ethereum", "cryptocurrency"]
 readme = "README.md"
 requires-python = ">=3.8"

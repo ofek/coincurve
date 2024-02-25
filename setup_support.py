@@ -31,7 +31,7 @@ def build_flags(library, type_, path='.'):
         pkg_config_path.append(os.path.join(os.environ['CONDA_PREFIX'], 'lib', 'pkgconfig'))
 
     options = {'I': '--cflags-only-I', 'L': '--libs-only-L', 'l': '--libs-only-l'}
-    env = dict(os.environ, PKG_CONFIG_PATH=':'.join(pkg_config_path))
+    env = dict(os.environ, PKG_CONFIG_PATH=str(os.pathsep).join(pkg_config_path))
     flags = subprocess.check_output([PKGCONFIG, options[type_], library], env=env)  # noqa S603
     flags = list(flags.decode('UTF-8').split())
 

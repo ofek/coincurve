@@ -6,35 +6,8 @@ import shutil
 import subprocess
 import tarfile
 import tempfile
-from contextlib import contextmanager, suppress
+from contextlib import suppress
 from io import BytesIO
-from tempfile import mkdtemp
-
-
-@contextmanager
-def workdir():
-    cwd = os.getcwd()
-    tmpdir = mkdtemp()
-    os.chdir(tmpdir)
-    try:
-        yield
-    finally:
-        os.chdir(cwd)
-        shutil.rmtree(tmpdir)
-
-
-@contextmanager
-def redirect(stdchannel, dest_filename):
-    oldstdchannel = os.dup(stdchannel.fileno())
-    dest_file = open(dest_filename, 'w')
-    os.dup2(dest_file.fileno(), stdchannel.fileno())
-    try:
-        yield
-    finally:
-        if oldstdchannel is not None:
-            os.dup2(oldstdchannel, stdchannel.fileno())
-        if dest_file is not None:
-            dest_file.close()
 
 
 def absolute_from_setup_dir(*paths):
@@ -66,24 +39,27 @@ def build_flags(library, type_, path='.'):
 
 
 def _find_lib():
+    from setup import PKGCONFIG, _SECP256K1_BUILD_TYPE
+
     if 'COINCURVE_IGNORE_SYSTEM_LIB' in os.environ:
         return False
 
     try:
-        from setup import PKGCONFIG
-
         # Update the environment CONDA_PREFIX to the current environment
         if 'CONDA_PREFIX' in os.environ:
             os.environ['PKG_CONFIG_PATH'] = (
                 os.path.join(os.environ['CONDA_PREFIX'], 'lib', 'pkgconfig')
-                + ':'
+                + os.pathsep
+                + os.path.join(os.environ['CONDA_PREFIX'], 'Library', 'lib', 'pkgconfig')
+                + os.pathsep
                 + os.environ.get('PKG_CONFIG_PATH', '')
             )
 
-        includes = subprocess.check_output([PKGCONFIG, '--cflags-only-I', 'libsecp256k1'])  # noqa S603
+        cmd = [PKGCONFIG, '--cflags-only-I', 'libsecp256k1']
+        includes = execute_command_with_temp_log(cmd, capture_output=True)
         includes = includes.strip().decode('utf-8')
 
-        return os.path.exists(os.path.join(includes[2:], 'secp256k1_ecdh.h'))
+        return os.path.exists(os.path.join(includes[2:], 'secp256k1_ecdh.h')) and _SECP256K1_BUILD_TYPE == "SHARED"
 
     except (OSError, subprocess.CalledProcessError):
         if 'LIB_DIR' in os.environ:
@@ -109,10 +85,7 @@ def has_system_lib():
 
 def detect_dll():
     here = os.path.dirname(os.path.abspath(__file__))
-    for fn in os.listdir(os.path.join(here, 'coincurve')):
-        if fn.endswith('.dll'):
-            return True
-    return False
+    return any(fn.endswith('.dll') for fn in os.listdir(os.path.join(here, 'coincurve')))
 
 
 def download_library(command, lib_dir='libsecp256k1', force=False):
@@ -131,8 +104,6 @@ def download_library(command, lib_dir='libsecp256k1', force=False):
 
     # _download will use shutil.move, thus remove the directory
     os.rmdir(lib_dir)
-
-    logging.info(f'Downloading {lib_dir} source code')
 
     from requests.exceptions import RequestException
 
@@ -156,6 +127,8 @@ def _download_library(lib_dir=None):
         except OSError:
             logging.info(f'Library directory {lib_dir} already exists')
             return
+
+    logging.info(f'Downloading {lib_dir} source code from: {LIB_TARBALL_URL}')
 
     r = requests.get(LIB_TARBALL_URL, stream=True, timeout=10, verify=True)
     status_code = r.status_code
@@ -184,14 +157,22 @@ def _download_library(lib_dir=None):
     os.remove(f'{UPSTREAM_REF}.tar.gz')
 
 
-def execute_command_with_temp_log(cmd, cwd=None, debug=False):
+def execute_command_with_temp_log(cmd, *, debug=False, capture_output=False, **kwargs):
     with tempfile.NamedTemporaryFile(mode='w+') as temp_log:
         try:
-            subprocess.check_call(cmd, stdout=temp_log, stderr=temp_log, cwd=cwd)  # noqa S603
+            if capture_output:
+                ret = subprocess.check_output(cmd, stderr=temp_log, **kwargs)  # noqa S603
+            else:
+                subprocess.check_call(cmd, stdout=temp_log, stderr=temp_log, **kwargs)  # noqa S603
+
             if debug:
                 temp_log.seek(0)
                 log_contents = temp_log.read()
                 logging.info(f'Command log:\n{log_contents}')
+
+            if capture_output:
+                return ret
+
         except subprocess.CalledProcessError as e:
             logging.error(f'An error occurred during the command execution: {e}')
             temp_log.seek(0)

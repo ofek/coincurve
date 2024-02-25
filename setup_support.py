@@ -1,8 +1,12 @@
 import glob
+import hashlib
+import logging
 import os
 import shutil
 import subprocess
+import tarfile
 from contextlib import contextmanager, suppress
+from io import BytesIO
 from tempfile import mkdtemp
 
 
@@ -95,3 +99,73 @@ def detect_dll():
         if fn.endswith('.dll'):
             return True
     return False
+
+
+def download_library(command, lib_dir='libsecp256k1', force=False):
+    if command.dry_run:
+        return
+
+    if force:
+        shutil.rmtree(lib_dir, ignore_errors=True)
+
+    if os.path.exists(os.path.join(lib_dir, 'autogen.sh')) or os.path.exists(os.path.join(lib_dir, 'libsecp256k1.pc')):
+        # Library already downloaded
+        return
+
+    # Ensure the path exists
+    os.makedirs(lib_dir, exist_ok=True)
+
+    # _download will use shutil.move, thus remove the directory
+    os.rmdir(lib_dir)
+
+    from requests.exceptions import RequestException
+
+    try:
+        _download_library(lib_dir)
+    except RequestException as e:
+        raise SystemExit(
+            f'Unable to download {lib_dir} library: {e!s}',
+        ) from e
+
+
+def _download_library(lib_dir=None):
+    import requests
+
+    from setup import LIB_TARBALL_HASH, LIB_TARBALL_URL, UPSTREAM_REF
+
+    if lib_dir is None:
+        lib_dir = 'libsecp256k1'
+        try:
+            os.makedirs(lib_dir)
+        except OSError:
+            logging.info(f'Library directory {lib_dir} already exists')
+            return
+
+    logging.info(f'Downloading {lib_dir} source code from: {LIB_TARBALL_URL}')
+
+    r = requests.get(LIB_TARBALL_URL, stream=True, timeout=10, verify=True)
+    status_code = r.status_code
+    if status_code != 200:
+        raise SystemExit(f'Unable to download {lib_dir} library: HTTP-Status: {status_code}')
+
+    content = BytesIO(r.raw.read())
+    content.seek(0)
+
+    # Verify the integrity of the downloaded library
+    sha256_hash = hashlib.sha256(content.getvalue()).hexdigest()
+    if sha256_hash != LIB_TARBALL_HASH:
+        raise SystemExit(f'Integrity check failed for {lib_dir}{sha256_hash} library: Hash mismatch')
+
+    # Write the content to a file
+    with open(f'{UPSTREAM_REF}.tar.gz', 'wb') as f:
+        f.write(content.getvalue())
+
+    tar_name = f'secp256k1-{UPSTREAM_REF}'
+    with tarfile.open(f'{UPSTREAM_REF}.tar.gz') as tf:
+        prefix, prefix_length = f'{tar_name}/', len(f'{tar_name}/')
+        for member in tf.getmembers():
+            if member.name.startswith(prefix):
+                member.name = member.name[prefix_length:]
+                tf.extract(member, path=lib_dir)
+
+    os.remove(f'{UPSTREAM_REF}.tar.gz')

@@ -2,10 +2,7 @@ import errno
 import os
 import os.path
 import platform
-import shutil
 import subprocess
-import tarfile
-from io import BytesIO
 import sys
 
 from setuptools import Distribution as _Distribution, setup, find_packages, __version__ as setuptools_version
@@ -13,11 +10,11 @@ from setuptools._distutils import log
 from setuptools._distutils.errors import DistutilsError
 from setuptools.command.build_clib import build_clib as _build_clib
 from setuptools.command.build_ext import build_ext as _build_ext
-from setuptools.extension import Extension
 from setuptools.command.develop import develop as _develop
 from setuptools.command.dist_info import dist_info as _dist_info
 from setuptools.command.egg_info import egg_info as _egg_info
 from setuptools.command.sdist import sdist as _sdist
+from setuptools.extension import Extension
 
 try:
     from wheel.bdist_wheel import bdist_wheel as _bdist_wheel
@@ -25,7 +22,7 @@ except ImportError:
     _bdist_wheel = None
 
 sys.path.append(os.path.abspath(os.path.dirname(__file__)))
-from setup_support import absolute, build_flags, detect_dll, has_system_lib  # noqa: E402
+from setup_support import absolute, build_flags, detect_dll, has_system_lib, download_library
 
 BUILDING_FOR_WINDOWS = detect_dll()
 
@@ -35,8 +32,10 @@ MAKE = 'gmake' if platform.system() in ['FreeBSD', 'OpenBSD'] else 'make'
 #
 # Version of libsecp256k1 to download if none exists in the `libsecp256k1` directory
 UPSTREAM_REF = os.getenv('COINCURVE_UPSTREAM_TAG') or '1ad5185cd42c0636104129fcc9f6a4bf9c67cc40'
+UPSTREAM_HSH = os.getenv('COINCURVE_UPSTREAM_HSH') or 'ba34be4319f505c5766aa80b99cfa696cbb2993bfecf7d7eb8696106c493cb8c'
 
 LIB_TARBALL_URL = f'https://github.com/bitcoin-core/secp256k1/archive/{UPSTREAM_REF}.tar.gz'
+LIB_TARBALL_HASH = f'{UPSTREAM_HSH}'
 
 # We require setuptools >= 3.3
 if [int(i) for i in setuptools_version.split('.', 2)[:2]] < [3, 3]:
@@ -44,35 +43,6 @@ if [int(i) for i in setuptools_version.split('.', 2)[:2]] < [3, 3]:
         f'Your setuptools version ({setuptools_version}) is too old to correctly install this package. Please upgrade '
         f'to a newer version (>= 3.3).'
     )
-
-
-def download_library(command):
-    if command.dry_run:
-        return
-    libdir = absolute('libsecp256k1')
-    if os.path.exists(os.path.join(libdir, 'autogen.sh')):
-        # Library already downloaded
-        return
-    if not os.path.exists(libdir):
-        command.announce('downloading libsecp256k1 source code', level=log.INFO)
-        try:
-            import requests
-            try:
-                r = requests.get(LIB_TARBALL_URL, stream=True, timeout=10)
-                status_code = r.status_code
-                if status_code == 200:
-                    content = BytesIO(r.raw.read())
-                    content.seek(0)
-                    with tarfile.open(fileobj=content) as tf:
-                        dirname = tf.getnames()[0].partition('/')[0]
-                        tf.extractall()
-                    shutil.move(dirname, libdir)
-                else:
-                    raise SystemExit('Unable to download secp256k1 library: HTTP-Status: %d', status_code)
-            except requests.exceptions.RequestException as e:
-                raise SystemExit('Unable to download secp256k1 library: %s', str(e))
-        except ImportError as e:
-            raise SystemExit('Unable to download secp256k1 library: %s', str(e))
 
 
 class egg_info(_egg_info):

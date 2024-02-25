@@ -370,6 +370,14 @@ class _BuildExtensionFromCFFI(build_ext.build_ext):
 
         # Location of locally built library
         c_lib_pkg = os.path.join(self.build_lib, 'coincurve', 'lib', 'pkgconfig')
+        if os.path.isfile(os.path.join(c_lib_pkg, f'{LIB_NAME}.pc')):
+            # For statically linked lib, we don't want to package secp256k1 and install in temp
+            c_lib_pkg = os.path.join(self.build_temp, 'coincurve', 'lib', 'pkgconfig')
+            if not os.path.isfile(os.path.join(c_lib_pkg, f'{LIB_NAME}.pc')):
+                raise RuntimeError(
+                    f'Library not found in {c_lib_pkg}. '
+                    'Please check that the library was properly built.'
+                )
 
         # PKG_CONFIG_PATH is updated by build_clib if built locally
         ext.extra_compile_args.extend([f'-I{build_flags(LIB_NAME, "I", c_lib_pkg)[0]}'])

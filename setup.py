@@ -138,7 +138,10 @@ class _BuildClib(build_clib.build_clib):
     def bc_set_dirs_download(self):
         self._cwd = pathlib.Path().cwd()
         os.makedirs(self.build_temp, exist_ok=True)
-        self._install_dir = str(self.build_temp).replace('temp', 'lib')
+        self._install_dir = str(self.build_temp)
+        if _SECP256K1_BUILD_TYPE == 'SHARED':
+            # Install shared library in the package directory
+            self._install_dir.replace('temp', 'lib')
         self._install_lib_dir = os.path.join(self._install_dir, PKG_NAME)
         self._lib_src = os.path.join(self._cwd, LIB_NAME)
         if not os.path.exists(self._lib_src):
@@ -430,7 +433,7 @@ def main():
         name=PKG_NAME,
         version='19.0.0',
 
-        packages=find_packages(exclude=('_cffi_build', '_cffi_build.*', LIB_NAME, 'tests')),
+        packages=find_packages(exclude=('_cffi_build', '_cffi_build.*', LIB_NAME, 'tests', '*.a')),
         package_data=package_data,
 
         distclass=Distribution,

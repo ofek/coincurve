@@ -39,7 +39,7 @@ def build_flags(library, type_, path='.'):
 
 
 def _find_lib():
-    from setup import PKGCONFIG, _SECP256K1_BUILD_TYPE
+    from setup import _SECP256K1_BUILD_TYPE, PKGCONFIG
 
     if 'COINCURVE_IGNORE_SYSTEM_LIB' in os.environ:
         return False
@@ -59,7 +59,7 @@ def _find_lib():
         includes = execute_command_with_temp_log(cmd, capture_output=True)
         includes = includes.strip().decode('utf-8')
 
-        return os.path.exists(os.path.join(includes[2:], 'secp256k1_ecdh.h')) and _SECP256K1_BUILD_TYPE == "SHARED"
+        return os.path.exists(os.path.join(includes[2:], 'secp256k1_ecdh.h')) and _SECP256K1_BUILD_TYPE == 'SHARED'
 
     except (OSError, subprocess.CalledProcessError):
         if 'LIB_DIR' in os.environ:

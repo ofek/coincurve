@@ -25,7 +25,7 @@ except ImportError:
     _bdist_wheel = None
 
 sys.path.append(os.path.abspath(os.path.dirname(__file__)))
-from setup_support import absolute, build_flags, detect_dll, has_system_lib  # noqa: E402
+from setup_support import absolute, build_flags, detect_dll, has_system_lib
 
 BUILDING_FOR_WINDOWS = detect_dll()
 

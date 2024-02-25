@@ -138,11 +138,15 @@ class _BuildClib(build_clib.build_clib):
     def bc_set_dirs_download(self):
         self._cwd = pathlib.Path().cwd()
         os.makedirs(self.build_temp, exist_ok=True)
-        self._install_dir = str(self.build_temp)
+        self._install_dir = str(self.build_temp).replace('temp', 'lib')
+
         if _SECP256K1_BUILD_TYPE == 'SHARED':
             # Install shared library in the package directory
-            self._install_dir.replace('temp', 'lib')
-        self._install_lib_dir = os.path.join(self._install_dir, PKG_NAME)
+            self._install_lib_dir = os.path.join(self._install_dir, PKG_NAME)
+        else:
+            # Install static library in its own directory for retrieval by build_ext
+            self._install_lib_dir = os.path.join(self._install_dir, LIB_NAME)
+
         self._lib_src = os.path.join(self._cwd, LIB_NAME)
         if not os.path.exists(self._lib_src):
             self.get_source_files()

@@ -332,9 +332,6 @@ else:
         )
 
 setup(
-    name='coincurve',
-    version='19.0.0',
-
     packages=find_packages(exclude=('_cffi_build', '_cffi_build.*', 'libsecp256k1', 'tests')),
     package_data=package_data,
 

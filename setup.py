@@ -416,38 +416,32 @@ class Distribution(_Distribution):
         return not has_system_lib()
 
 
-package_data = {PKG_NAME: ['py.typed']}
-
-extension = Extension(
-    name=f'{PKG_NAME}._{LIB_NAME}',
-    sources=[os.path.join(PKG_NAME, f'_{LIB_NAME}.c')],
-    py_limited_api=False,
-    extra_compile_args=['/d2FH4-'] if SYSTEM == 'Windows' else []
-)
-
-setup_kwargs = dict(
-    setup_requires=['cffi>=1.3.0', 'requests'],
-    ext_modules=[extension],
-    cmdclass={
-        'build_clib': BuildClibWithCMake,
-        'build_ext': BuildCFFIExtension,
-        'develop': Develop,
-        'dist_info': DistInfo,
-        'egg_info': EggInfo,
-        'sdist': Sdist,
-        'bdist_wheel': BdistWheel if _bdist_wheel else None,
-    },
-)
-
-
 def main():
+    package_data = {PKG_NAME: ['py.typed']}
+
+    extension = Extension(
+        name=f'{PKG_NAME}._{LIB_NAME}',
+        sources=[os.path.join(PKG_NAME, f'_{LIB_NAME}.c')],
+        py_limited_api=False,
+        extra_compile_args=['/d2FH4-'] if SYSTEM == 'Windows' else []
+    )
+
     setup(
         packages=find_packages(exclude=('_cffi_build', '_cffi_build.*', LIB_NAME, 'tests')),
         package_data=package_data,
-
         distclass=Distribution,
         zip_safe=False,
-        **setup_kwargs
+        setup_requires=['cffi>=1.3.0', 'requests'],
+        ext_modules=[extension],
+        cmdclass={
+            'build_clib': BuildClibWithCMake,
+            'build_ext': BuildCFFIExtension,
+            'develop': Develop,
+            'dist_info': DistInfo,
+            'egg_info': EggInfo,
+            'sdist': Sdist,
+            'bdist_wheel': BdistWheel if _bdist_wheel else None,
+        },
     )
 
 

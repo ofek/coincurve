@@ -25,7 +25,7 @@ except ImportError:
     _bdist_wheel = None
 
 sys.path.append(os.path.abspath(os.path.dirname(__file__)))
-from setup_support import absolute, build_flags, detect_dll, has_system_lib  # noqa: E402
+from setup_support import absolute, build_flags, detect_dll, has_system_lib
 
 BUILDING_FOR_WINDOWS = detect_dll()
 
@@ -65,7 +65,7 @@ def download_library(command):
                     content.seek(0)
                     with tarfile.open(fileobj=content) as tf:
                         dirname = tf.getnames()[0].partition('/')[0]
-                        tf.extractall()
+                        tf.extractall()  # noqa: S202
                     shutil.move(dirname, libdir)
                 else:
                     raise SystemExit('Unable to download secp256k1 library: HTTP-Status: %d', status_code)

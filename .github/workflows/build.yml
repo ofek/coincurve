@@ -15,11 +15,11 @@ concurrency:
   cancel-in-progress: true
 
 env:
-  COINCURVE_UPSTREAM_REF: 1ad5185cd42c0636104129fcc9f6a4bf9c67cc40
+  COINCURVE_UPSTREAM_TAG: 1ad5185cd42c0636104129fcc9f6a4bf9c67cc40
   COINCURVE_IGNORE_SYSTEM_LIB: '1'
   CIBW_BEFORE_ALL_MACOS: ./.github/scripts/install-macos-build-deps.sh
   CIBW_ENVIRONMENT_PASS_LINUX: >
-    COINCURVE_UPSTREAM_REF
+    COINCURVE_UPSTREAM_TAG
     COINCURVE_IGNORE_SYSTEM_LIB
   CIBW_TEST_COMMAND: >
     python -c
@@ -75,13 +75,13 @@ jobs:
     name: Build Linux wheels
     needs:
     - test
-    runs-on: ubuntu-22.04
+    runs-on: ubuntu-latest
 
     steps:
     - uses: actions/checkout@v4
 
     - name: Build wheels
-      uses: pypa/cibuildwheel@v2.16.2
+      uses: pypa/cibuildwheel@v2.16.5
 
     - uses: actions/upload-artifact@v3
       with:
@@ -93,13 +93,13 @@ jobs:
     name: Build macOS wheels
     needs:
     - test
-    runs-on: macos-12
+    runs-on: macos-latest
 
     steps:
     - uses: actions/checkout@v4
 
     - name: Build wheels
-      uses: pypa/cibuildwheel@v2.16.2
+      uses: pypa/cibuildwheel@v2.16.5
       env:
         CIBW_ARCHS_MACOS: x86_64
 
@@ -113,17 +113,110 @@ jobs:
     name: Build macOS wheels for ARM
     needs:
     - test
-    runs-on: macos-12
+    runs-on: macos-latest
 
     steps:
     - uses: actions/checkout@v4
 
     - name: Build wheels
-      uses: pypa/cibuildwheel@v2.16.2
+      uses: pypa/cibuildwheel@v2.16.5
       env:
         CIBW_ARCHS_MACOS: arm64
-        COINCURVE_CROSS_HOST: aarch64-apple-darwin
-        CFLAGS: -target arm64-apple-macos11
+        COINCURVE_CROSS_HOST: 'arm64'
+
+    - uses: actions/upload-artifact@v3
+      with:
+        name: artifacts
+        path: wheelhouse/*.whl
+        if-no-files-found: error
+
+  macos-wheels-arm-beta:
+    name: Build macOS wheels for ARM (Native
+    needs:
+    - test
+    runs-on: macos-14
+
+    steps:
+    - uses: actions/checkout@v4
+
+    - name: Build wheels
+      uses: pypa/cibuildwheel@v2.16.5
+      env:
+        CIBW_ARCHS_MACOS: arm64
+
+    - uses: actions/upload-artifact@v3
+      with:
+        name: artifacts
+        path: wheelhouse/*.whl
+        if-no-files-found: error
+
+  windows-wheels-x86_64:
+    name: Build Windows wheels AMD64
+    needs:
+    - test
+    runs-on: windows-latest
+
+    steps:
+    - uses: actions/checkout@v4
+
+    - uses: actions/setup-python@v5
+
+    - name: Build wheels
+      uses: pypa/cibuildwheel@v2.16.5
+      env:
+        CIBW_ARCHS_WINDOWS: "AMD64"
+        CIBW_BUILD_VERBOSITY: 1
+        CIBW_BEFORE_ALL: choco install -y --no-progress --no-color cmake>=3.28 pkgconfiglite
+
+    - uses: actions/upload-artifact@v3
+      with:
+        name: artifacts
+        path: wheelhouse/*.whl
+        if-no-files-found: error
+
+  windows-wheels-x86:
+    name: Build Windows wheels x86
+    needs:
+    - test
+    runs-on: windows-latest
+
+    steps:
+    - uses: actions/checkout@v4
+
+    - uses: actions/setup-python@v5
+
+    - name: Build wheels
+      uses: pypa/cibuildwheel@v2.16.5
+      env:
+        COINCURVE_CROSS_HOST: "x86"
+        CIBW_ARCHS_WINDOWS: "x86"
+        CIBW_BUILD_VERBOSITY: 1
+        CIBW_BEFORE_ALL: choco install -y --no-progress --no-color cmake>=3.28 pkgconfiglite
+
+    - uses: actions/upload-artifact@v3
+      with:
+        name: artifacts
+        path: wheelhouse/*.whl
+        if-no-files-found: error
+
+  windows-wheels-arm64:
+    name: Build Windows wheels for ARM64
+    needs:
+    - test
+    runs-on: windows-latest
+
+    steps:
+    - uses: actions/checkout@v4
+
+    - uses: actions/setup-python@v5
+
+    - name: Build wheels
+      uses: pypa/cibuildwheel@v2.16.5
+      env:
+        COINCURVE_CROSS_HOST: "arm64"
+        CIBW_ARCHS_WINDOWS: "ARM64"
+        CIBW_BUILD_VERBOSITY: 1
+        CIBW_BEFORE_ALL: choco install -y --no-progress --no-color cmake>=3.28 pkgconfiglite
 
     - uses: actions/upload-artifact@v3
       with:
@@ -174,7 +267,7 @@ jobs:
         platforms: arm64
 
     - name: Build wheels
-      uses: pypa/cibuildwheel@v2.16.2
+      uses: pypa/cibuildwheel@v2.16.5
       env:
         CIBW_ARCHS_LINUX: aarch64
 
@@ -191,6 +284,9 @@ jobs:
     - macos-wheels-x86-64
     - macos-wheels-arm
     - windows-wheels-and-sdist
+    - windows-wheels-x86_64
+    - windows-wheels-x86
+    - windows-wheels-arm64
     - linux-wheels-arm
     runs-on: ubuntu-latest
     if: >

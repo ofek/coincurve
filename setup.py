@@ -1,4 +1,3 @@
-import errno
 import logging
 import os
 import os.path
@@ -6,20 +5,20 @@ import pathlib
 import platform
 import shutil
 import subprocess
+import sys
 import tarfile
 from io import BytesIO
-import sys
 
 from setuptools import Distribution as _Distribution, setup, find_packages, __version__ as setuptools_version
 from setuptools._distutils import log
 from setuptools._distutils.errors import DistutilsError
 from setuptools.command.build_clib import build_clib as _build_clib
 from setuptools.command.build_ext import build_ext as _build_ext
-from setuptools.extension import Extension
 from setuptools.command.develop import develop as _develop
 from setuptools.command.dist_info import dist_info as _dist_info
 from setuptools.command.egg_info import egg_info as _egg_info
 from setuptools.command.sdist import sdist as _sdist
+from setuptools.extension import Extension
 
 try:
     from wheel.bdist_wheel import bdist_wheel as _bdist_wheel
@@ -27,7 +26,7 @@ except ImportError:
     _bdist_wheel = None
 
 sys.path.append(os.path.abspath(os.path.dirname(__file__)))
-from setup_support import absolute, build_flags, detect_dll, has_system_lib
+from setup_support import absolute, detect_dll, has_system_lib
 
 BUILDING_FOR_WINDOWS = detect_dll()
 
@@ -222,13 +221,9 @@ class BuildClibWithCMake(_build_clib):
 
         # Windows (more complex)
         if SYSTEM == 'Windows':
-            # TODO: await PR approval
-            # vswhere = shutil.which('vswhere')
-            # msvc = execute_command_with_temp_log(
-            #     [vswhere, '-latest', '-find', 'MSBuild\\**\\Bin\\MSBuild.exe'],
-            #     capture_output=True,
-            # )
-            msvc = None
+            vswhere = shutil.which('vswhere')
+            cmd = [vswhere, '-latest', '-find', 'MSBuild\\**\\Bin\\MSBuild.exe']
+            msvc = subprocess.check_output(cmd).strip().decode('utf-8')  # noqa S603
 
             # For windows x86/x64, select the correct architecture
             arch = 'x64' if MACHINE == 'AMD64' else 'Win32'  # Native

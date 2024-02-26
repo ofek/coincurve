@@ -69,12 +69,12 @@ def test_bytes_int_conversion_padded():
 
 
 def test_der_conversion(samples):
-    assert pem_to_der(der_to_pem(samples.get('PRIVATE_KEY_DER'))) == samples.get('PRIVATE_KEY_DER')
+    assert pem_to_der(der_to_pem(samples['PRIVATE_KEY_DER'])) == samples['PRIVATE_KEY_DER']
 
 
 def test_verify_signature(samples):
-    assert verify_signature(samples.get('SIGNATURE'), samples.get('MESSAGE'), samples.get('PUBLIC_KEY_COMPRESSED'))
-    assert verify_signature(samples.get('SIGNATURE'), samples.get('MESSAGE'), samples.get('PUBLIC_KEY_UNCOMPRESSED'))
+    assert verify_signature(samples['SIGNATURE'], samples['MESSAGE'], samples['PUBLIC_KEY_COMPRESSED'])
+    assert verify_signature(samples['SIGNATURE'], samples['MESSAGE'], samples['PUBLIC_KEY_UNCOMPRESSED'])
 
 
 def test_chunk_data():

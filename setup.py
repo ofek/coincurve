@@ -26,7 +26,7 @@ except ImportError:
     _bdist_wheel = None
 
 sys.path.append(os.path.abspath(os.path.dirname(__file__)))
-from setup_support import absolute, detect_dll, has_system_lib
+from setup_support import absolute, detect_dll, has_system_lib, build_flags
 
 BUILDING_FOR_WINDOWS = detect_dll()
 
@@ -192,7 +192,7 @@ class BuildClibWithCMake(_build_clib):
         ).replace('\\', '/')
 
         # Verify installation
-        subprocess.check_call([PKGCONFIG, '--exists', LIB_NAME])  # noqa S603
+        subprocess.check_call(['pkg-config', '--exists', LIB_NAME])  # noqa S603
 
     @staticmethod
     def _generator(msvc):
@@ -271,19 +271,102 @@ class BuildClibWithCMake(_build_clib):
         return ['cmake', '--build', '.', '--target', 'install', '--config', 'Release', '--clean-first']
 
 
-class build_ext(_build_ext):
-    def run(self):
-        if self.distribution.has_c_libraries():
-            _build_clib = self.get_finalized_command('build_clib')
-            self.include_dirs.append(os.path.join(_build_clib.build_clib, 'include'))
-            self.include_dirs.extend(_build_clib.build_flags['include_dirs'])
+class SharedLinker(object):
+    @staticmethod
+    def update_link_args(compiler, libraries, libraries_dirs, extra_link_args):
+        if compiler.__class__.__name__ == 'UnixCCompiler':
+            extra_link_args.extend([f'-l{lib}' for lib in libraries])
+            if sys.platform == 'darwin':
+                extra_link_args.extend([
+                    '-Wl,-rpath,@loader_path/lib',
+                ])
+            else:
+                extra_link_args.extend([
+                    '-Wl,-rpath,$ORIGIN/lib',
+                    '-Wl,-rpath,$ORIGIN/lib64',
+                ])
+        elif compiler.__class__.__name__ == 'MSVCCompiler':
+            for ld in libraries_dirs:
+                ld = ld.replace('/', '\\')
+                for lib in libraries:
+                    lib_file = os.path.join(ld, f'lib{lib}.lib')
+                    lib_path = [f'/LIBPATH:{ld}', f'lib{lib}.lib']
+                    if os.path.exists(lib_file):
+                        extra_link_args.extend(lib_path)
+        else:
+            raise NotImplementedError(f'Unsupported compiler: {compiler.__class__.__name__}')
 
-            self.library_dirs.insert(0, os.path.join(_build_clib.build_clib, 'lib'))
-            self.library_dirs.extend(_build_clib.build_flags['library_dirs'])
 
-            self.define = _build_clib.build_flags['define']
+class StaticLinker(object):
+    @staticmethod
+    def update_link_args(compiler, libraries, libraries_dirs, extra_link_args):
+        if compiler.__class__.__name__ == 'UnixCCompiler':
+            # It is possible that the library was compiled without fPIC option
+            for lib in libraries:
+                # On MacOS the mix static/dynamic option is different
+                # It requires a -force_load <full_lib_path> option for each library
+                if sys.platform == 'darwin':
+                    for lib_dir in libraries_dirs:
+                        if os.path.exists(os.path.join(lib_dir, f'lib{lib}.a')):
+                            extra_link_args.extend(
+                                ['-Wl,-force_load', os.path.join(lib_dir, f'lib{lib}.a')]
+                            )
+                            break
+                else:
+                    extra_link_args.extend(['-Wl,-Bstatic', f'-l{lib}', '-Wl,-Bdynamic'])
 
-        return _build_ext.run(self)
+        elif compiler.__class__.__name__ == 'MSVCCompiler':
+            for ld in libraries_dirs:
+                ld = ld.replace('/', '\\')
+                for lib in libraries:
+                    lib_file = os.path.join(ld, f'lib{lib}.lib')
+                    if os.path.exists(lib_file):
+                        extra_link_args.append(lib_file)
+        else:
+            raise NotImplementedError(f'Unsupported compiler: {compiler.__class__.__name__}')
+
+
+class BuildExtensionFromCFFI(_build_ext):
+    static_lib = True if _SECP256K1_BUILD_TYPE == 'STATIC' else False
+
+    def update_link_args(self, libraries, libraries_dirs, extra_link_args):
+        if self.static_lib:
+            StaticLinker.update_link_args(self.compiler, libraries, libraries_dirs, extra_link_args)
+        else:
+            SharedLinker.update_link_args(self.compiler, libraries, libraries_dirs, extra_link_args)
+
+    def build_extension(self, ext):
+        # Construct C-file from CFFI
+        build_script = os.path.join('_cffi_build', 'build_shared.py')
+        for c_file in ext.sources:
+            cmd = [sys.executable, build_script, c_file, '1' if self.static_lib else '0']
+            subprocess.check_call(cmd)  # noqa S603
+
+        # Enforce API interface
+        ext.py_limited_api = False
+
+        # Location of locally built library
+        lib = 'libsecp256k1' if self.static_lib else 'coincurve'
+        c_lib_pkg = os.path.join(self.build_lib, lib, 'lib', 'pkgconfig')
+        if not os.path.isfile(os.path.join(c_lib_pkg, f'{LIB_NAME}.pc')) and not has_system_lib():
+            raise RuntimeError(
+                f'Library not found in {c_lib_pkg}, nor as a system lib({has_system_lib()}). '
+                'Please check that the library was properly built.'
+            )
+
+        # PKG_CONFIG_PATH is updated by build_clib if built locally,
+        # however, it would not work for a step-by-step build, thus we specify the lib path
+        ext.extra_compile_args.extend([f'-I{build_flags(LIB_NAME, "I", c_lib_pkg)[0]}'])
+        ext.library_dirs.extend(build_flags(LIB_NAME, 'L', c_lib_pkg))
+
+        libraries = build_flags(LIB_NAME, 'l', c_lib_pkg)
+        logging.info(f'  Libraries:{libraries}')
+
+        # We do not set ext.libraries, this would add the default link instruction
+        # Instead, we use extra_link_args to customize the link command
+        self.update_link_args(libraries, ext.library_dirs, ext.extra_link_args)
+
+        super().build_extension(ext)
 
 
 class develop(_develop):
@@ -298,89 +381,41 @@ class develop(_develop):
 
 package_data = {'coincurve': ['py.typed']}
 
+extension = Extension(
+    name='coincurve._libsecp256k1',
+    sources=[os.path.join('coincurve', '_libsecp256k1.c')],
+    py_limited_api=False,
+)
 
-class BuildCFFIForSharedLib(_build_ext):
-    def build_extensions(self):
-        build_script = os.path.join('_cffi_build', 'build_shared.py')
-        c_file = self.extensions[0].sources[0]
-        subprocess.run([sys.executable, build_script, c_file, '0'], shell=False, check=True)  # noqa S603
-        super().build_extensions()
+if BUILDING_FOR_WINDOWS:
+
+    class Distribution(_Distribution):
+        def is_pure(self):
+            return False
 
 
-if has_system_lib():
+    package_data['coincurve'].append('libsecp256k1.dll')
+    setup_kwargs = {}
+
+else:
 
     class Distribution(_Distribution):
         def has_c_libraries(self):
             return not has_system_lib()
 
-    # --- SECP256K1 package definitions ---
-    secp256k1_package = 'libsecp256k1'
-
-    extension = Extension(
-        name='coincurve._libsecp256k1',
-        sources=[os.path.join('coincurve', '_libsecp256k1.c')],
-        # ABI?: py_limited_api=True,
-    )
-
-    extension.extra_compile_args = [
-        subprocess.check_output(['pkg-config', '--cflags-only-I', 'libsecp256k1']).strip().decode('utf-8')  # noqa S603
-    ]
-    extension.extra_link_args = [
-        subprocess.check_output(['pkg-config', '--libs-only-L', 'libsecp256k1']).strip().decode('utf-8'),  # noqa S603
-        subprocess.check_output(['pkg-config', '--libs-only-l', 'libsecp256k1']).strip().decode('utf-8'),  # noqa S603
-    ]
-
-    if os.name == 'nt' or sys.platform == 'win32':
-        # Apparently, the linker on Windows interprets -lxxx as xxx.lib, not libxxx.lib
-        for i, v in enumerate(extension.__dict__.get('extra_link_args')):
-            extension.__dict__['extra_link_args'][i] = v.replace('-L', '/LIBPATH:')
-
-            if v.startswith('-l'):
-                v = v.replace('-l', 'lib')
-                extension.__dict__['extra_link_args'][i] = f'{v}.lib'
 
     setup_kwargs = dict(
+        ext_package='coincurve',
         ext_modules=[extension],
         cmdclass={
             'build_clib': BuildClibWithCMake,
-            'build_ext': BuildCFFIForSharedLib,
+            'build_ext': BuildExtensionFromCFFI,
             'develop': develop,
             'egg_info': egg_info,
             'sdist': sdist,
             'bdist_wheel': bdist_wheel,
         },
     )
-
-else:
-    if BUILDING_FOR_WINDOWS:
-
-        class Distribution(_Distribution):
-            def is_pure(self):
-                return False
-
-
-        package_data['coincurve'].append('libsecp256k1.dll')
-        setup_kwargs = {}
-
-    else:
-
-        class Distribution(_Distribution):
-            def has_c_libraries(self):
-                return not has_system_lib()
-
-
-        setup_kwargs = dict(
-            ext_package='coincurve',
-            cffi_modules=['_cffi_build/build.py:ffi'],
-            cmdclass={
-                'build_clib': BuildClibWithCMake,
-                'build_ext': build_ext,
-                'develop': develop,
-                'egg_info': egg_info,
-                'sdist': sdist,
-                'bdist_wheel': bdist_wheel,
-            },
-        )
 
 setup(
     name='coincurve',

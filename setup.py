@@ -24,6 +24,7 @@ except ImportError:
 sys.path.append(os.path.abspath(os.path.dirname(__file__)))
 from setup_support import absolute, build_flags, detect_dll, has_system_lib, download_library
 
+
 BUILDING_FOR_WINDOWS = detect_dll()
 
 MAKE = 'gmake' if platform.system() in ['FreeBSD', 'OpenBSD'] else 'make'
@@ -257,7 +258,6 @@ if has_system_lib():
                 extension.__dict__['extra_link_args'][i] = f'{v}.lib'
 
     setup_kwargs = dict(
-        setup_requires=['cffi>=1.3.0', 'requests'],
         ext_modules=[extension],
         cmdclass={
             'build_clib': build_clib,
@@ -288,7 +288,6 @@ else:
 
 
         setup_kwargs = dict(
-            setup_requires=['cffi>=1.3.0', 'requests'],
             ext_package='coincurve',
             cffi_modules=['_cffi_build/build.py:ffi'],
             cmdclass={
@@ -305,10 +304,51 @@ setup(
     name='coincurve',
     version='19.0.0',
 
+    description='Cross-platform Python CFFI bindings for libsecp256k1',
+    long_description=open('README.md', 'r').read(),
+    long_description_content_type='text/markdown',
+    author_email='Ofek Lev <oss@ofek.dev>',
+    license='MIT OR Apache-2.0',
+
+    python_requires='>=3.8',
+    install_requires=['asn1crypto', 'cffi>=1.3.0'],
+
     packages=find_packages(exclude=('_cffi_build', '_cffi_build.*', 'libsecp256k1', 'tests')),
     package_data=package_data,
 
     distclass=Distribution,
     zip_safe=False,
+
+    project_urls={
+        'Documentation': 'https://ofek.dev/coincurve/',
+        'Issues': 'https://github.com/ofek/coincurve/issues',
+        'Source': 'https://github.com/ofek/coincurve',
+    },
+    keywords=[
+        'secp256k1',
+        'crypto',
+        'elliptic curves',
+        'bitcoin',
+        'ethereum',
+        'cryptocurrency',
+    ],
+    classifiers=[
+        'Development Status :: 5 - Production/Stable',
+        'Intended Audience :: Developers',
+        'License :: OSI Approved :: MIT License',
+        'License :: OSI Approved :: Apache Software License',
+        'Natural Language :: English',
+        'Operating System :: OS Independent',
+        'Programming Language :: Python :: 3',
+        'Programming Language :: Python :: 3.8',
+        'Programming Language :: Python :: 3.9',
+        'Programming Language :: Python :: 3.10',
+        'Programming Language :: Python :: 3.11',
+        'Programming Language :: Python :: 3.12',
+        'Programming Language :: Python :: Implementation :: CPython',
+        'Programming Language :: Python :: Implementation :: PyPy',
+        'Topic :: Software Development :: Libraries',
+        'Topic :: Security :: Cryptography',
+    ],
     **setup_kwargs
 )

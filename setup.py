@@ -1,6 +1,8 @@
 import errno
+import logging
 import os
 import os.path
+import pathlib
 import platform
 import shutil
 import subprocess
@@ -25,7 +27,7 @@ except ImportError:
     _bdist_wheel = None
 
 sys.path.append(os.path.abspath(os.path.dirname(__file__)))
-from setup_support import absolute, build_flags, detect_dll, has_system_lib  # noqa: E402
+from setup_support import absolute, build_flags, detect_dll, has_system_lib
 
 BUILDING_FOR_WINDOWS = detect_dll()
 
@@ -37,6 +39,18 @@ MAKE = 'gmake' if platform.system() in ['FreeBSD', 'OpenBSD'] else 'make'
 UPSTREAM_REF = os.getenv('COINCURVE_UPSTREAM_TAG') or '1ad5185cd42c0636104129fcc9f6a4bf9c67cc40'
 
 LIB_TARBALL_URL = f'https://github.com/bitcoin-core/secp256k1/archive/{UPSTREAM_REF}.tar.gz'
+
+LIB_NAME = 'libsecp256k1'
+PKG_NAME = 'coincurve'
+
+# Helpers for compilation instructions
+# Cross-compile for Windows/ARM64, Linux/ARM64, Darwin/ARM64, Windows/x86 (GitHub)
+X_HOST = os.getenv('COINCURVE_CROSS_HOST')
+
+SYSTEM = platform.system()  # supported: Windows, Linux, Darwin
+MACHINE = platform.machine()  # supported: AMD64, x86_64
+
+_SECP256K1_BUILD_TYPE = 'STATIC'
 
 # We require setuptools >= 3.3
 if [int(i) for i in setuptools_version.split('.', 2)[:2]] < [3, 3]:
@@ -216,6 +230,173 @@ class build_clib(_build_clib):
         self.build_flags['library_dirs'].extend(build_flags('libsecp256k1', 'L', build_temp))
         if not has_system_lib():
             self.build_flags['define'].append(('CFFI_ENABLE_RECOVERY', None))
+
+
+class _BuildClib(_build_clib):
+    title = 'SECP256K1 C library build'
+
+    def __init__(self, dist):
+        super().__init__(dist)
+        self.pkgconfig_dir = None
+
+        self._cwd = None
+        self._lib_src = None
+        self._install_dir = None
+        self._install_lib_dir = None
+
+    def get_source_files(self):
+        # Ensure library has been downloaded (sdist might have been skipped)
+        if not has_system_lib():
+            download_library(self)
+
+        # This seems to create issues in MANIFEST.in
+        return [f for _, _, fs in os.walk(absolute(LIB_NAME)) for f in fs]
+
+    def run(self):
+        if has_system_lib():
+            logging.info('Using system library')
+            return
+
+        logging.info(self.title)
+        self.bc_set_dirs_download()
+        self.bc_prepare_build(self._install_lib_dir, self.build_temp, self._lib_src)
+
+        try:
+            os.chdir(self.build_temp)
+            self.bc_build_in_temp(self._install_lib_dir, self._lib_src)
+            # TODO: await PR approval
+            # execute_command_with_temp_log(self.bc_build_command(), debug=True)
+        finally:
+            os.chdir(self._cwd)
+
+        # Register lib installation path
+        self.bc_update_pkg_config_path()
+
+    def bc_set_dirs_download(self):
+        self._cwd = pathlib.Path().cwd()
+        os.makedirs(self.build_temp, exist_ok=True)
+        self._install_dir = str(self.build_temp).replace('temp', 'lib')
+
+        if _SECP256K1_BUILD_TYPE == 'SHARED':
+            # Install shared library in the package directory
+            self._install_lib_dir = os.path.join(self._install_dir, PKG_NAME)
+        else:
+            # Install static library in its own directory for retrieval by build_ext
+            self._install_lib_dir = os.path.join(self._install_dir, LIB_NAME)
+
+        self._lib_src = os.path.join(self._cwd, LIB_NAME)
+        if not os.path.exists(self._lib_src):
+            self.get_source_files()
+
+    def bc_update_pkg_config_path(self):
+        self.pkgconfig_dir = [
+            os.path.join(self._install_lib_dir, 'lib', 'pkgconfig'),
+            os.path.join(self._install_lib_dir, 'lib64', 'pkgconfig'),
+        ]
+        os.environ['PKG_CONFIG_PATH'] = (
+            f'{str(os.pathsep).join(self.pkgconfig_dir)}'
+            f'{os.pathsep}'
+            f'{os.environ.get("PKG_CONFIG_PATH", "")}'
+        ).replace('\\', '/')
+
+        # Verify installation
+        # TODO: await PR approval
+        # execute_command_with_temp_log([PKGCONFIG, '--exists', LIB_NAME])
+
+    @staticmethod
+    def bc_prepare_build(install_lib_dir, build_temp, lib_src):
+        raise NotImplementedError('This method should be implemented in a Mixin class')
+
+    @staticmethod
+    def bc_build_in_temp(install_lib_dir, lib_src):
+        pass
+
+    @staticmethod
+    def bc_build_command():
+        raise NotImplementedError('This method should be implemented in a Mixin class')
+
+
+class BuildClibWithCMake(_BuildClib):
+    @staticmethod
+    def _generator(msvc):
+        if '2017' in str(msvc):
+            return 'Visual Studio 15 2017'
+        if '2019' in str(msvc):
+            return 'Visual Studio 16 2019'
+        if '2022' in str(msvc):
+            return 'Visual Studio 17 2022'
+
+    @staticmethod
+    def bc_prepare_build(install_lib_dir, build_temp, lib_src):
+        cmake_args = [
+            '-DCMAKE_BUILD_TYPE=Release',
+            f'-DCMAKE_INSTALL_PREFIX={install_lib_dir}',
+            f'-DCMAKE_C_FLAGS={"-fPIC" if _SECP256K1_BUILD_TYPE != "SHARED" and SYSTEM != "Windows" else ""}',
+            f'-DSECP256K1_DISABLE_SHARED={"OFF" if _SECP256K1_BUILD_TYPE == "SHARED" else "ON"}',
+            '-DSECP256K1_BUILD_BENCHMARK=OFF',
+            '-DSECP256K1_BUILD_TESTS=ON',
+            '-DSECP256K1_ENABLE_MODULE_ECDH=ON',
+            '-DSECP256K1_ENABLE_MODULE_RECOVERY=ON',
+            '-DSECP256K1_ENABLE_MODULE_SCHNORRSIG=ON',
+            '-DSECP256K1_ENABLE_MODULE_EXTRAKEYS=ON',
+        ]
+
+        # Windows (more complex)
+        if SYSTEM == 'Windows':
+            # TODO: await PR approval
+            # vswhere = shutil.which('vswhere')
+            # msvc = execute_command_with_temp_log(
+            #     [vswhere, '-latest', '-find', 'MSBuild\\**\\Bin\\MSBuild.exe'],
+            #     capture_output=True,
+            # )
+            msvc = None
+
+            # For windows x86/x64, select the correct architecture
+            arch = 'x64' if MACHINE == 'AMD64' else 'Win32'  # Native
+
+            if X_HOST is not None:
+                logging.info(f'Cross-compiling on {SYSTEM}:{MACHINE} for {X_HOST}')
+                if X_HOST in ['arm64', 'ARM64', 'x86']:
+                    arch = 'Win32' if X_HOST in ['x86'] else 'arm64'
+                else:
+                    raise NotImplementedError(f'Unsupported architecture: {X_HOST}')
+
+            # Place the DLL directly in the package directory
+            cmake_args.append('-DCMAKE_INSTALL_BINDIR=.')
+            cmake_args.extend(['-G', BuildClibWithCMake._generator(msvc), f'-A{arch}'])
+
+        elif SYSTEM == 'Darwin':
+            if X_HOST is None:
+                cmake_args.append(
+                    f'-DCMAKE_OSX_ARCHITECTURES={MACHINE}'  # Native
+                )
+            else:
+                logging.info(f'Cross-compiling on {SYSTEM}:{MACHINE} for {X_HOST}')
+                if X_HOST in ['armv7', 'armv7s', 'arm64', 'arm64e']:
+                    cmake_args.append(
+                        f'-DCMAKE_OSX_ARCHITECTURES={X_HOST}'
+                    )
+        else:
+            if X_HOST is not None:
+                if X_HOST not in [
+                    'arm-linux-gnueabihf',
+                    'x86_64-w64-mingw32',
+                ]:
+                    raise NotImplementedError(f'Unsupported architecture: {X_HOST}')
+
+                logging.info(f'Cross-compiling on {SYSTEM}:{MACHINE} for {X_HOST}')
+                cmake_args.append(
+                    f'-DCMAKE_TOOLCHAIN_FILE=../cmake/{X_HOST}.toolchain.cmake'
+                )
+
+        logging.info('    Configure CMake')
+        # TODO: await PR approval
+        # execute_command_with_temp_log(['cmake', '-S', lib_src, '-B', build_temp, *cmake_args])
+
+    @staticmethod
+    def bc_build_command():
+        logging.info('    Install with CMake')
+        return ['cmake', '--build', '.', '--target', 'install', '--config', 'Release', '--clean-first']
 
 
 class build_ext(_build_ext):

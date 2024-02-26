@@ -127,112 +127,7 @@ else:
     bdist_wheel = None
 
 
-class build_clib(_build_clib):
-    def initialize_options(self):
-        _build_clib.initialize_options(self)
-        self.build_flags = None
-
-    def finalize_options(self):
-        _build_clib.finalize_options(self)
-        if self.build_flags is None:
-            self.build_flags = {'include_dirs': [], 'library_dirs': [], 'define': []}
-
-    def get_source_files(self):
-        # Ensure library has been downloaded (sdist might have been skipped)
-        if not has_system_lib():
-            download_library(self)
-
-        return [
-            absolute(os.path.join(root, filename))
-            for root, _, filenames in os.walk(absolute('libsecp256k1'))
-            for filename in filenames
-        ]
-
-    def build_libraries(self, libraries):
-        raise Exception('build_libraries')
-
-    def check_library_list(self, libraries):
-        raise Exception('check_library_list')
-
-    def get_library_names(self):
-        return build_flags('libsecp256k1', 'l', os.path.abspath(self.build_temp))
-
-    def run(self):
-        if has_system_lib():
-            log.info('Using system library')
-            return
-
-        build_temp = os.path.abspath(self.build_temp)
-
-        try:
-            os.makedirs(build_temp)
-        except OSError as e:
-            if e.errno != errno.EEXIST:
-                raise
-
-        if not os.path.exists(absolute('libsecp256k1')):
-            # library needs to be downloaded
-            self.get_source_files()
-
-        if not os.path.exists(absolute('libsecp256k1/configure')):
-            # configure script hasn't been generated yet
-            autogen = absolute('libsecp256k1/autogen.sh')
-            os.chmod(absolute(autogen), 0o700)
-            subprocess.check_call([autogen], cwd=absolute('libsecp256k1'))  # noqa S603
-
-        for filename in [
-            'libsecp256k1/configure',
-            'libsecp256k1/build-aux/compile',
-            'libsecp256k1/build-aux/config.guess',
-            'libsecp256k1/build-aux/config.sub',
-            'libsecp256k1/build-aux/depcomp',
-            'libsecp256k1/build-aux/install-sh',
-            'libsecp256k1/build-aux/missing',
-            'libsecp256k1/build-aux/test-driver',
-        ]:
-            try:
-                os.chmod(absolute(filename), 0o700)
-            except OSError as e:
-                # some of these files might not exist depending on autoconf version
-                if e.errno != errno.ENOENT:
-                    # If the error isn't 'No such file or directory' something
-                    # else is wrong and we want to know about it
-                    raise
-
-        cmd = [
-            absolute('libsecp256k1/configure'),
-            '--disable-shared',
-            '--enable-static',
-            '--disable-dependency-tracking',
-            '--with-pic',
-            '--enable-module-extrakeys',
-            '--enable-module-recovery',
-            '--enable-module-schnorrsig',
-            '--prefix',
-            os.path.abspath(self.build_clib),
-            '--enable-experimental',
-            '--enable-module-ecdh',
-            '--enable-benchmark=no',
-            '--enable-tests=no',
-            '--enable-exhaustive-tests=no',
-        ]
-        if 'COINCURVE_CROSS_HOST' in os.environ:
-            cmd.append(f"--host={os.environ['COINCURVE_CROSS_HOST']}")
-
-        log.debug(f"Running configure: {' '.join(cmd)}")
-        subprocess.check_call(cmd, cwd=build_temp)  # noqa S603
-
-        subprocess.check_call([MAKE], cwd=build_temp)  # noqa S603
-        subprocess.check_call([MAKE, 'check'], cwd=build_temp)  # noqa S603
-        subprocess.check_call([MAKE, 'install'], cwd=build_temp)  # noqa S603
-
-        self.build_flags['include_dirs'].extend(build_flags('libsecp256k1', 'I', build_temp))
-        self.build_flags['library_dirs'].extend(build_flags('libsecp256k1', 'L', build_temp))
-        if not has_system_lib():
-            self.build_flags['define'].append(('CFFI_ENABLE_RECOVERY', None))
-
-
-class _BuildClib(_build_clib):
+class BuildClibWithCMake(_build_clib):
     title = 'SECP256K1 C library build'
 
     def __init__(self, dist):
@@ -264,8 +159,7 @@ class _BuildClib(_build_clib):
         try:
             os.chdir(self.build_temp)
             self.bc_build_in_temp(self._install_lib_dir, self._lib_src)
-            # TODO: await PR approval
-            # execute_command_with_temp_log(self.bc_build_command(), debug=True)
+            subprocess.check_call(self.bc_build_command())  # noqa S603
         finally:
             os.chdir(self._cwd)
 
@@ -300,23 +194,8 @@ class _BuildClib(_build_clib):
         ).replace('\\', '/')
 
         # Verify installation
-        # TODO: await PR approval
-        # execute_command_with_temp_log([PKGCONFIG, '--exists', LIB_NAME])
+        subprocess.check_call([PKGCONFIG, '--exists', LIB_NAME])  # noqa S603
 
-    @staticmethod
-    def bc_prepare_build(install_lib_dir, build_temp, lib_src):
-        raise NotImplementedError('This method should be implemented in a Mixin class')
-
-    @staticmethod
-    def bc_build_in_temp(install_lib_dir, lib_src):
-        pass
-
-    @staticmethod
-    def bc_build_command():
-        raise NotImplementedError('This method should be implemented in a Mixin class')
-
-
-class BuildClibWithCMake(_BuildClib):
     @staticmethod
     def _generator(msvc):
         if '2017' in str(msvc):
@@ -390,8 +269,7 @@ class BuildClibWithCMake(_BuildClib):
                 )
 
         logging.info('    Configure CMake')
-        # TODO: await PR approval
-        # execute_command_with_temp_log(['cmake', '-S', lib_src, '-B', build_temp, *cmake_args])
+        subprocess.check_call(['cmake', '-S', lib_src, '-B', build_temp, *cmake_args])  # noqa S603
 
     @staticmethod
     def bc_build_command():
@@ -471,7 +349,7 @@ if has_system_lib():
         setup_requires=['cffi>=1.3.0', 'requests'],
         ext_modules=[extension],
         cmdclass={
-            'build_clib': build_clib,
+            'build_clib': BuildClibWithCMake,
             'build_ext': BuildCFFIForSharedLib,
             'develop': develop,
             'egg_info': egg_info,
@@ -503,7 +381,7 @@ else:
             ext_package='coincurve',
             cffi_modules=['_cffi_build/build.py:ffi'],
             cmdclass={
-                'build_clib': build_clib,
+                'build_clib': BuildClibWithCMake,
                 'build_ext': build_ext,
                 'develop': develop,
                 'egg_info': egg_info,

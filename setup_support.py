@@ -1,35 +1,35 @@
 import glob
+import logging
 import os
-import shutil
 import subprocess
-from contextlib import contextmanager, suppress
-from tempfile import mkdtemp
+import tempfile
+from contextlib import suppress
 
-
-@contextmanager
-def workdir():
-    cwd = os.getcwd()
-    tmpdir = mkdtemp()
-    os.chdir(tmpdir)
-    try:
-        yield
-    finally:
-        os.chdir(cwd)
-        shutil.rmtree(tmpdir)
-
-
-@contextmanager
-def redirect(stdchannel, dest_filename):
-    oldstdchannel = os.dup(stdchannel.fileno())
-    dest_file = open(dest_filename, 'w')
-    os.dup2(dest_file.fileno(), stdchannel.fileno())
-    try:
-        yield
-    finally:
-        if oldstdchannel is not None:
-            os.dup2(oldstdchannel, stdchannel.fileno())
-        if dest_file is not None:
-            dest_file.close()
+# Is this needed?
+# @contextmanager
+# def workdir():
+#     cwd = os.getcwd()
+#     tmpdir = mkdtemp()
+#     os.chdir(tmpdir)
+#     try:
+#         yield
+#     finally:
+#         os.chdir(cwd)
+#         shutil.rmtree(tmpdir)
+#
+#
+# @contextmanager
+# def redirect(stdchannel, dest_filename):
+#     oldstdchannel = os.dup(stdchannel.fileno())
+#     dest_file = open(dest_filename, 'w')
+#     os.dup2(dest_file.fileno(), stdchannel.fileno())
+#     try:
+#         yield
+#     finally:
+#         if oldstdchannel is not None:
+#             os.dup2(oldstdchannel, stdchannel.fileno())
+#         if dest_file is not None:
+#             dest_file.close()
 
 
 def absolute(*paths):
@@ -47,9 +47,13 @@ def build_flags(library, type_, path):
         pkg_config_path.append(os.environ['LIB_DIR'])
         pkg_config_path.append(os.path.join(os.environ['LIB_DIR'], 'pkgconfig'))
 
+    # Update PKG_CONFIG_PATH, it may be needed in later stages
+    new_path = str(os.pathsep).join(pkg_config_path)
+    os.environ['PKG_CONFIG_PATH'] = new_path + os.pathsep + os.environ.get('PKG_CONFIG_PATH', '')
+
     options = {'I': '--cflags-only-I', 'L': '--libs-only-L', 'l': '--libs-only-l'}
-    env = dict(os.environ, PKG_CONFIG_PATH=':'.join(pkg_config_path))
-    flags = subprocess.check_output(['pkg-config', '--static', options[type_], library], env=env)  # noqa S603
+    cmd = ['pkg-config', options[type_], library]
+    flags = execute_command_with_temp_log(cmd, capture_output=True)
     flags = list(flags.decode('UTF-8').split())
 
     return [flag.strip(f'-{type_}') for flag in flags]
@@ -62,9 +66,11 @@ def _find_lib():
     from cffi import FFI
 
     try:
-        subprocess.check_output(['pkg-config', '--exists', 'libsecp256k1'])  # noqa S603
+        cmd = ['pkg-config', '--exists', 'libsecp256k1']
+        execute_command_with_temp_log(cmd)
 
-        includes = subprocess.check_output(['pkg-config', '--cflags-only-I', 'libsecp256k1'])  # noqa S603
+        cmd = ['pkg-config', '--cflags-only-I', 'libsecp256k1']
+        includes = execute_command_with_temp_log(cmd, capture_output=True)
         includes = includes.strip().decode('utf-8')
 
         return os.path.exists(os.path.join(includes[2:], 'secp256k1_ecdh.h'))
@@ -95,3 +101,27 @@ def detect_dll():
         if fn.endswith('.dll'):
             return True
     return False
+
+
+def execute_command_with_temp_log(cmd, *, debug=False, capture_output=False, **kwargs):
+    with tempfile.NamedTemporaryFile(mode='w+') as temp_log:
+        try:
+            if capture_output:
+                ret = subprocess.check_output(cmd, stderr=temp_log, **kwargs)  # noqa S603
+            else:
+                subprocess.check_call(cmd, stdout=temp_log, stderr=temp_log, **kwargs)  # noqa S603
+
+            if debug:
+                temp_log.seek(0)
+                log_contents = temp_log.read()
+                logging.info(f'Command log:\n{log_contents}')
+
+            if capture_output:
+                return ret
+
+        except subprocess.CalledProcessError as e:
+            logging.error(f'An error occurred during the command execution: {e}')
+            temp_log.seek(0)
+            log_contents = temp_log.read()
+            logging.error(f'Command log:\n{log_contents}')
+            raise e

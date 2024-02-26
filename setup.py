@@ -157,7 +157,6 @@ class BuildClibWithCMake(_build_clib):
 
         try:
             os.chdir(self.build_temp)
-            self.bc_build_in_temp(self._install_lib_dir, self._lib_src)
             subprocess.check_call(self.bc_build_command())  # noqa S603
         finally:
             os.chdir(self._cwd)

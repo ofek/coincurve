@@ -401,7 +401,6 @@ def main():
             def is_pure(self):
                 return False
 
-
         package_data['coincurve'].append('libsecp256k1.dll')
         setup_kwargs = {}
 
@@ -410,7 +409,6 @@ def main():
         class Distribution(_Distribution):
             def has_c_libraries(self):
                 return not has_system_lib()
-
 
         setup_kwargs = dict(
             ext_modules=[extension],
@@ -437,7 +435,7 @@ def main():
         python_requires='>=3.8',
         install_requires=['asn1crypto', 'cffi>=1.3.0'],
 
-        package_data={'coincurve': ['py.typed']},
+        package_data=package_data,
         packages=find_packages(include=['coincurve', 'coincurve.*']),
 
         distclass=Distribution,

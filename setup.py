@@ -433,6 +433,7 @@ def main():
         license='MIT OR Apache-2.0',
 
         python_requires='>=3.8',
+        setup_requires=['cffi>=1.3.0', 'requests', 'setuptools>=61'],
         install_requires=['asn1crypto', 'cffi>=1.3.0'],
 
         package_data=package_data,

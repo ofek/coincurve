@@ -61,14 +61,10 @@ def _find_lib():
 
     from cffi import FFI
 
+    from setup import SECP256K1_BUILD
+
     try:
-        subprocess.check_output(['pkg-config', '--exists', 'libsecp256k1'])  # noqa S603
-
-        includes = subprocess.check_output(['pkg-config', '--cflags-only-I', 'libsecp256k1'])  # noqa S603
-        includes = includes.strip().decode('utf-8')
-
-        return os.path.exists(os.path.join(includes[2:], 'secp256k1_ecdh.h'))
-
+        lib_dir = subprocess.check_output(['pkg-config', '--libs-only-L', 'libsecp256k1'])  # noqa S603
     except (OSError, subprocess.CalledProcessError):
         if 'LIB_DIR' in os.environ:
             for path in glob.glob(os.path.join(os.environ['LIB_DIR'], '*secp256k1*')):
@@ -77,6 +73,25 @@ def _find_lib():
                     return True
         # We couldn't locate libsecp256k1, so we'll use the bundled one
         return False
+
+    # tox fails when the dynamic library is installed for a STATIC linkage
+    # so we need to check the type of the installed library
+    lib_dir = lib_dir[2:].strip().decode('utf-8')
+    if os.name == 'nt':
+        dyn_lib = any(
+            (
+                os.path.exists(os.path.join(lib_dir[:-3], 'bin', 'secp256k1.dll')),
+                os.path.exists(os.path.join(lib_dir[:-3], 'bin', 'libsecp256k1.dll')),
+            )
+        )
+    else:
+        dyn_lib = any(
+            (
+                os.path.exists(os.path.join(lib_dir, 'libsecp256k1.so')),
+                os.path.exists(os.path.join(lib_dir, 'libsecp256k1.dylib')),
+            )
+        )
+    return any((dyn_lib and SECP256K1_BUILD == 'SHARED', not dyn_lib and SECP256K1_BUILD != 'SHARED'))
 
 
 _has_system_lib = None

@@ -49,7 +49,7 @@ X_HOST = os.getenv('COINCURVE_CROSS_HOST')
 SYSTEM = platform.system()  # supported: Windows, Linux, Darwin
 MACHINE = platform.machine()  # supported: AMD64, x86_64
 
-_SECP256K1_BUILD_TYPE = 'STATIC'
+SECP256K1_BUILD = os.getenv('COINCURVE_SECP256K1_BUILD') or 'STATIC'
 
 # We require setuptools >= 3.3
 if [int(i) for i in setuptools_version.split('.', 2)[:2]] < [3, 3]:
@@ -169,12 +169,14 @@ class BuildClibWithCMake(_build_clib):
         os.makedirs(self.build_temp, exist_ok=True)
         self._install_dir = str(self.build_temp).replace('temp', 'lib')
 
-        if _SECP256K1_BUILD_TYPE == 'SHARED':
+        if SECP256K1_BUILD == 'SHARED':
             # Install shared library in the package directory
             self._install_lib_dir = os.path.join(self._install_dir, PKG_NAME)
         else:
             # Install static library in its own directory for retrieval by build_ext
-            self._install_lib_dir = os.path.join(self._install_dir, LIB_NAME)
+            self._install_lib_dir = os.path.join(
+                self._install_dir.replace('lib', 'x_lib'), LIB_NAME
+            )
 
         self._lib_src = os.path.join(self._cwd, LIB_NAME)
         if not os.path.exists(self._lib_src):
@@ -188,7 +190,7 @@ class BuildClibWithCMake(_build_clib):
         os.environ['PKG_CONFIG_PATH'] = (
             f'{str(os.pathsep).join(self.pkgconfig_dir)}'
             f'{os.pathsep}'
-            f'{os.environ.get("PKG_CONFIG_PATH", "")}'
+            f'{os.getenv("PKG_CONFIG_PATH", "")}'
         ).replace('\\', '/')
 
         # Verify installation
@@ -208,8 +210,8 @@ class BuildClibWithCMake(_build_clib):
         cmake_args = [
             '-DCMAKE_BUILD_TYPE=Release',
             f'-DCMAKE_INSTALL_PREFIX={install_lib_dir}',
-            f'-DCMAKE_C_FLAGS={"-fPIC" if _SECP256K1_BUILD_TYPE != "SHARED" and SYSTEM != "Windows" else ""}',
-            f'-DSECP256K1_DISABLE_SHARED={"OFF" if _SECP256K1_BUILD_TYPE == "SHARED" else "ON"}',
+            f'-DCMAKE_C_FLAGS={"-fPIC" if SECP256K1_BUILD != "SHARED" and SYSTEM != "Windows" else ""}',
+            f'-DSECP256K1_DISABLE_SHARED={"OFF" if SECP256K1_BUILD == "SHARED" else "ON"}',
             '-DSECP256K1_BUILD_BENCHMARK=OFF',
             '-DSECP256K1_BUILD_TESTS=ON',
             '-DSECP256K1_ENABLE_MODULE_ECDH=ON',
@@ -327,7 +329,7 @@ class StaticLinker(object):
 
 
 class BuildExtensionFromCFFI(_build_ext):
-    static_lib = True if _SECP256K1_BUILD_TYPE == 'STATIC' else False
+    static_lib = True if SECP256K1_BUILD == 'STATIC' else False
 
     def update_link_args(self, libraries, libraries_dirs, extra_link_args):
         if self.static_lib:
@@ -338,7 +340,11 @@ class BuildExtensionFromCFFI(_build_ext):
     def build_extension(self, ext):
         # Construct C-file from CFFI
         build_script = os.path.join('_cffi_build', 'build_shared.py')
-        for c_file in ext.sources:
+        for i, c_file in enumerate(ext.sources):
+            os.makedirs(self.build_temp, exist_ok=True)
+            c_file = os.path.join(self.build_temp, os.path.basename(c_file))
+            # This puts c-file a temp location (and not in the coincurve src directory)
+            ext.sources[i] = c_file
             cmd = [sys.executable, build_script, c_file, '1' if self.static_lib else '0']
             subprocess.check_call(cmd)  # noqa S603
 
@@ -347,7 +353,7 @@ class BuildExtensionFromCFFI(_build_ext):
 
         # Location of locally built library
         lib = 'libsecp256k1' if self.static_lib else 'coincurve'
-        c_lib_pkg = os.path.join(self.build_lib, lib, 'lib', 'pkgconfig')
+        c_lib_pkg = os.path.join(self.build_lib.replace('lib', 'x_lib'), lib, 'lib', 'pkgconfig')
         if not os.path.isfile(os.path.join(c_lib_pkg, f'{LIB_NAME}.pc')) and not has_system_lib():
             raise RuntimeError(
                 f'Library not found in {c_lib_pkg}, nor as a system lib({has_system_lib()}). '
@@ -379,93 +385,98 @@ class develop(_develop):
         _develop.run(self)
 
 
-package_data = {'coincurve': ['py.typed']}
+def main():
+    package_data = {'coincurve': ['py.typed']}
 
-extension = Extension(
-    name='coincurve._libsecp256k1',
-    sources=[os.path.join('coincurve', '_libsecp256k1.c')],
-    py_limited_api=False,
-)
-
-if BUILDING_FOR_WINDOWS:
-
-    class Distribution(_Distribution):
-        def is_pure(self):
-            return False
-
-
-    package_data['coincurve'].append('libsecp256k1.dll')
-    setup_kwargs = {}
-
-else:
-
-    class Distribution(_Distribution):
-        def has_c_libraries(self):
-            return not has_system_lib()
-
-
-    setup_kwargs = dict(
-        ext_package='coincurve',
-        ext_modules=[extension],
-        cmdclass={
-            'build_clib': BuildClibWithCMake,
-            'build_ext': BuildExtensionFromCFFI,
-            'develop': develop,
-            'egg_info': egg_info,
-            'sdist': sdist,
-            'bdist_wheel': bdist_wheel,
-        },
+    extension = Extension(
+        name='coincurve._libsecp256k1',
+        sources=['_c_file_for_extension.c'],
+        py_limited_api=False,
+        extra_compile_args=['/d2FH4-'] if SYSTEM == 'Windows' else [],
     )
 
-setup(
-    name='coincurve',
-    version='19.0.0',
+    if BUILDING_FOR_WINDOWS:
 
-    description='Cross-platform Python CFFI bindings for libsecp256k1',
-    long_description=open('README.md', 'r').read(),
-    long_description_content_type='text/markdown',
-    author_email='Ofek Lev <oss@ofek.dev>',
-    license='MIT OR Apache-2.0',
+        class Distribution(_Distribution):
+            def is_pure(self):
+                return False
 
-    python_requires='>=3.8',
-    install_requires=['asn1crypto', 'cffi>=1.3.0'],
 
-    packages=find_packages(exclude=('_cffi_build', '_cffi_build.*', 'libsecp256k1', 'tests')),
-    package_data=package_data,
+        package_data['coincurve'].append('libsecp256k1.dll')
+        setup_kwargs = {}
 
-    distclass=Distribution,
-    zip_safe=False,
+    else:
 
-    project_urls={
-        'Documentation': 'https://ofek.dev/coincurve/',
-        'Issues': 'https://github.com/ofek/coincurve/issues',
-        'Source': 'https://github.com/ofek/coincurve',
-    },
-    keywords=[
-        'secp256k1',
-        'crypto',
-        'elliptic curves',
-        'bitcoin',
-        'ethereum',
-        'cryptocurrency',
-    ],
-    classifiers=[
-        'Development Status :: 5 - Production/Stable',
-        'Intended Audience :: Developers',
-        'License :: OSI Approved :: MIT License',
-        'License :: OSI Approved :: Apache Software License',
-        'Natural Language :: English',
-        'Operating System :: OS Independent',
-        'Programming Language :: Python :: 3',
-        'Programming Language :: Python :: 3.8',
-        'Programming Language :: Python :: 3.9',
-        'Programming Language :: Python :: 3.10',
-        'Programming Language :: Python :: 3.11',
-        'Programming Language :: Python :: 3.12',
-        'Programming Language :: Python :: Implementation :: CPython',
-        'Programming Language :: Python :: Implementation :: PyPy',
-        'Topic :: Software Development :: Libraries',
-        'Topic :: Security :: Cryptography',
-    ],
-    **setup_kwargs
-)
+        class Distribution(_Distribution):
+            def has_c_libraries(self):
+                return not has_system_lib()
+
+
+        setup_kwargs = dict(
+            ext_modules=[extension],
+            cmdclass={
+                'build_clib': BuildClibWithCMake,
+                'build_ext': BuildExtensionFromCFFI,
+                'develop': develop,
+                'egg_info': egg_info,
+                'sdist': sdist,
+                'bdist_wheel': bdist_wheel,
+            },
+        )
+
+    setup(
+        name='coincurve',
+        version='19.0.0',
+
+        description='Cross-platform Python CFFI bindings for libsecp256k1',
+        long_description=open('README.md', 'r').read(),
+        long_description_content_type='text/markdown',
+        author_email='Ofek Lev <oss@ofek.dev>',
+        license='MIT OR Apache-2.0',
+
+        python_requires='>=3.8',
+        install_requires=['asn1crypto', 'cffi>=1.3.0'],
+
+        package_data={'coincurve': ['py.typed']},
+        packages=find_packages(include=['coincurve', 'coincurve.*']),
+
+        distclass=Distribution,
+        zip_safe=False,
+
+        project_urls={
+            'Documentation': 'https://ofek.dev/coincurve/',
+            'Issues': 'https://github.com/ofek/coincurve/issues',
+            'Source': 'https://github.com/ofek/coincurve',
+        },
+        keywords=[
+            'secp256k1',
+            'crypto',
+            'elliptic curves',
+            'bitcoin',
+            'ethereum',
+            'cryptocurrency',
+        ],
+        classifiers=[
+            'Development Status :: 5 - Production/Stable',
+            'Intended Audience :: Developers',
+            'License :: OSI Approved :: MIT License',
+            'License :: OSI Approved :: Apache Software License',
+            'Natural Language :: English',
+            'Operating System :: OS Independent',
+            'Programming Language :: Python :: 3',
+            'Programming Language :: Python :: 3.8',
+            'Programming Language :: Python :: 3.9',
+            'Programming Language :: Python :: 3.10',
+            'Programming Language :: Python :: 3.11',
+            'Programming Language :: Python :: 3.12',
+            'Programming Language :: Python :: Implementation :: CPython',
+            'Programming Language :: Python :: Implementation :: PyPy',
+            'Topic :: Software Development :: Libraries',
+            'Topic :: Security :: Cryptography',
+        ],
+        **setup_kwargs
+    )
+
+
+if __name__ == '__main__':
+    main()

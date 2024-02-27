@@ -213,7 +213,7 @@ class BuildClibWithCMake(_build_clib):
             f'-DCMAKE_C_FLAGS={"-fPIC" if SECP256K1_BUILD != "SHARED" and SYSTEM != "Windows" else ""}',
             f'-DSECP256K1_DISABLE_SHARED={"OFF" if SECP256K1_BUILD == "SHARED" else "ON"}',
             '-DSECP256K1_BUILD_BENCHMARK=OFF',
-            '-DSECP256K1_BUILD_TESTS=ON',
+            '-DSECP256K1_BUILD_TESTS=OFF',
             '-DSECP256K1_ENABLE_MODULE_ECDH=ON',
             '-DSECP256K1_ENABLE_MODULE_RECOVERY=ON',
             '-DSECP256K1_ENABLE_MODULE_SCHNORRSIG=ON',
@@ -433,11 +433,10 @@ def main():
         license='MIT OR Apache-2.0',
 
         python_requires='>=3.8',
-        setup_requires=['cffi>=1.3.0', 'requests', 'setuptools>=61'],
         install_requires=['asn1crypto', 'cffi>=1.3.0'],
 
+        packages=find_packages(exclude=('_cffi_build', '_cffi_build.*', LIB_NAME, 'tests')),
         package_data=package_data,
-        packages=find_packages(include=['coincurve', 'coincurve.*']),
 
         distclass=Distribution,
         zip_safe=False,

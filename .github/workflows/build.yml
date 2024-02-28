@@ -120,6 +120,13 @@ jobs:
         path: wheelhouse/*.whl
         if-no-files-found: error
 
+    - name: Build SHARED wheels
+      uses: pypa/cibuildwheel@v2.16.5
+      env:
+        CIBW_ARCHS_MACOS: x86_64
+        COINCURVE_SECP256K1_BUILD: 'SHARED'
+
+
   macos-wheels-arm:
     name: Build macOS wheels for ARM
     needs:
@@ -141,6 +148,14 @@ jobs:
         path: wheelhouse/*.whl
         if-no-files-found: error
 
+    - name: Build SHARED wheels
+      uses: pypa/cibuildwheel@v2.16.5
+      env:
+        CIBW_ARCHS_MACOS: arm64
+        COINCURVE_SECP256K1_BUILD: 'SHARED'
+        COINCURVE_CROSS_HOST: 'arm64'
+
+
   macos-wheels-arm-beta:
     name: Build macOS wheels for ARM (Native
     needs:
@@ -161,6 +176,12 @@ jobs:
         path: wheelhouse/*.whl
         if-no-files-found: error
 
+    - name: Build SHARED wheels
+      uses: pypa/cibuildwheel@v2.16.5
+      env:
+        COINCURVE_SECP256K1_BUILD: 'SHARED'
+        CIBW_ARCHS_MACOS: arm64
+
   windows-wheels-x86_64:
     name: Build Windows wheels AMD64
     needs:
@@ -176,7 +197,6 @@ jobs:
       uses: pypa/cibuildwheel@v2.16.5
       env:
         CIBW_ARCHS_WINDOWS: "AMD64"
-        CIBW_BUILD_VERBOSITY: 1
         CIBW_BEFORE_ALL: choco install -y --no-progress --no-color cmake>=3.28 pkgconfiglite
 
     - uses: actions/upload-artifact@v3
@@ -184,6 +204,13 @@ jobs:
         name: artifacts
         path: wheelhouse/*.whl
         if-no-files-found: error
+
+    - name: Build SHARED wheels
+      uses: pypa/cibuildwheel@v2.16.5
+      env:
+        COINCURVE_SECP256K1_BUILD: 'SHARED'
+        CIBW_ARCHS_WINDOWS: "AMD64"
+        CIBW_BEFORE_ALL: choco install -y --no-progress --no-color cmake>=3.28 pkgconfiglite
 
   windows-wheels-x86:
     name: Build Windows wheels x86
@@ -201,7 +228,6 @@ jobs:
       env:
         COINCURVE_CROSS_HOST: "x86"
         CIBW_ARCHS_WINDOWS: "x86"
-        CIBW_BUILD_VERBOSITY: 1
         CIBW_BEFORE_ALL: choco install -y --no-progress --no-color cmake>=3.28 pkgconfiglite
 
     - uses: actions/upload-artifact@v3
@@ -209,6 +235,15 @@ jobs:
         name: artifacts
         path: wheelhouse/*.whl
         if-no-files-found: error
+
+    - name: Build SHARED wheels
+      uses: pypa/cibuildwheel@v2.16.5
+      env:
+        COINCURVE_SECP256K1_BUILD: 'SHARED'
+        COINCURVE_CROSS_HOST: "x86"
+        CIBW_ARCHS_WINDOWS: "x86"
+        CIBW_BEFORE_ALL: choco install -y --no-progress --no-color cmake>=3.28 pkgconfiglite
+
 
   windows-wheels-arm64:
     name: Build Windows wheels for ARM64
@@ -234,6 +269,16 @@ jobs:
         name: artifacts
         path: wheelhouse/*.whl
         if-no-files-found: error
+
+    - name: Build SHARED wheels
+      uses: pypa/cibuildwheel@v2.16.5
+      env:
+        COINCURVE_SECP256K1_BUILD: 'SHARED'
+        COINCURVE_CROSS_HOST: "arm64"
+        CIBW_ARCHS_WINDOWS: "ARM64"
+        CIBW_BUILD_VERBOSITY: 1
+        CIBW_BEFORE_ALL: choco install -y --no-progress --no-color cmake>=3.28 pkgconfiglite
+
 
   windows-wheels-and-sdist:
     name: Build Windows wheels and source distribution

@@ -355,10 +355,13 @@ class BuildExtensionFromCFFI(_build_ext):
         lib = 'libsecp256k1' if self.static_lib else 'coincurve'
         c_lib_pkg = os.path.join(self.build_lib.replace('lib', 'x_lib'), lib, 'lib', 'pkgconfig')
         if not os.path.isfile(os.path.join(c_lib_pkg, f'{LIB_NAME}.pc')) and not has_system_lib():
-            raise RuntimeError(
-                f'Library not found in {c_lib_pkg}, nor as a system lib({has_system_lib()}). '
-                'Please check that the library was properly built.'
-            )
+            c_lib_pkg = os.path.join(self.build_lib.replace('lib', 'x_lib'), lib, 'lib64', 'pkgconfig')
+            if not os.path.isfile(os.path.join(c_lib_pkg, f'{LIB_NAME}.pc')) and not has_system_lib():
+                raise RuntimeError(
+                    f'Library not found in {c_lib_pkg = }'
+                    f'\nnor as a system lib ({has_system_lib() = }). '
+                    'Please check that the library was properly built.'
+                )
 
         # PKG_CONFIG_PATH is updated by build_clib if built locally,
         # however, it would not work for a step-by-step build, thus we specify the lib path

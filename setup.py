@@ -59,6 +59,13 @@ if [int(i) for i in setuptools_version.split('.', 2)[:2]] < [3, 3]:
     )
 
 
+def define_secp256k1_local_lib_info():
+    if SECP256K1_BUILD == 'SHARED':
+        return 'libsecp256k1', 'x_lib'
+    else:
+        return 'coincurve', 'lib'
+
+
 def download_library(command):
     if command.dry_run:
         return
@@ -169,14 +176,9 @@ class BuildClibWithCMake(_build_clib):
         os.makedirs(self.build_temp, exist_ok=True)
         self._install_dir = str(self.build_temp).replace('temp', 'lib')
 
-        if SECP256K1_BUILD == 'SHARED':
-            # Install shared library in the package directory
-            self._install_lib_dir = os.path.join(self._install_dir, PKG_NAME)
-        else:
-            # Install static library in its own directory for retrieval by build_ext
-            self._install_lib_dir = os.path.join(
-                self._install_dir.replace('lib', 'x_lib'), LIB_NAME
-            )
+        # Install static library in its own directory for retrieval by build_ext
+        lib, inst_dir = define_secp256k1_local_lib_info()
+        self._install_lib_dir = os.path.join(self._install_dir.replace('lib', inst_dir), lib)
 
         self._lib_src = os.path.join(self._cwd, LIB_NAME)
         if not os.path.exists(self._lib_src):
@@ -308,7 +310,7 @@ class StaticLinker(object):
                 # On MacOS the mix static/dynamic option is different
                 # It requires a -force_load <full_lib_path> option for each library
                 if sys.platform == 'darwin':
-                    for lib_dir in libraries_dirs:
+                    for inst_dir in libraries_dirs:
                         if os.path.exists(os.path.join(lib_dir, f'lib{lib}.a')):
                             extra_link_args.extend(
                                 ['-Wl,-force_load', os.path.join(lib_dir, f'lib{lib}.a')]
@@ -352,16 +354,21 @@ class BuildExtensionFromCFFI(_build_ext):
         ext.py_limited_api = False
 
         # Location of locally built library
-        lib = 'libsecp256k1' if self.static_lib else 'coincurve'
-        c_lib_pkg = os.path.join(self.build_lib.replace('lib', 'x_lib'), lib, 'lib', 'pkgconfig')
-        if not os.path.isfile(os.path.join(c_lib_pkg, f'{LIB_NAME}.pc')) and not has_system_lib():
-            c_lib_pkg = os.path.join(self.build_lib.replace('lib', 'x_lib'), lib, 'lib64', 'pkgconfig')
-            if not os.path.isfile(os.path.join(c_lib_pkg, f'{LIB_NAME}.pc')) and not has_system_lib():
-                raise RuntimeError(
-                    f'Library not found in {c_lib_pkg = }'
-                    f'\nnor as a system lib ({has_system_lib() = }). '
-                    'Please check that the library was properly built.'
-                )
+        lib, inst_dir = define_secp256k1_local_lib_info()
+        prefix = os.path.join(self.build_lib.replace('lib', inst_dir), lib)
+        postfix = os.path.join('pkgconfig', f'{LIB_NAME}.pc')
+
+        c_lib_pkg = None
+        if not any([
+            os.path.isfile(c_lib_pkg := os.path.join(prefix, 'lib', postfix)),
+            os.path.isfile(c_lib_pkg := os.path.join(prefix, 'lib64', postfix)),
+            has_system_lib()
+        ]):
+            raise RuntimeError(
+                f'Library not found: {os.path.join(prefix, "lib/lib64", postfix)}'
+                f'\nSystem lib is {has_system_lib() = }. '
+                'Please check that the library was properly built.'
+            )
 
         # PKG_CONFIG_PATH is updated by build_clib if built locally,
         # however, it would not work for a step-by-step build, thus we specify the lib path

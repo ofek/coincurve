@@ -310,7 +310,7 @@ class StaticLinker(object):
                 # On MacOS the mix static/dynamic option is different
                 # It requires a -force_load <full_lib_path> option for each library
                 if sys.platform == 'darwin':
-                    for inst_dir in libraries_dirs:
+                    for lib_dir in libraries_dirs:
                         if os.path.exists(os.path.join(lib_dir, f'lib{lib}.a')):
                             extra_link_args.extend(
                                 ['-Wl,-force_load', os.path.join(lib_dir, f'lib{lib}.a')]

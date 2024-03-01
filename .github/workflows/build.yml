@@ -93,12 +93,21 @@ jobs:
         path: wheelhouse/*.whl
         if-no-files-found: error
 
+  linux-wheels-shared:
+    name: Build Linux wheels
+    needs:
+    - test
+    runs-on: ubuntu-latest
+
+    steps:
+    - uses: actions/checkout@v4
+
     - name: Build SHARED wheels
       uses: pypa/cibuildwheel@v2.16.5
       env:
-        CIBW_BUILD: 'cp38-manylinux_x86_64'
         COINCURVE_SECP256K1_BUILD: 'SHARED'
-
+        CIBW_BUILD: 'cp38-manylinux_x86_64'
+        CIBW_VERBOSE: 1
 
   macos-wheels-x86-64:
     name: Build macOS wheels

@@ -8,6 +8,10 @@ Important changes are emphasized.
 
 ## Unreleased
 
+## 19.0.1
+
+- Fix regression in Windows wheels
+
 ## 19.0.0
 
 - **Breaking:** Drop support for Python 3.7

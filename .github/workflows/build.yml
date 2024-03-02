@@ -95,15 +95,6 @@ jobs:
         path: wheelhouse/*.whl
         if-no-files-found: error
 
-  linux-wheels-shared:
-    name: Build Linux wheels (SHARED)
-    needs:
-    - test
-    runs-on: ubuntu-latest
-
-    steps:
-    - uses: actions/checkout@v4
-
     - name: Build SHARED wheels
       uses: pypa/cibuildwheel@v2.16.5
       env:
@@ -131,11 +122,11 @@ jobs:
         path: wheelhouse/*.whl
         if-no-files-found: error
 
-    # - name: Build SHARED wheels
-    #   uses: pypa/cibuildwheel@v2.16.5
-    #   env:
-    #     CIBW_ARCHS_MACOS: x86_64
-    #     COINCURVE_SECP256K1_BUILD: 'SHARED'
+    - name: Build SHARED wheels
+      uses: pypa/cibuildwheel@v2.16.5
+      env:
+        CIBW_ARCHS_MACOS: x86_64
+        COINCURVE_SECP256K1_BUILD: 'SHARED'
 
 
   macos-wheels-arm:
@@ -159,12 +150,12 @@ jobs:
         path: wheelhouse/*.whl
         if-no-files-found: error
 
-    # - name: Build SHARED wheels
-    #   uses: pypa/cibuildwheel@v2.16.5
-    #   env:
-    #     CIBW_ARCHS_MACOS: arm64
-    #     COINCURVE_SECP256K1_BUILD: 'SHARED'
-    #     COINCURVE_CROSS_HOST: 'arm64'
+    - name: Build SHARED wheels
+      uses: pypa/cibuildwheel@v2.16.5
+      env:
+        CIBW_ARCHS_MACOS: arm64
+        COINCURVE_SECP256K1_BUILD: 'SHARED'
+        COINCURVE_CROSS_HOST: 'arm64'
 
 
   macos-wheels-arm-beta:
@@ -187,11 +178,11 @@ jobs:
         path: wheelhouse/*.whl
         if-no-files-found: error
 
-    # - name: Build SHARED wheels
-    #   uses: pypa/cibuildwheel@v2.16.5
-    #   env:
-    #     COINCURVE_SECP256K1_BUILD: 'SHARED'
-    #     CIBW_ARCHS_MACOS: arm64
+    - name: Build SHARED wheels
+      uses: pypa/cibuildwheel@v2.16.5
+      env:
+        COINCURVE_SECP256K1_BUILD: 'SHARED'
+        CIBW_ARCHS_MACOS: arm64
 
   windows-wheels-x86_64:
     name: Build Windows wheels AMD64
@@ -216,12 +207,12 @@ jobs:
         path: wheelhouse/*.whl
         if-no-files-found: error
 
-    # - name: Build SHARED wheels
-    #   uses: pypa/cibuildwheel@v2.16.5
-    #   env:
-    #     COINCURVE_SECP256K1_BUILD: 'SHARED'
-    #     CIBW_ARCHS_WINDOWS: "AMD64"
-    #     CIBW_BEFORE_ALL: choco install -y --no-progress --no-color cmake>=3.28 pkgconfiglite
+    - name: Build SHARED wheels
+      uses: pypa/cibuildwheel@v2.16.5
+      env:
+        COINCURVE_SECP256K1_BUILD: 'SHARED'
+        CIBW_ARCHS_WINDOWS: "AMD64"
+        CIBW_BEFORE_ALL: choco install -y --no-progress --no-color cmake>=3.28 pkgconfiglite
 
   windows-wheels-x86:
     name: Build Windows wheels x86
@@ -247,13 +238,13 @@ jobs:
         path: wheelhouse/*.whl
         if-no-files-found: error
 
-    # - name: Build SHARED wheels
-    #   uses: pypa/cibuildwheel@v2.16.5
-    #   env:
-    #     COINCURVE_SECP256K1_BUILD: 'SHARED'
-    #     COINCURVE_CROSS_HOST: "x86"
-    #     CIBW_ARCHS_WINDOWS: "x86"
-    #     CIBW_BEFORE_ALL: choco install -y --no-progress --no-color cmake>=3.28 pkgconfiglite
+    - name: Build SHARED wheels
+      uses: pypa/cibuildwheel@v2.16.5
+      env:
+        COINCURVE_SECP256K1_BUILD: 'SHARED'
+        COINCURVE_CROSS_HOST: "x86"
+        CIBW_ARCHS_WINDOWS: "x86"
+        CIBW_BEFORE_ALL: choco install -y --no-progress --no-color cmake>=3.28 pkgconfiglite
 
 
   windows-wheels-arm64:
@@ -281,39 +272,39 @@ jobs:
         path: wheelhouse/*.whl
         if-no-files-found: error
 
-    # - name: Build SHARED wheels
-    #   uses: pypa/cibuildwheel@v2.16.5
-    #   env:
-    #     COINCURVE_SECP256K1_BUILD: 'SHARED'
-    #     COINCURVE_CROSS_HOST: "arm64"
-    #     CIBW_ARCHS_WINDOWS: "ARM64"
-    #     CIBW_BUILD_VERBOSITY: 1
-    #     CIBW_BEFORE_ALL: choco install -y --no-progress --no-color cmake>=3.28 pkgconfiglite
+    - name: Build SHARED wheels
+      uses: pypa/cibuildwheel@v2.16.5
+      env:
+        COINCURVE_SECP256K1_BUILD: 'SHARED'
+        COINCURVE_CROSS_HOST: "arm64"
+        CIBW_ARCHS_WINDOWS: "ARM64"
+        CIBW_BUILD_VERBOSITY: 1
+        CIBW_BEFORE_ALL: choco install -y --no-progress --no-color cmake>=3.28 pkgconfiglite
 
 
-  windows-wheels-and-sdist:
-    name: Build Windows wheels and source distribution
-    needs:
-    - test
-    runs-on: ubuntu-latest
-
-    steps:
-    - uses: actions/checkout@v4
-
-    - name: Install build dependencies
-      run: python -m pip install build
-
-    - name: Build source distribution
-      run: python -m build --sdist
-
-    - name: Build Windows wheels
-      run: ./.github/scripts/build-windows-wheels.sh
-
-    - uses: actions/upload-artifact@v3
-      with:
-        name: artifacts
-        path: dist/*
-        if-no-files-found: error
+#  windows-wheels-and-sdist:
+#    name: Build Windows wheels and source distribution
+#    needs:
+#    - test
+#    runs-on: ubuntu-latest
+#
+#    steps:
+#    - uses: actions/checkout@v4
+#
+#    - name: Install build dependencies
+#      run: python -m pip install build
+#
+#    - name: Build source distribution
+#      run: python -m build --sdist
+#
+#    - name: Build Windows wheels
+#      run: ./.github/scripts/build-windows-wheels.sh
+#
+#    - uses: actions/upload-artifact@v3
+#      with:
+#        name: artifacts
+#        path: dist/*
+#        if-no-files-found: error
 
   linux-wheels-arm:
     name: Build Linux wheels for ARM

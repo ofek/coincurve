@@ -60,10 +60,19 @@ if [int(i) for i in setuptools_version.split('.', 2)[:2]] < [3, 3]:
 
 
 def define_secp256k1_local_lib_info():
+    """
+    Define the library name and the installation directory
+    The purpose is to automatically include the shared library in the package and
+    prevent inclusion the static library. This is probably hacky, but it works.
+    """
     if SECP256K1_BUILD == 'SHARED':
-        return 'libsecp256k1', 'x_lib'
-    else:
-        return 'coincurve', 'lib'
+        logging.info('Building shared library')
+        # This will place the shared library inside the coincurve package data
+        return PKG_NAME, 'lib'
+
+    logging.info('Building static library')
+    # This will place the static library in a separate x_lib and in a lib_name directory
+    return LIB_NAME, 'x_lib'
 
 
 def download_library(command):
@@ -176,7 +185,9 @@ class BuildClibWithCMake(_build_clib):
         os.makedirs(self.build_temp, exist_ok=True)
         self._install_dir = str(self.build_temp).replace('temp', 'lib')
 
-        # Install static library in its own directory for retrieval by build_ext
+        # Install path
+        #  SHARED: lib/coincurve       -> path/lib.xxx/coincurve/path      # included in coincurve wheel
+        #  STATIC: x_lib/libsecp256k1  -> path/x_lib.xxx/libsecp256k1/path # NOT included in coincurve wheel
         lib, inst_dir = define_secp256k1_local_lib_info()
         self._install_lib_dir = os.path.join(self._install_dir.replace('lib', inst_dir), lib)
 

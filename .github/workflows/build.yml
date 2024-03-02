@@ -94,7 +94,7 @@ jobs:
         if-no-files-found: error
 
   linux-wheels-shared:
-    name: Build Linux wheels
+    name: Build Linux wheels (SHARED)
     needs:
     - test
     runs-on: ubuntu-latest
@@ -107,7 +107,7 @@ jobs:
       env:
         COINCURVE_SECP256K1_BUILD: 'SHARED'
         CIBW_BUILD: 'cp38-manylinux_x86_64'
-        CIBW_VERBOSE: 1
+        CIBW_BUILD_VERBOSITY: 1
 
   macos-wheels-x86-64:
     name: Build macOS wheels

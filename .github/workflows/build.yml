@@ -78,6 +78,9 @@ jobs:
   test-with-libsecp256k1:
     name: Test Conda libsecp256k1
     runs-on: ubuntu-latest
+    defaults:
+      run:
+        shell: bash -el {0}
 
     env:
       PYTHON_VERSION: '3.12'
@@ -98,15 +101,12 @@ jobs:
         auto-activate-base: false
 
     - name: Install dependencies
-      shell: pwsh
       run: conda install tox tox-conda libsecp256k1 -c conda-forge
 
     - name: Run tests
-      shell: pwsh
       run: tox -e ${{ env.PYTHON_VERSION }}
 
     - name: Run benchmarks
-      shell: pwsh
       run: tox -e bench
 
   linux-wheels-standard:
@@ -244,7 +244,16 @@ jobs:
         CIBW_TEST_REQUIRES: pytest pytest-benchmark
         CIBW_TEST_COMMAND: >
             conda install -c conda-forge cffi libsecp256k1 &&
-            pytest {project}
+            python -c
+            "from coincurve import PrivateKey;
+            a=PrivateKey();
+            b=PrivateKey();
+            assert a.ecdh(b.public_key.format())==b.ecdh(a.public_key.format())
+            "
+        # This fails due to the way tests/ is installed by cibuildwheel
+        # The way I worked around it is to refactor the tests with conftest.py
+        # defining samples.py items as fixtures
+            # pytest {project}
 
 
   windows-wheels-x86_64:

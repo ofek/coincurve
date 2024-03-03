@@ -126,9 +126,16 @@ _has_system_lib = None
 
 def has_system_lib():
     import logging
+    from setup import SECP256K1_BUILD, SECP256K1_IGNORE_EXT_LIB, UPSTREAM_REF
 
     global _has_system_lib
     logging.info(f'\n   SYSTEM LIB: {_has_system_lib} <- First should be None\n')
+    logging.info(f'               {UPSTREAM_REF = }')
+    logging.info(f'                               {os.getenv("COINCURVE_UPSTREAM_REF")}')
+    logging.info(f'            {SECP256K1_BUILD = }')
+    logging.info(f'                               {os.getenv("COINCURVE_SECP256K1_BUILD")}')
+    logging.info(f'   {SECP256K1_IGNORE_EXT_LIB = }')
+    logging.info(f'                               {os.getenv("COINCURVE_IGNORE_SYSTEM_LIB")}')
     if _has_system_lib is None:
         _has_system_lib = _find_lib()
     logging.info(f'\n   SYSTEM LIB: {_has_system_lib}\n')

@@ -26,7 +26,7 @@ except ImportError:
     _bdist_wheel = None
 
 sys.path.append(os.path.abspath(os.path.dirname(__file__)))
-from setup_support import absolute, has_system_lib, build_flags
+from setup_support import absolute, build_flags
 
 MAKE = 'gmake' if platform.system() in ['FreeBSD', 'OpenBSD'] else 'make'
 
@@ -113,8 +113,9 @@ def download_library(command):
 
 class egg_info(_egg_info):
     def run(self):
+        logging.info(f'   egg_info:{self.distribution.uses_system_lib() = }')
         # Ensure library has been downloaded (sdist might have been skipped)
-        if not has_system_lib():
+        if not self.distribution.uses_system_lib():
             download_library(self)
 
         _egg_info.run(self)
@@ -123,7 +124,7 @@ class egg_info(_egg_info):
 class dist_info(_dist_info):
     def run(self):
         # Ensure library has been downloaded (sdist might have been skipped)
-        if not has_system_lib():
+        if not self.distribution.uses_system_lib():
             download_library(self)
 
         _dist_info.run(self)
@@ -131,7 +132,7 @@ class dist_info(_dist_info):
 
 class sdist(_sdist):
     def run(self):
-        if not has_system_lib():
+        if not self.distribution.uses_system_lib():
             download_library(self)
         _sdist.run(self)
 
@@ -140,7 +141,7 @@ if _bdist_wheel:
 
     class bdist_wheel(_bdist_wheel):
         def run(self):
-            if not has_system_lib():
+            if not self.distribution.uses_system_lib():
                 download_library(self)
             _bdist_wheel.run(self)
 
@@ -163,14 +164,14 @@ class BuildClibWithCMake(_build_clib):
 
     def get_source_files(self):
         # Ensure library has been downloaded (sdist might have been skipped)
-        if not has_system_lib():
+        if not self.distribution.uses_system_lib():
             download_library(self)
 
         # This seems to create issues in MANIFEST.in
         return [f for _, _, fs in os.walk(absolute(LIB_NAME)) for f in fs]
 
     def run(self):
-        if has_system_lib():
+        if self.distribution.uses_system_lib():
             logging.info('Using system library')
             return
 
@@ -380,11 +381,11 @@ class BuildExtensionFromCFFI(_build_ext):
         if not any([
             os.path.isfile(c_lib_pkg := os.path.join(prefix, 'lib', postfix)),
             os.path.isfile(c_lib_pkg := os.path.join(prefix, 'lib64', postfix)),
-            has_system_lib()
+            self.distribution.uses_system_lib()
         ]):
             raise RuntimeError(
                 f'Library not found: {os.path.join(prefix, "lib/lib64", postfix)}'
-                f'\nSystem lib is {has_system_lib() = }. '
+                f'\nSystem lib is {self.distribution.uses_system_lib() = }. '
                 'Please check that the library was properly built.'
             )
 
@@ -405,7 +406,7 @@ class BuildExtensionFromCFFI(_build_ext):
 
 class develop(_develop):
     def run(self):
-        if not has_system_lib():
+        if not self.distribution.uses_system_lib():
             raise DistutilsError(
                 "This library is not usable in 'develop' mode when using the "
                 'bundled libsecp256k1. See README for details.'
@@ -414,88 +415,103 @@ class develop(_develop):
 
 
 class Distribution(_Distribution):
+    _uses_system_lib = None
+
     def has_c_libraries(self):
-        return not has_system_lib()
+        return not self.uses_system_lib()
+
+    @classmethod
+    def uses_system_lib(cls):
+        if cls._uses_system_lib is None:
+            logging.info(f'   SYSTEM LIB: {cls._uses_system_lib} <- First time should be None')
+            logging.info(f'               {UPSTREAM_REF = }')
+            logging.info(f'                               {os.getenv("COINCURVE_UPSTREAM_REF")}')
+            logging.info(f'            {SECP256K1_BUILD = }')
+            logging.info(f'                               {os.getenv("COINCURVE_SECP256K1_BUILD")}')
+            logging.info(f'   {SECP256K1_IGNORE_EXT_LIB = }')
+            logging.info(f'                               {os.getenv("COINCURVE_IGNORE_SYSTEM_LIB")}')
+            from setup_support import _find_lib
+            cls._uses_system_lib = _find_lib()
+        logging.info(f'\n   SYSTEM LIB: {cls._uses_system_lib} <- Should not be None\n')
+        return cls._uses_system_lib
 
 
-logging.info(f'               {UPSTREAM_REF = }')
-logging.info(f'                               {os.getenv("COINCURVE_UPSTREAM_REF")}')
-logging.info(f'            {SECP256K1_BUILD = }')
-logging.info(f'                               {os.getenv("COINCURVE_SECP256K1_BUILD")}')
-logging.info(f'   {SECP256K1_IGNORE_EXT_LIB = }')
-logging.info(f'                               {os.getenv("COINCURVE_IGNORE_SYSTEM_LIB")}')
+def main():
+    package_data = {'coincurve': ['py.typed']}
 
-package_data = {'coincurve': ['py.typed']}
+    extension = Extension(
+        name='coincurve._libsecp256k1',
+        sources=['_c_file_for_extension.c'],
+        py_limited_api=False,
+        extra_compile_args=['/d2FH4-'] if SYSTEM == 'Windows' else [],
+    )
 
-extension = Extension(
-    name='coincurve._libsecp256k1',
-    sources=['_c_file_for_extension.c'],
-    py_limited_api=False,
-    extra_compile_args=['/d2FH4-'] if SYSTEM == 'Windows' else [],
-)
+    setup_kwargs = dict(
+        ext_modules=[extension],
+        cmdclass={
+            'build_clib': None if Distribution.uses_system_lib() else BuildClibWithCMake,
+            'build_ext': BuildExtensionFromCFFI,
+            'develop': develop,
+            'dist_info': dist_info,
+            'egg_info': egg_info,
+            'sdist': sdist,
+            'bdist_wheel': bdist_wheel,
+        },
+    )
+
+    setup(
+        name='coincurve',
+        version='19.0.0',
+
+        description='Cross-platform Python CFFI bindings for libsecp256k1',
+        long_description=open('README.md', 'r').read(),
+        long_description_content_type='text/markdown',
+        author_email='Ofek Lev <oss@ofek.dev>',
+        license='MIT OR Apache-2.0',
+
+        python_requires='>=3.8',
+        install_requires=['asn1crypto', 'cffi>=1.3.0'],
+
+        packages=find_packages(exclude=('_cffi_build', '_cffi_build.*', LIB_NAME, 'tests')),
+        package_data=package_data,
+
+        distclass=Distribution,
+        zip_safe=False,
+
+        project_urls={
+            'Documentation': 'https://ofek.dev/coincurve/',
+            'Issues': 'https://github.com/ofek/coincurve/issues',
+            'Source': 'https://github.com/ofek/coincurve',
+        },
+        keywords=[
+            'secp256k1',
+            'crypto',
+            'elliptic curves',
+            'bitcoin',
+            'ethereum',
+            'cryptocurrency',
+        ],
+        classifiers=[
+            'Development Status :: 5 - Production/Stable',
+            'Intended Audience :: Developers',
+            'License :: OSI Approved :: MIT License',
+            'License :: OSI Approved :: Apache Software License',
+            'Natural Language :: English',
+            'Operating System :: OS Independent',
+            'Programming Language :: Python :: 3',
+            'Programming Language :: Python :: 3.8',
+            'Programming Language :: Python :: 3.9',
+            'Programming Language :: Python :: 3.10',
+            'Programming Language :: Python :: 3.11',
+            'Programming Language :: Python :: 3.12',
+            'Programming Language :: Python :: Implementation :: CPython',
+            'Programming Language :: Python :: Implementation :: PyPy',
+            'Topic :: Software Development :: Libraries',
+            'Topic :: Security :: Cryptography',
+        ],
+        **setup_kwargs
+    )
 
 
-setup_kwargs = dict(
-    ext_modules=[extension],
-    cmdclass={
-        'build_clib': None if has_system_lib() else BuildClibWithCMake,
-        'build_ext': BuildExtensionFromCFFI,
-        'develop': develop,
-        'egg_info': egg_info,
-        'sdist': sdist,
-        'bdist_wheel': bdist_wheel,
-    },
-)
-
-setup(
-    name='coincurve',
-    version='19.0.0',
-
-    description='Cross-platform Python CFFI bindings for libsecp256k1',
-    long_description=open('README.md', 'r').read(),
-    long_description_content_type='text/markdown',
-    author_email='Ofek Lev <oss@ofek.dev>',
-    license='MIT OR Apache-2.0',
-
-    python_requires='>=3.8',
-    install_requires=['asn1crypto', 'cffi>=1.3.0'],
-
-    packages=find_packages(exclude=('_cffi_build', '_cffi_build.*', LIB_NAME, 'tests')),
-    package_data=package_data,
-
-    distclass=Distribution,
-    zip_safe=False,
-
-    project_urls={
-        'Documentation': 'https://ofek.dev/coincurve/',
-        'Issues': 'https://github.com/ofek/coincurve/issues',
-        'Source': 'https://github.com/ofek/coincurve',
-    },
-    keywords=[
-        'secp256k1',
-        'crypto',
-        'elliptic curves',
-        'bitcoin',
-        'ethereum',
-        'cryptocurrency',
-    ],
-    classifiers=[
-        'Development Status :: 5 - Production/Stable',
-        'Intended Audience :: Developers',
-        'License :: OSI Approved :: MIT License',
-        'License :: OSI Approved :: Apache Software License',
-        'Natural Language :: English',
-        'Operating System :: OS Independent',
-        'Programming Language :: Python :: 3',
-        'Programming Language :: Python :: 3.8',
-        'Programming Language :: Python :: 3.9',
-        'Programming Language :: Python :: 3.10',
-        'Programming Language :: Python :: 3.11',
-        'Programming Language :: Python :: 3.12',
-        'Programming Language :: Python :: Implementation :: CPython',
-        'Programming Language :: Python :: Implementation :: PyPy',
-        'Topic :: Software Development :: Libraries',
-        'Topic :: Security :: Cryptography',
-    ],
-    **setup_kwargs
-)
+if __name__ == '__main__':
+    main()

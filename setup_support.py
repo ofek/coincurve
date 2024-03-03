@@ -37,19 +37,36 @@ def absolute(*paths):
     return op.realpath(op.abspath(op.join(op.dirname(__file__), *paths)))
 
 
-def build_flags(library, type_, path):
+def _update_pkg_config_path(path='.'):
     """Return separated build flags from pkg-config output"""
 
     pkg_config_path = [path]
     if 'PKG_CONFIG_PATH' in os.environ:
         pkg_config_path.append(os.environ['PKG_CONFIG_PATH'])
+    if 'CONDA_PREFIX' in os.environ:
+        pkg_config_path.extend(
+            [p for p in (
+                os.path.join(os.environ['CONDA_PREFIX'], 'lib', 'pkgconfig'),
+                os.path.join(os.environ['CONDA_PREFIX'], 'lib64', 'pkgconfig'),
+                os.path.join(os.environ['CONDA_PREFIX'], 'Library', 'lib', 'pkgconfig'),
+            ) if os.path.isdir(p)
+            ]
+        )
     if 'LIB_DIR' in os.environ:
         pkg_config_path.append(os.environ['LIB_DIR'])
         pkg_config_path.append(os.path.join(os.environ['LIB_DIR'], 'pkgconfig'))
 
+    # Update environment
+    os.environ['PKG_CONFIG_PATH'] = str(os.pathsep).join(pkg_config_path)
+
+
+def build_flags(library, type_, path):
+    """Return separated build flags from pkg-config output"""
+
+    _update_pkg_config_path(path)
+
     options = {'I': '--cflags-only-I', 'L': '--libs-only-L', 'l': '--libs-only-l'}
-    env = dict(os.environ, PKG_CONFIG_PATH=str(os.pathsep).join(pkg_config_path))
-    flags = subprocess.check_output(['pkg-config', '--static', options[type_], library], env=env)  # noqa S603
+    flags = subprocess.check_output(['pkg-config', '--static', options[type_], library])  # noqa S603
     flags = list(flags.decode('UTF-8').split())
 
     return [flag.strip(f'-{type_}') for flag in flags]
@@ -60,8 +77,9 @@ def _find_lib():
         return False
 
     from cffi import FFI
-
     from setup import SECP256K1_BUILD
+
+    _update_pkg_config_path()
 
     try:
         lib_dir = subprocess.check_output(['pkg-config', '--libs-only-L', 'libsecp256k1'])  # noqa S603

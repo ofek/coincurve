@@ -126,6 +126,7 @@ _has_system_lib = None
 
 def has_system_lib():
     import logging
+
     from setup import SECP256K1_BUILD, SECP256K1_IGNORE_EXT_LIB, UPSTREAM_REF
 
     global _has_system_lib

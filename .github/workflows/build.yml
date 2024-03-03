@@ -107,7 +107,7 @@ jobs:
       run: conda install tox-conda libsecp256k1 -c conda-forge
 
     - name: Run tests
-      run: tox -e ${{ env.PYTHON_VERSION }}
+      run: PKG_CONFIG_PATH="${{ env.PKG_CONFIG_PATH }}:${{ env.CONDA_PKGS_DIR }}/lib/pkgconfig" tox -e ${{ env.PYTHON_VERSION }}
 
     - name: Run benchmarks
       run: tox -e bench

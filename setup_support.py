@@ -80,7 +80,7 @@ def _find_lib():
 
     logging.info(f'   COINCURVE_IGNORE_SYSTEM_LIB: {os.getenv("COINCURVE_IGNORE_SYSTEM_LIB")}')
     logging.info(f'        COINCURVE_UPSTREAM_REF: {os.getenv("COINCURVE_UPSTREAM_REF")}')
-    if os.getenv("COINCURVE_IGNORE_SYSTEM_LIB", '1') == '1':
+    if os.getenv('COINCURVE_IGNORE_SYSTEM_LIB', '1') == '1':
         return False
 
     from cffi import FFI

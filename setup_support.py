@@ -80,7 +80,7 @@ def _find_lib():
 
     logging.info(f'   COINCURVE_IGNORE_SYSTEM_LIB: {os.getenv("COINCURVE_IGNORE_SYSTEM_LIB")}')
     logging.info(f'        COINCURVE_UPSTREAM_REF: {os.getenv("COINCURVE_UPSTREAM_REF")}')
-    if 'COINCURVE_IGNORE_SYSTEM_LIB' in os.environ:
+    if os.getenv("COINCURVE_IGNORE_SYSTEM_LIB", '1') == '1':
         return False
 
     from cffi import FFI
@@ -130,7 +130,7 @@ def has_system_lib():
     from setup import SECP256K1_BUILD, SECP256K1_IGNORE_EXT_LIB, UPSTREAM_REF
 
     global _has_system_lib
-    logging.info(f'\n   SYSTEM LIB: {_has_system_lib} <- First should be None\n')
+    logging.info(f'   SYSTEM LIB: {_has_system_lib} <- First should be None')
     logging.info(f'               {UPSTREAM_REF = }')
     logging.info(f'                               {os.getenv("COINCURVE_UPSTREAM_REF")}')
     logging.info(f'            {SECP256K1_BUILD = }')

@@ -414,6 +414,13 @@ class develop(_develop):
 
 
 def main():
+    logging.info(f'               {UPSTREAM_REF = }')
+    logging.info(f'                               {os.getenv("COINCURVE_UPSTREAM_REF")}')
+    logging.info(f'            {SECP256K1_BUILD = }')
+    logging.info(f'                               {os.getenv("COINCURVE_SECP256K1_BUILD")}')
+    logging.info(f'   {SECP256K1_IGNORE_EXT_LIB = }')
+    logging.info(f'                               {os.getenv("COINCURVE_IGNORE_SYSTEM_LIB")}')
+
     package_data = {'coincurve': ['py.typed']}
 
     extension = Extension(

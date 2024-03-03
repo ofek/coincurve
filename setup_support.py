@@ -76,17 +76,19 @@ def build_flags(library, type_, path):
 
 
 def _find_lib():
+    import logging
+
+    logging.info(f'   COINCURVE_IGNORE_SYSTEM_LIB: {os.environ["COINCURVE_IGNORE_SYSTEM_LIB"]}')
+    logging.info(f'        COINCURVE_UPSTREAM_REF: {os.environ["COINCURVE_UPSTREAM_REF"]}')
     if 'COINCURVE_IGNORE_SYSTEM_LIB' in os.environ:
         return False
-
-    import logging
 
     from cffi import FFI
 
     from setup import SECP256K1_BUILD
 
     _update_pkg_config_path()
-    logging.info(f'\n   PKG_CONFIG_PATH: {os.environ["PKG_CONFIG_PATH"]}\n')
+    logging.info(f'              PKG_CONFIG_PATH: {os.environ["PKG_CONFIG_PATH"]}')
 
     try:
         lib_dir = subprocess.check_output(['pkg-config', '--libs-only-L', 'libsecp256k1'])  # noqa S603

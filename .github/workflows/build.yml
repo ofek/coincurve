@@ -223,7 +223,7 @@ jobs:
 
 
   windows-wheels-conda-x86_64:
-    name: Build Windows wheels AMD64 (CONDA)
+    name: Build Windows (CONDA) wheels AMD64
     needs:
     - test
     runs-on: windows-latest
@@ -243,8 +243,9 @@ jobs:
       uses: pypa/cibuildwheel@v2.16.5
       env:
         CIBW_ENVIRONMENT:
-            COINCURVE_IGNORE_SYSTEM_LIB='0'
-            COINCURVE_UPSTREAM_REF='__no_tag__'
+            COINCURVE_IGNORE_SYSTEM_LIB="0"
+            COINCURVE_UPSTREAM_REF="__no_tag__"
+        CIBW_BUILD: "cp312-win_amd64"
         CIBW_ARCHS_WINDOWS: "AMD64"
         CIBW_BEFORE_ALL: conda install -c conda-forge pkg-config libsecp256k1
         CIBW_BUILD_VERBOSITY: 1

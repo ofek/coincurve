@@ -26,9 +26,7 @@ except ImportError:
     _bdist_wheel = None
 
 sys.path.append(os.path.abspath(os.path.dirname(__file__)))
-from setup_support import absolute, detect_dll, has_system_lib, build_flags
-
-BUILDING_FOR_WINDOWS = detect_dll()
+from setup_support import absolute, has_system_lib, build_flags
 
 MAKE = 'gmake' if platform.system() in ['FreeBSD', 'OpenBSD'] else 'make'
 
@@ -416,32 +414,21 @@ def main():
         extra_compile_args=['/d2FH4-'] if SYSTEM == 'Windows' else [],
     )
 
-    if BUILDING_FOR_WINDOWS:
+    class Distribution(_Distribution):
+        def has_c_libraries(self):
+            return not has_system_lib()
 
-        class Distribution(_Distribution):
-            def is_pure(self):
-                return False
-
-        package_data['coincurve'].append('libsecp256k1.dll')
-        setup_kwargs = {}
-
-    else:
-
-        class Distribution(_Distribution):
-            def has_c_libraries(self):
-                return not has_system_lib()
-
-        setup_kwargs = dict(
-            ext_modules=[extension],
-            cmdclass={
-                'build_clib': None if has_system_lib() else BuildClibWithCMake,
-                'build_ext': BuildExtensionFromCFFI,
-                'develop': develop,
-                'egg_info': egg_info,
-                'sdist': sdist,
-                'bdist_wheel': bdist_wheel,
-            },
-        )
+    setup_kwargs = dict(
+        ext_modules=[extension],
+        cmdclass={
+            'build_clib': None if has_system_lib() else BuildClibWithCMake,
+            'build_ext': BuildExtensionFromCFFI,
+            'develop': develop,
+            'egg_info': egg_info,
+            'sdist': sdist,
+            'bdist_wheel': bdist_wheel,
+        },
+    )
 
     setup(
         name='coincurve',

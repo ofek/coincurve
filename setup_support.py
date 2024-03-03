@@ -79,11 +79,14 @@ def _find_lib():
     if 'COINCURVE_IGNORE_SYSTEM_LIB' in os.environ:
         return False
 
+    import logging
+
     from cffi import FFI
 
     from setup import SECP256K1_BUILD
 
     _update_pkg_config_path()
+    logging.info(f'\n   PKG_CONFIG_PATH: {os.environ["PKG_CONFIG_PATH"]}\n')
 
     try:
         lib_dir = subprocess.check_output(['pkg-config', '--libs-only-L', 'libsecp256k1'])  # noqa S603
@@ -120,15 +123,10 @@ _has_system_lib = None
 
 
 def has_system_lib():
+    import logging
+
     global _has_system_lib
     if _has_system_lib is None:
         _has_system_lib = _find_lib()
+    logging.info(f'\n   SYSTEM LIB: {_has_system_lib}\n')
     return _has_system_lib
-
-
-def detect_dll():
-    here = os.path.dirname(os.path.abspath(__file__))
-    for fn in os.listdir(os.path.join(here, 'coincurve')):
-        if fn.endswith('.dll'):
-            return True
-    return False

@@ -33,7 +33,7 @@ MAKE = 'gmake' if platform.system() in ['FreeBSD', 'OpenBSD'] else 'make'
 # IMPORTANT: keep in sync with .github/workflows/build.yml
 #
 # Version of libsecp256k1 to download if none exists in the `libsecp256k1` directory
-UPSTREAM_REF = os.getenv('COINCURVE_UPSTREAM_TAG') or '1ad5185cd42c0636104129fcc9f6a4bf9c67cc40'
+UPSTREAM_REF = os.getenv('COINCURVE_UPSTREAM_REF') or '1ad5185cd42c0636104129fcc9f6a4bf9c67cc40'
 
 LIB_TARBALL_URL = f'https://github.com/bitcoin-core/secp256k1/archive/{UPSTREAM_REF}.tar.gz'
 
@@ -47,7 +47,16 @@ X_HOST = os.getenv('COINCURVE_CROSS_HOST')
 SYSTEM = platform.system()  # supported: Windows, Linux, Darwin
 MACHINE = platform.machine()  # supported: AMD64, x86_64
 
+logging.info(f'Building for {SYSTEM}:{MACHINE} with {X_HOST = }')
 SECP256K1_BUILD = os.getenv('COINCURVE_SECP256K1_BUILD') or 'STATIC'
+SECP256K1_IGNORE_EXT_LIB = os.getenv('COINCURVE_IGNORE_SYSTEM_LIB')
+
+logging.info(f'               {UPSTREAM_REF = }')
+logging.info(f'                               {os.getenv("COINCURVE_UPSTREAM_REF")}')
+logging.info(f'            {SECP256K1_BUILD = }')
+logging.info(f'                               {os.getenv("COINCURVE_SECP256K1_BUILD")}')
+logging.info(f'   {SECP256K1_IGNORE_EXT_LIB = }')
+logging.info(f'                               {os.getenv("COINCURVE_IGNORE_SYSTEM_LIB")}')
 
 # We require setuptools >= 3.3
 if [int(i) for i in setuptools_version.split('.', 2)[:2]] < [3, 3]:

@@ -128,6 +128,7 @@ def has_system_lib():
     import logging
 
     global _has_system_lib
+    logging.info(f'\n   SYSTEM LIB: {_has_system_lib} <- First should be None\n')
     if _has_system_lib is None:
         _has_system_lib = _find_lib()
     logging.info(f'\n   SYSTEM LIB: {_has_system_lib}\n')

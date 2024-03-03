@@ -45,11 +45,14 @@ def _update_pkg_config_path(path='.'):
         pkg_config_path.append(os.environ['PKG_CONFIG_PATH'])
     if 'CONDA_PREFIX' in os.environ:
         pkg_config_path.extend(
-            [p for p in (
-                os.path.join(os.environ['CONDA_PREFIX'], 'lib', 'pkgconfig'),
-                os.path.join(os.environ['CONDA_PREFIX'], 'lib64', 'pkgconfig'),
-                os.path.join(os.environ['CONDA_PREFIX'], 'Library', 'lib', 'pkgconfig'),
-            ) if os.path.isdir(p)
+            [
+                p
+                for p in (
+                    os.path.join(os.environ['CONDA_PREFIX'], 'lib', 'pkgconfig'),
+                    os.path.join(os.environ['CONDA_PREFIX'], 'lib64', 'pkgconfig'),
+                    os.path.join(os.environ['CONDA_PREFIX'], 'Library', 'lib', 'pkgconfig'),
+                )
+                if os.path.isdir(p)
             ]
         )
     if 'LIB_DIR' in os.environ:
@@ -77,6 +80,7 @@ def _find_lib():
         return False
 
     from cffi import FFI
+
     from setup import SECP256K1_BUILD
 
     _update_pkg_config_path()

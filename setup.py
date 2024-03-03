@@ -434,7 +434,7 @@ def main():
         setup_kwargs = dict(
             ext_modules=[extension],
             cmdclass={
-                'build_clib': BuildClibWithCMake,
+                'build_clib': None if has_system_lib() else BuildClibWithCMake,
                 'build_ext': BuildExtensionFromCFFI,
                 'develop': develop,
                 'egg_info': egg_info,

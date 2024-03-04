@@ -26,7 +26,7 @@ except ImportError:
     _bdist_wheel = None
 
 sys.path.append(os.path.abspath(os.path.dirname(__file__)))
-from setup_support import absolute, build_flags
+from setup_support import absolute
 
 MAKE = 'gmake' if platform.system() in ['FreeBSD', 'OpenBSD'] else 'make'
 
@@ -391,6 +391,7 @@ class BuildExtensionFromCFFI(_build_ext):
 
         # PKG_CONFIG_PATH is updated by build_clib if built locally,
         # however, it would not work for a step-by-step build, thus we specify the lib path
+        build_flags = self.distribution.build_flags
         ext.extra_compile_args.extend([f'-I{build_flags(LIB_NAME, "I", c_lib_pkg)[0]}'])
         ext.library_dirs.extend(build_flags(LIB_NAME, 'L', c_lib_pkg))
 
@@ -423,17 +424,21 @@ class Distribution(_Distribution):
     @classmethod
     def uses_system_lib(cls):
         if cls._uses_system_lib is None:
-            logging.info(f'   SYSTEM LIB: {cls._uses_system_lib} <- First time should be None')
-            logging.info(f'               {UPSTREAM_REF = }')
-            logging.info(f'                               {os.getenv("COINCURVE_UPSTREAM_REF")}')
-            logging.info(f'            {SECP256K1_BUILD = }')
-            logging.info(f'                               {os.getenv("COINCURVE_SECP256K1_BUILD")}')
-            logging.info(f'   {SECP256K1_IGNORE_EXT_LIB = }')
-            logging.info(f'                               {os.getenv("COINCURVE_IGNORE_SYSTEM_LIB")}')
-            from setup_support import _find_lib
-            cls._uses_system_lib = _find_lib()
+            from setup_support import has_installed_libsecp256k1
+            cls._uses_system_lib = has_installed_libsecp256k1()
         logging.info(f'\n   SYSTEM LIB: {cls._uses_system_lib} <- Should not be None\n')
         return cls._uses_system_lib
+
+    @staticmethod
+    def build_flags(library, type_, path):
+        """Return separated build flags from pkg-config output"""
+        from setup_support import update_pkg_config_path
+
+        update_pkg_config_path(path)
+        options = {'I': '--cflags-only-I', 'L': '--libs-only-L', 'l': '--libs-only-l'}
+        flags = subprocess.check_output(['pkg-config', options[type_], library])  # noqa S603
+        flags = list(flags.decode('UTF-8').split())
+        return [flag.strip(f'-{type_}') for flag in flags]
 
 
 def main():

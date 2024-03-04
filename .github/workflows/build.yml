@@ -252,6 +252,7 @@ jobs:
         CIBW_TEST_REQUIRES: pytest pytest-benchmark
         CIBW_TEST_COMMAND: >
             conda install -c conda-forge cffi libsecp256k1 &&
+            pkg-config --cflags --libs libsecp256k1 &&
             python -c
             "from coincurve import PrivateKey;
             a=PrivateKey();

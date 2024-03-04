@@ -108,7 +108,7 @@ def has_installed_libsecp256k1():
     # so we need to check the type of the installed library
     lib_dir = lib_dir[2:].strip()
     if SYSTEM == 'Windows':
-        no_lib_path = os.path.join(lib_dir[:-3], "bin", f"{LIB_NAME[3:]}.dll")
+        no_lib_path = os.path.join(lib_dir[:-3], 'bin', f'{LIB_NAME[3:]}.dll')
         lib_path = os.path.join(lib_dir[:-3], 'bin', f'{LIB_NAME}.dll')
         logging.info(f'DBG:\n   {no_lib_path = }\n   {lib_path = }')
         dyn_lib = any(

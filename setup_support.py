@@ -110,7 +110,7 @@ def has_installed_libsecp256k1():
     if SYSTEM == 'Windows':
         no_lib_path = os.path.join(lib_dir[:-3], 'bin', f'{LIB_NAME[3:]}.dll')
         lib_path = os.path.join(lib_dir[:-3], 'bin', f'{LIB_NAME}.dll')
-        logging.info(f'DBG:\n   {no_lib_path = }\n   {lib_path = }')
+        logging.warning(f'DBG: {no_lib_path = }, {lib_path = }')
         dyn_lib = any(
             (
                 os.path.exists(no_lib_path),
@@ -124,11 +124,12 @@ def has_installed_libsecp256k1():
                 os.path.exists(os.path.join(lib_dir, f'{LIB_NAME}.dylib')),
             )
         )
-    found = any((dyn_lib and SECP256K1_BUILD == 'SHARED', not dyn_lib and SECP256K1_BUILD != 'SHARED'))
 
+    found = any((dyn_lib and SECP256K1_BUILD == 'SHARED', not dyn_lib and SECP256K1_BUILD != 'SHARED'))
     if not found:
         logging.warning(
             f'WARNING: {LIB_NAME} is installed, but it is not the expected type. '
-            'Please ensure that the shared library is installed.'
+            f'Please ensure that the {SECP256K1_BUILD} library is installed.'
         )
+        logging.warning(f'DBG:   {SYSTEM = }, {dyn_lib = }, {SECP256K1_BUILD = }, {found = }')
     return found

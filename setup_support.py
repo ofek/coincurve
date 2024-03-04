@@ -89,7 +89,7 @@ def has_installed_libsecp256k1():
 
     from cffi import FFI
 
-    from setup import LIB_NAME, SECP256K1_BUILD
+    from setup import LIB_NAME, SECP256K1_BUILD, SYSTEM
 
     update_pkg_config_path()
 
@@ -107,11 +107,14 @@ def has_installed_libsecp256k1():
     # tox fails when the dynamic library is installed for a STATIC linkage,
     # so we need to check the type of the installed library
     lib_dir = lib_dir[2:].strip()
-    if os.name == 'nt':
+    if SYSTEM == 'Windows':
+        no_lib_path = os.path.join(lib_dir[:-3], "bin", f"{LIB_NAME[3:]}.dll")
+        lib_path = os.path.join(lib_dir[:-3], 'bin', f'{LIB_NAME}.dll')
+        logging.info(f'DBG:\n   {no_lib_path = }\n   {lib_path = }')
         dyn_lib = any(
             (
-                os.path.exists(os.path.join(lib_dir[:-3], 'bin', f'{LIB_NAME[3:]}.dll')),
-                os.path.exists(os.path.join(lib_dir[:-3], 'bin', f'{LIB_NAME}.dll')),
+                os.path.exists(no_lib_path),
+                os.path.exists(lib_path),
             )
         )
     else:

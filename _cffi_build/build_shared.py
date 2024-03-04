@@ -36,7 +36,7 @@ define_static_lib = """
 """
 
 define_shared_lib = """
-/* 
+/*
  * #if defined(_WIN32)
  * #   define SECP256K1_API extern __declspec(dllimport)
  * #endif

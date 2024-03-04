@@ -247,6 +247,7 @@ jobs:
         CIBW_ENVIRONMENT:
             COINCURVE_IGNORE_SYSTEM_LIB="0"
             COINCURVE_UPSTREAM_REF="__no_tag__"
+            COINCURVE_SECP256K1_BUILD='SHARED'
         CIBW_BUILD: "cp312-win_amd64"
         CIBW_ARCHS_WINDOWS: "AMD64"
         CIBW_BEFORE_ALL: conda install -c conda-forge pkg-config libsecp256k1

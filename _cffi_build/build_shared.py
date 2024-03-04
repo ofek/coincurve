@@ -35,13 +35,6 @@ define_static_lib = """
 """
 
 
-define_shared_lib = """
-#if defined(_WIN32) || defined(_WIN32) || defined(__WIN32__) || defined(__NT__)
-#   define SECP256K1_API extern __declspec(dllimport)
-#endif
-"""
-
-
 def mk_ffi(sources: List[Source],
            static_lib: bool = False,
            name: str = '_libsecp256k1') -> FFI:
@@ -54,7 +47,7 @@ def mk_ffi(sources: List[Source],
     :return: An FFI object.
     """
     _ffi = FFI()
-    code = [define_static_lib] if static_lib else [define_shared_lib]
+    code = [define_static_lib] if static_lib else []
 
     logging.info(f'   Static {static_lib}...')
     for source in sources:

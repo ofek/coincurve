@@ -29,16 +29,18 @@ def gather_sources_from_directory(directory: str) -> List[Source]:
 
 
 define_static_lib = """
-#if defined(_WIN32)
+#if defined(_WIN32) || defined(_WIN32) || defined(__WIN32__) || defined(__NT__)
 #   define SECP256K1_STATIC 1
-#   define SECP256K1_API extern __declspec(dllexport)
+/* #   define SECP256K1_API extern __declspec(dllexport) */
 #endif
 """
 
 define_shared_lib = """
-#if defined(_WIN32)
-#   define SECP256K1_API extern __declspec(dllimport)
-#endif
+/* 
+ * #if defined(_WIN32)
+ * #   define SECP256K1_API extern __declspec(dllimport)
+ * #endif
+ */
 """
 
 
@@ -49,7 +51,6 @@ def mk_ffi(sources: List[Source],
     Create an FFI object.
 
     :param sources: A list of Source namedtuples.
-    :param libraries: A list of libraries to link against.
     :param static_lib: Whether to generate a static lib in Windows.
     :param name: The name of the FFI object.
     :return: An FFI object.
@@ -75,10 +76,10 @@ if __name__ == '__main__':
     logging.info('Starting CFFI build process...')
     parser = argparse.ArgumentParser(description='Generate C code using CFFI.')
     parser.add_argument('c_file', help='Generated C code filename.')
-    parser.add_argument('static_lib', help='Generate static lib in Windows.', default=False)
+    parser.add_argument('static_lib', help='Generate static lib in Windows.', default='0', type=str)
     args = parser.parse_args()
 
     modules = gather_sources_from_directory(here)
-    ffi = mk_ffi(modules, args.static_lib)
+    ffi = mk_ffi(modules, args.static_lib == '1')
     ffi.emit_c_code(args.c_file)
     logging.info(f'   Generated C code: {args.c_file}')

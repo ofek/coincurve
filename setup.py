@@ -432,7 +432,7 @@ class Distribution(_Distribution):
         options = {'I': '--cflags-only-I', 'L': '--libs-only-L', 'l': '--libs-only-l'}
         # flags = subprocess.check_output(['pkg-config', options[type_], '--dont-define-prefix', library])  # S603
         flags = call_pkg_config([options[type_]], library, capture_output=True)
-        flags = list(flags.decode('UTF-8').split())
+        flags = list(flags.split())
         return [flag.strip(f'-{type_}') for flag in flags]
 
 

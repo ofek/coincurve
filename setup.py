@@ -436,7 +436,13 @@ class Distribution(_Distribution):
 
         update_pkg_config_path(path)
         options = {'I': '--cflags-only-I', 'L': '--libs-only-L', 'l': '--libs-only-l'}
-        flags = subprocess.check_output(['pkg-config', options[type_], '--dont-define-prefix', library])  # noqa S603
+
+        # On Windows, pkg-config tries to be cute by adding 'Library', but libsecp256k1.pc from conda
+        # has the correct definitions based on what is actually installed
+        if SYSTEM == 'Windows':
+            flags = subprocess.check_output(['pkg-config', options[type_], '--dont-define-prefix', library])  # noqa S603
+        else:
+            flags = subprocess.check_output(['pkg-config', options[type_], library])  # noqa S603
         flags = list(flags.decode('UTF-8').split())
         return [flag.strip(f'-{type_}') for flag in flags]
 

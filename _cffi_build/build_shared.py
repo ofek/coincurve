@@ -31,21 +31,13 @@ def gather_sources_from_directory(directory: str) -> List[Source]:
 define_static_lib = """
 #if defined(_WIN32) || defined(_WIN32) || defined(__WIN32__) || defined(__NT__)
 #   define SECP256K1_STATIC 1
-#   define SECP256K1_API extern __declspec(dllexport)
+/* #   define SECP256K1_API extern __declspec(dllexport) */
 #endif
-"""
-
-define_shared_lib = """
-/*
- * #if defined(_WIN32)
- * #   define SECP256K1_API extern __declspec(dllimport)
- * #endif
- */
 """
 
 
 def mk_ffi(sources: List[Source],
-           static_lib: str = '0',
+           static_lib: bool = False,
            name: str = '_libsecp256k1') -> FFI:
     """
     Create an FFI object.
@@ -56,7 +48,7 @@ def mk_ffi(sources: List[Source],
     :return: An FFI object.
     """
     _ffi = FFI()
-    code = [define_static_lib] if static_lib == '1' else [define_shared_lib]
+    code = [define_static_lib] if static_lib else []
 
     for source in sources:
         with open(os.path.join(here, source.h)) as h:

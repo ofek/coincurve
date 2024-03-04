@@ -3,34 +3,8 @@ import logging
 import os
 import shutil
 import subprocess
-from contextlib import contextmanager, suppress
-from tempfile import mkdtemp
-
-
-@contextmanager
-def workdir():
-    cwd = os.getcwd()
-    tmpdir = mkdtemp()
-    os.chdir(tmpdir)
-    try:
-        yield
-    finally:
-        os.chdir(cwd)
-        shutil.rmtree(tmpdir)
-
-
-@contextmanager
-def redirect(stdchannel, dest_filename):
-    oldstdchannel = os.dup(stdchannel.fileno())
-    dest_file = open(dest_filename, 'w')
-    os.dup2(dest_file.fileno(), stdchannel.fileno())
-    try:
-        yield
-    finally:
-        if oldstdchannel is not None:
-            os.dup2(oldstdchannel, stdchannel.fileno())
-        if dest_file is not None:
-            dest_file.close()
+import tempfile
+from contextlib import suppress
 
 
 def absolute(*paths):
@@ -70,10 +44,43 @@ def build_flags(library, type_, path):
     update_pkg_config_path(path)
 
     options = {'I': '--cflags-only-I', 'L': '--libs-only-L', 'l': '--libs-only-l'}
-    flags = subprocess.check_output(['pkg-config', options[type_], library])  # noqa S603
-    flags = list(flags.decode('UTF-8').split())
+    # flags = subprocess.check_output(['pkg-config', options[type_], library])  # S603
+    flags = call_pkg_config([options[type_]], library, capture_output=True)
+    flags = list(flags.split())
 
     return [flag.strip(f'-{type_}') for flag in flags]
+
+
+def call_pkg_config(options, library, *, debug=False, capture_output=False):
+    from setup import SYSTEM
+
+    if SYSTEM == 'Windows':
+        options.append('--dont-define-prefix')
+
+    with tempfile.NamedTemporaryFile(mode='w+') as temp_log:
+        try:
+            pkg_config = shutil.which('pkg-config')
+            cmd = [pkg_config, *options, library]
+
+            if capture_output:
+                ret = subprocess.check_output(cmd, stderr=temp_log)  # noqa S603
+            else:
+                subprocess.check_call(cmd, stdout=temp_log, stderr=temp_log)  # noqa S603
+
+            if debug:
+                temp_log.seek(0)
+                log_contents = temp_log.read()
+                logging.info(f'Command log:\n{log_contents}')
+
+            if capture_output:
+                return ret.rstrip().decode()
+
+        except subprocess.CalledProcessError as e:
+            logging.error(f'An error occurred during the command execution: {e}')
+            temp_log.seek(0)
+            log_contents = temp_log.read()
+            logging.error(f'Command log:\n{log_contents}')
+            raise e
 
 
 def has_installed_libsecp256k1():
@@ -87,7 +94,7 @@ def has_installed_libsecp256k1():
     update_pkg_config_path()
 
     try:
-        lib_dir = subprocess.check_output(['pkg-config', '--libs-only-L', LIB_NAME])  # noqa S603
+        lib_dir = call_pkg_config(['--libs-only-L'], LIB_NAME, capture_output=True)
     except (OSError, subprocess.CalledProcessError):
         if 'LIB_DIR' in os.environ:
             for path in glob.glob(os.path.join(os.environ['LIB_DIR'], f'*{LIB_NAME[3:]}*')):
@@ -99,7 +106,7 @@ def has_installed_libsecp256k1():
 
     # tox fails when the dynamic library is installed for a STATIC linkage,
     # so we need to check the type of the installed library
-    lib_dir = lib_dir[2:].strip().decode('utf-8')
+    lib_dir = lib_dir[2:].strip()
     if os.name == 'nt':
         dyn_lib = any(
             (

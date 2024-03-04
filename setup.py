@@ -26,7 +26,7 @@ except ImportError:
     _bdist_wheel = None
 
 sys.path.append(os.path.abspath(os.path.dirname(__file__)))
-from setup_support import absolute
+from setup_support import absolute, call_pkg_config
 
 MAKE = 'gmake' if platform.system() in ['FreeBSD', 'OpenBSD'] else 'make'
 
@@ -50,13 +50,6 @@ MACHINE = platform.machine()  # supported: AMD64, x86_64
 logging.info(f'Building for {SYSTEM}:{MACHINE} with {X_HOST = }')
 SECP256K1_BUILD = os.getenv('COINCURVE_SECP256K1_BUILD') or 'STATIC'
 SECP256K1_IGNORE_EXT_LIB = os.getenv('COINCURVE_IGNORE_SYSTEM_LIB')
-
-logging.info(f'               {UPSTREAM_REF = }')
-logging.info(f'                               {os.getenv("COINCURVE_UPSTREAM_REF")}')
-logging.info(f'            {SECP256K1_BUILD = }')
-logging.info(f'                               {os.getenv("COINCURVE_SECP256K1_BUILD")}')
-logging.info(f'   {SECP256K1_IGNORE_EXT_LIB = }')
-logging.info(f'                               {os.getenv("COINCURVE_IGNORE_SYSTEM_LIB")}')
 
 # We require setuptools >= 3.3
 if [int(i) for i in setuptools_version.split('.', 2)[:2]] < [3, 3]:
@@ -215,7 +208,8 @@ class BuildClibWithCMake(_build_clib):
         ).replace('\\', '/')
 
         # Verify installation
-        subprocess.check_call(['pkg-config', '--exists', LIB_NAME])  # noqa S603
+        # subprocess.check_call(['pkg-config', '--exists', LIB_NAME])  # S603
+        call_pkg_config(['--exists'], LIB_NAME, capture_output=True)
 
     @staticmethod
     def _generator(msvc):
@@ -436,13 +430,8 @@ class Distribution(_Distribution):
 
         update_pkg_config_path(path)
         options = {'I': '--cflags-only-I', 'L': '--libs-only-L', 'l': '--libs-only-l'}
-
-        # On Windows, pkg-config tries to be cute by adding 'Library', but libsecp256k1.pc from conda
-        # has the correct definitions based on what is actually installed
-        if SYSTEM == 'Windows':
-            flags = subprocess.check_output(['pkg-config', options[type_], '--dont-define-prefix', library])  # noqa S603
-        else:
-            flags = subprocess.check_output(['pkg-config', options[type_], library])  # noqa S603
+        # flags = subprocess.check_output(['pkg-config', options[type_], '--dont-define-prefix', library])  # S603
+        flags = call_pkg_config([options[type_]], library, capture_output=True)
         flags = list(flags.decode('UTF-8').split())
         return [flag.strip(f'-{type_}') for flag in flags]
 

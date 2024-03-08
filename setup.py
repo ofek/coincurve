@@ -30,7 +30,7 @@ except ImportError:
 COINCURVE_SRC_DIR = dirname(abspath(__file__))
 PATH.append(COINCURVE_SRC_DIR)
 
-from setup_support import absolute, build_flags, detect_dll, has_system_lib
+from setup_support import absolute, build_flags, detect_dll, has_system_lib  # noqa: E402
 
 BUILDING_FOR_WINDOWS = detect_dll()
 
@@ -49,7 +49,7 @@ with open(join(COINCURVE_SRC_DIR, 'coincurve', '_version.py')) as fp:
     __version__ = globals_['__version__']
 
 with open(join(COINCURVE_SRC_DIR, 'coincurve', '_secp256k1_library_info.py'), 'w') as fp:
-    fp.write(f'SECP256K1_LIBRARY_TYPE = "INTERNAL"\n')
+    fp.write('SECP256K1_LIBRARY_TYPE = "INTERNAL"\n')
     fp.write('SECP256K1_LIBRARY_NAME = "_TBD_"\n')
 
 # We require setuptools >= 3.3

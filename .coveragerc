@@ -6,6 +6,8 @@ source =
     tests
 
 omit =
+    */_secp256k1_library_info.py
+    */_version.py
     */_windows_libsecp256k1.py
     */test_bench.py
 

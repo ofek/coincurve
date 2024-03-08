@@ -5,32 +5,6 @@ import subprocess
 import tempfile
 from contextlib import suppress
 
-# Is this needed?
-# @contextmanager
-# def workdir():
-#     cwd = os.getcwd()
-#     tmpdir = mkdtemp()
-#     os.chdir(tmpdir)
-#     try:
-#         yield
-#     finally:
-#         os.chdir(cwd)
-#         shutil.rmtree(tmpdir)
-#
-#
-# @contextmanager
-# def redirect(stdchannel, dest_filename):
-#     oldstdchannel = os.dup(stdchannel.fileno())
-#     dest_file = open(dest_filename, 'w')
-#     os.dup2(dest_file.fileno(), stdchannel.fileno())
-#     try:
-#         yield
-#     finally:
-#         if oldstdchannel is not None:
-#             os.dup2(oldstdchannel, stdchannel.fileno())
-#         if dest_file is not None:
-#             dest_file.close()
-
 
 def absolute(*paths):
     op = os.path

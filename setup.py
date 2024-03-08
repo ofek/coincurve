@@ -279,7 +279,7 @@ class develop(_develop):
         _develop.run(self)
 
 
-package_data = {'coincurve': ['py.typed', '_secp256k1__library_info.py']}
+package_data = {'coincurve': ['py.typed']}
 
 
 class BuildCFFIForSharedLib(_build_ext):
@@ -295,7 +295,6 @@ if has_system_lib():
     class Distribution(_Distribution):
         def has_c_libraries(self):
             return not has_system_lib()
-
 
     # --- SECP256K1 package definitions ---
     secp256k1_package = 'libsecp256k1'
@@ -317,16 +316,11 @@ if has_system_lib():
     if os.name == 'nt' or sys.platform == 'win32':
         # Apparently, the linker on Windows interprets -lxxx as xxx.lib, not libxxx.lib
         for i, v in enumerate(extension.__dict__.get('extra_link_args')):
-            v_ = v.replace('-L', '/LIBPATH:').replace('Library/Library', 'Library')
-            extension.__dict__['extra_link_args'][i] = v_
+            extension.__dict__['extra_link_args'][i] = v.replace('-L', '/LIBPATH:')
 
             if v.startswith('-l'):
                 v = v.replace('-l', 'lib')
                 extension.__dict__['extra_link_args'][i] = f'{v}.lib'
-
-        for i, v in enumerate(extension.__dict__.get('extra_compile_args')):
-            v_ = v.replace('Library/Library', 'Library')
-            extension.__dict__['extra_compile_args'][i] = v_
 
     setup_kwargs = dict(
         ext_modules=[extension],

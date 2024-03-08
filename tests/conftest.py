@@ -73,3 +73,10 @@ def samples():
         'X_ONLY_PUBKEY': X_ONLY_PUBKEY,
         'X_ONLY_PUBKEY_INVALID': X_ONLY_PUBKEY_INVALID,
     }
+
+
+@pytest.fixture(autouse=True)
+def load_secp256k1_library():
+    from coincurve import load_secp256k1_conda_library
+
+    load_secp256k1_conda_library()

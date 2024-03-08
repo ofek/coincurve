@@ -7,6 +7,9 @@ import subprocess
 import tarfile
 from io import BytesIO
 import sys
+from os.path import dirname, abspath, join
+from sys import path as PATH
+
 
 from setuptools import Distribution as _Distribution, setup, find_packages, __version__ as setuptools_version
 from setuptools._distutils import log
@@ -24,7 +27,9 @@ try:
 except ImportError:
     _bdist_wheel = None
 
-sys.path.append(os.path.abspath(os.path.dirname(__file__)))
+COINCURVE_SRC_DIR = dirname(abspath(__file__))
+PATH.append(COINCURVE_SRC_DIR)
+
 from setup_support import absolute, build_flags, detect_dll, has_system_lib
 
 BUILDING_FOR_WINDOWS = detect_dll()
@@ -37,6 +42,15 @@ MAKE = 'gmake' if platform.system() in ['FreeBSD', 'OpenBSD'] else 'make'
 UPSTREAM_REF = os.getenv('COINCURVE_UPSTREAM_TAG') or '1ad5185cd42c0636104129fcc9f6a4bf9c67cc40'
 
 LIB_TARBALL_URL = f'https://github.com/bitcoin-core/secp256k1/archive/{UPSTREAM_REF}.tar.gz'
+
+globals_ = {}
+with open(join(COINCURVE_SRC_DIR, 'coincurve', '_version.py')) as fp:
+    exec(fp.read(), globals_)  # noqa S102
+    __version__ = globals_['__version__']
+
+with open(join(COINCURVE_SRC_DIR, 'coincurve', '_secp256k1_library_info.py'), 'w') as fp:
+    fp.write(f'SECP256K1_LIBRARY_TYPE = "INTERNAL"\n')
+    fp.write('SECP256K1_LIBRARY_NAME = "_TBD_"\n')
 
 # We require setuptools >= 3.3
 if [int(i) for i in setuptools_version.split('.', 2)[:2]] < [3, 3]:
@@ -331,7 +345,7 @@ else:
 
 setup(
     name='coincurve',
-    version='19.0.1',
+    version=__version__,
 
     description='Cross-platform Python CFFI bindings for libsecp256k1',
     long_description=open('README.md', 'r').read(),

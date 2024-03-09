@@ -49,7 +49,7 @@ lint.unfixable = [
   "F401",
 ]
 extend-exclude = [
-  "_cffi_build/compose_cffi_files.py",
+  "tests/conftest.py",
 ]
 
 [tool.ruff.lint.isort]

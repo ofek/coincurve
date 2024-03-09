@@ -60,6 +60,33 @@ SECP256K1_BUILD = os.getenv('COINCURVE_SECP256K1_BUILD') or 'STATIC'
 SECP256K1_IGNORE_EXT_LIB = os.getenv('COINCURVE_IGNORE_SYSTEM_LIB')
 
 
+def define_secp256k1_local_lib_info():
+    """
+    Define the library name and the installation directory
+    The purpose is to automatically include the shared library in the package and
+    prevent inclusion the static library. This is probably hacky, but it works.
+    """
+    if SECP256K1_BUILD == 'SHARED':
+        logging.info('Building shared library')
+        # This will place the shared library inside the coincurve package data
+        return PKG_NAME, 'lib'
+
+    logging.info('Building static library')
+    # This will place the static library in a separate x_lib and in a lib_name directory
+    return LIB_NAME, 'x_lib'
+
+
+def call_pkg_config(options, library, *, debug=False):
+    """Calls pkg-config with the given options and returns the output."""
+    if SYSTEM == 'Windows':
+        options.append('--dont-define-prefix')
+
+    pkg_config = shutil.which('pkg-config')
+    cmd = [pkg_config, *options, library]
+
+    return subprocess_run(cmd, debug=debug)
+
+
 def download_library(command):
     if command.dry_run:
         return

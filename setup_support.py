@@ -84,3 +84,46 @@ def subprocess_run(cmd, *, debug=False):
         logging.error(f'An error occurred during the command execution: {e}')
         logging.error(f'Command log:\n{e.stderr}')
         raise e
+
+
+def call_pkg_config(options, library, *, debug=False):
+    """Calls pkg-config with the given options and returns the output."""
+    import shutil
+
+    from setup import SYSTEM
+
+    if SYSTEM == 'Windows':
+        options.append('--dont-define-prefix')
+
+    pkg_config = shutil.which('pkg-config')
+    cmd = [pkg_config, *options, library]
+
+    return subprocess_run(cmd, debug=debug)
+
+
+def define_secp256k1_local_lib_info():
+    """
+    Define the library name and the installation directory
+    The purpose is to automatically include the shared library in the package and
+    prevent inclusion the static library. This is probably hacky, but it works.
+    """
+    from setup import LIB_NAME, PKG_NAME, SECP256K1_BUILD
+
+    if SECP256K1_BUILD == 'SHARED':
+        return PKG_NAME, 'lib'
+    return LIB_NAME, 'x_lib'
+
+
+def update_pkg_config_path(path='.'):
+    """Updates the PKG_CONFIG_PATH environment variable to include the given path."""
+    pkg_config_paths = [path, os.getenv('PKG_CONFIG_PATH', '').strip('"')]
+
+    if cpf := os.getenv('CONDA_PREFIX'):
+        conda_paths = [os.path.join(cpf, sbd, 'pkgconfig') for sbd in ('lib', 'lib64', os.path.join('Library', 'lib'))]
+        pkg_config_paths.extend([p for p in conda_paths if os.path.isdir(p)])
+
+    if lbd := os.getenv('LIB_DIR'):
+        pkg_config_paths.append(os.path.join(lbd, 'pkgconfig'))
+
+    # Update environment
+    os.environ['PKG_CONFIG_PATH'] = os.pathsep.join(pkg_config_paths)

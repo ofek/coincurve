@@ -2,7 +2,6 @@ import glob
 import logging
 import os
 import subprocess
-import tempfile
 from contextlib import suppress
 
 
@@ -27,8 +26,8 @@ def build_flags(library, type_, path):
 
     options = {'I': '--cflags-only-I', 'L': '--libs-only-L', 'l': '--libs-only-l'}
     cmd = ['pkg-config', options[type_], library]
-    flags = execute_command_with_temp_log(cmd, capture_output=True)
-    flags = list(flags.decode('UTF-8').split())
+    flags = subprocess_run(cmd)
+    flags = list(flags.split())
 
     return [flag.strip(f'-{type_}') for flag in flags]
 
@@ -40,12 +39,8 @@ def _find_lib():
     from cffi import FFI
 
     try:
-        cmd = ['pkg-config', '--exists', 'libsecp256k1']
-        execute_command_with_temp_log(cmd)
-
         cmd = ['pkg-config', '--cflags-only-I', 'libsecp256k1']
-        includes = execute_command_with_temp_log(cmd, capture_output=True)
-        includes = includes.strip().decode('utf-8')
+        includes = subprocess_run(cmd)
 
         return os.path.exists(os.path.join(includes[2:], 'secp256k1_ecdh.h'))
 
@@ -77,25 +72,15 @@ def detect_dll():
     return False
 
 
-def execute_command_with_temp_log(cmd, *, debug=False, capture_output=False, **kwargs):
-    with tempfile.NamedTemporaryFile(mode='w+') as temp_log:
-        try:
-            if capture_output:
-                ret = subprocess.check_output(cmd, stderr=temp_log, **kwargs)  # noqa S603
-            else:
-                subprocess.check_call(cmd, stdout=temp_log, stderr=temp_log, **kwargs)  # noqa S603
+def subprocess_run(cmd, *, debug=False):
+    try:
+        result = subprocess.run(cmd, text=True, check=True)  # noqa S603
+        if debug:
+            logging.info(f'Command log:\n{result.stderr}')
 
-            if debug:
-                temp_log.seek(0)
-                log_contents = temp_log.read()
-                logging.info(f'Command log:\n{log_contents}')
-
-            if capture_output:
-                return ret
-
-        except subprocess.CalledProcessError as e:
-            logging.error(f'An error occurred during the command execution: {e}')
-            temp_log.seek(0)
-            log_contents = temp_log.read()
-            logging.error(f'Command log:\n{log_contents}')
-            raise e
+        return result.stdout.strip()
+    
+    except subprocess.CalledProcessError as e:
+        logging.error(f'An error occurred during the command execution: {e}')
+        logging.error(f'Command log:\n{e.stderr}')
+        raise e

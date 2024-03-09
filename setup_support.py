@@ -74,7 +74,7 @@ def detect_dll():
 
 def subprocess_run(cmd, *, debug=False):
     try:
-        result = subprocess.run(cmd, text=True, check=True)  # noqa S603
+        result = subprocess.run(cmd, capture_output=True, text=True, check=True)  # noqa S603
         if debug:
             logging.info(f'Command log:\n{result.stderr}')
 

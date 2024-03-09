@@ -1,23 +1,24 @@
 import errno
+import logging
 import os
 import os.path
 import platform
 import shutil
 import subprocess
+import sys
 import tarfile
 from io import BytesIO
-import sys
 
 from setuptools import Distribution as _Distribution, setup, find_packages, __version__ as setuptools_version
 from setuptools._distutils import log
 from setuptools._distutils.errors import DistutilsError
 from setuptools.command.build_clib import build_clib as _build_clib
 from setuptools.command.build_ext import build_ext as _build_ext
-from setuptools.extension import Extension
 from setuptools.command.develop import develop as _develop
 from setuptools.command.dist_info import dist_info as _dist_info
 from setuptools.command.egg_info import egg_info as _egg_info
 from setuptools.command.sdist import sdist as _sdist
+from setuptools.extension import Extension
 
 try:
     from wheel.bdist_wheel import bdist_wheel as _bdist_wheel
@@ -25,7 +26,7 @@ except ImportError:
     _bdist_wheel = None
 
 sys.path.append(os.path.abspath(os.path.dirname(__file__)))
-from setup_support import absolute, build_flags, detect_dll, has_system_lib
+from setup_support import absolute, build_flags, detect_dll, has_system_lib, subprocess_run
 
 BUILDING_FOR_WINDOWS = detect_dll()
 
@@ -44,6 +45,47 @@ if [int(i) for i in setuptools_version.split('.', 2)[:2]] < [3, 3]:
         f'Your setuptools version ({setuptools_version}) is too old to correctly install this package. Please upgrade '
         f'to a newer version (>= 3.3).'
     )
+
+LIB_NAME = 'libsecp256k1'
+PKG_NAME = 'coincurve'
+
+# Helpers for compilation instructions
+# Cross-compile for Windows/ARM64, Linux/ARM64, Darwin/ARM64, Windows/x86 (GitHub)
+X_HOST = os.getenv('COINCURVE_CROSS_HOST')
+
+SYSTEM = platform.system()  # supported: Windows, Linux, Darwin
+MACHINE = platform.machine()  # supported: AMD64, x86_64
+
+logging.info(f'Building for {SYSTEM}:{MACHINE} with {X_HOST = }')
+SECP256K1_BUILD = os.getenv('COINCURVE_SECP256K1_BUILD') or 'STATIC'
+SECP256K1_IGNORE_EXT_LIB = os.getenv('COINCURVE_IGNORE_SYSTEM_LIB')
+
+
+def define_secp256k1_local_lib_info():
+    """
+    Define the library name and the installation directory
+    The purpose is to automatically include the shared library in the package and
+    prevent inclusion the static library. This is probably hacky, but it works.
+    """
+    if SECP256K1_BUILD == 'SHARED':
+        logging.info('Building shared library')
+        # This will place the shared library inside the coincurve package data
+        return PKG_NAME, 'lib'
+
+    logging.info('Building static library')
+    # This will place the static library in a separate x_lib and in a lib_name directory
+    return LIB_NAME, 'x_lib'
+
+
+def call_pkg_config(options, library, *, debug=False):
+    """Calls pkg-config with the given options and returns the output."""
+    if SYSTEM == 'Windows':
+        options.append('--dont-define-prefix')
+
+    pkg_config = shutil.which('pkg-config')
+    cmd = [pkg_config, *options, library]
+
+    return subprocess_run(cmd, debug=debug)
 
 
 def download_library(command):
@@ -111,6 +153,151 @@ if _bdist_wheel:
 
 else:
     bdist_wheel = None
+
+
+class BuildClibWithCMake(_build_clib):
+    title = 'SECP256K1 C library build'
+
+    def __init__(self, dist):
+        super().__init__(dist)
+        self.pkgconfig_dir = None
+
+        self._cwd = None
+        self._lib_src = None
+        self._install_dir = None
+        self._install_lib_dir = None
+
+    def get_source_files(self):
+        # Ensure library has been downloaded (sdist might have been skipped)
+        if not self.distribution.uses_system_lib():
+            download_library(self)
+
+        # This seems to create issues in MANIFEST.in
+        return [f for _, _, fs in os.walk(absolute(LIB_NAME)) for f in fs]
+
+    def run(self):
+        if self.distribution.uses_system_lib():
+            logging.info('Using system library')
+            return
+
+        logging.info(self.title)
+        self.bc_set_dirs_download()
+        self.bc_prepare_build(self._install_lib_dir, self.build_temp, self._lib_src)
+
+        try:
+            os.chdir(self.build_temp)
+            subprocess.check_call(self.bc_build_command())  # noqa S603
+        finally:
+            os.chdir(self._cwd)
+
+        # Register lib installation path
+        self.bc_update_pkg_config_path()
+
+    def bc_set_dirs_download(self):
+        self._cwd = os.getcwd()
+        os.makedirs(self.build_temp, exist_ok=True)
+        self._install_dir = str(self.build_temp).replace('temp', 'lib')
+
+        # Install path
+        #  SHARED: lib/coincurve       -> path/lib.xxx/coincurve/path      # included in coincurve wheel
+        #  STATIC: x_lib/libsecp256k1  -> path/x_lib.xxx/libsecp256k1/path # NOT included in coincurve wheel
+        lib, inst_dir = define_secp256k1_local_lib_info()
+        self._install_lib_dir = os.path.join(self._install_dir.replace('lib', inst_dir), lib)
+
+        self._lib_src = os.path.join(self._cwd, LIB_NAME)
+        if not os.path.exists(self._lib_src):
+            self.get_source_files()
+
+    def bc_update_pkg_config_path(self):
+        self.pkgconfig_dir = [
+            os.path.join(self._install_lib_dir, 'lib', 'pkgconfig'),
+            os.path.join(self._install_lib_dir, 'lib64', 'pkgconfig'),
+        ]
+        os.environ['PKG_CONFIG_PATH'] = (
+            f'{str(os.pathsep).join(self.pkgconfig_dir)}'
+            f'{os.pathsep}'
+            f'{os.getenv("PKG_CONFIG_PATH", "")}'
+        ).replace('\\', '/')
+
+        # Verify installation
+        # subprocess.check_call(['pkg-config', '--exists', LIB_NAME])  # S603
+        call_pkg_config(['--exists'], LIB_NAME)
+
+    @staticmethod
+    def _generator(msvc):
+        if '2017' in str(msvc):
+            return 'Visual Studio 15 2017'
+        if '2019' in str(msvc):
+            return 'Visual Studio 16 2019'
+        if '2022' in str(msvc):
+            return 'Visual Studio 17 2022'
+
+    @staticmethod
+    def bc_prepare_build(install_lib_dir, build_temp, lib_src):
+        cmake_args = [
+            '-DCMAKE_BUILD_TYPE=Release',
+            f'-DCMAKE_INSTALL_PREFIX={install_lib_dir}',
+            f'-DCMAKE_C_FLAGS={"-fPIC" if SECP256K1_BUILD != "SHARED" and SYSTEM != "Windows" else ""}',
+            f'-DSECP256K1_DISABLE_SHARED={"OFF" if SECP256K1_BUILD == "SHARED" else "ON"}',
+            '-DSECP256K1_BUILD_BENCHMARK=OFF',
+            '-DSECP256K1_BUILD_TESTS=OFF',
+            '-DSECP256K1_ENABLE_MODULE_ECDH=ON',
+            '-DSECP256K1_ENABLE_MODULE_RECOVERY=ON',
+            '-DSECP256K1_ENABLE_MODULE_SCHNORRSIG=ON',
+            '-DSECP256K1_ENABLE_MODULE_EXTRAKEYS=ON',
+        ]
+
+        # Windows (more complex)
+        if SYSTEM == 'Windows':
+            vswhere = shutil.which('vswhere')
+            cmd = [vswhere, '-latest', '-find', 'MSBuild\\**\\Bin\\MSBuild.exe']
+            msvc = subprocess.check_output(cmd).strip().decode('utf-8')  # noqa S603
+
+            # For windows x86/x64, select the correct architecture
+            arch = 'x64' if MACHINE == 'AMD64' else 'Win32'  # Native
+
+            if X_HOST is not None:
+                logging.info(f'Cross-compiling on {SYSTEM}:{MACHINE} for {X_HOST}')
+                if X_HOST in ['arm64', 'ARM64', 'x86']:
+                    arch = 'Win32' if X_HOST in ['x86'] else 'arm64'
+                else:
+                    raise NotImplementedError(f'Unsupported architecture: {X_HOST}')
+
+            # Place the DLL directly in the package directory
+            cmake_args.append('-DCMAKE_INSTALL_BINDIR=.')
+            cmake_args.extend(['-G', BuildClibWithCMake._generator(msvc), f'-A{arch}'])
+
+        elif SYSTEM == 'Darwin':
+            if X_HOST is None:
+                cmake_args.append(
+                    f'-DCMAKE_OSX_ARCHITECTURES={MACHINE}'  # Native
+                )
+            else:
+                logging.info(f'Cross-compiling on {SYSTEM}:{MACHINE} for {X_HOST}')
+                if X_HOST in ['armv7', 'armv7s', 'arm64', 'arm64e']:
+                    cmake_args.append(
+                        f'-DCMAKE_OSX_ARCHITECTURES={X_HOST}'
+                    )
+        else:
+            if X_HOST is not None:
+                if X_HOST not in [
+                    'arm-linux-gnueabihf',
+                    'x86_64-w64-mingw32',
+                ]:
+                    raise NotImplementedError(f'Unsupported architecture: {X_HOST}')
+
+                logging.info(f'Cross-compiling on {SYSTEM}:{MACHINE} for {X_HOST}')
+                cmake_args.append(
+                    f'-DCMAKE_TOOLCHAIN_FILE=../cmake/{X_HOST}.toolchain.cmake'
+                )
+
+        logging.info('    Configure CMake')
+        subprocess.check_call(['cmake', '-S', lib_src, '-B', build_temp, *cmake_args])  # noqa S603
+
+    @staticmethod
+    def bc_build_command():
+        logging.info('    Install with CMake')
+        return ['cmake', '--build', '.', '--target', 'install', '--config', 'Release', '--clean-first']
 
 
 class build_clib(_build_clib):
@@ -259,6 +446,7 @@ if has_system_lib():
     class Distribution(_Distribution):
         def has_c_libraries(self):
             return not has_system_lib()
+
 
     # --- SECP256K1 package definitions ---
     secp256k1_package = 'libsecp256k1'

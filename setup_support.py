@@ -1,35 +1,8 @@
 import glob
+import logging
 import os
-import shutil
 import subprocess
-from contextlib import contextmanager, suppress
-from tempfile import mkdtemp
-
-
-@contextmanager
-def workdir():
-    cwd = os.getcwd()
-    tmpdir = mkdtemp()
-    os.chdir(tmpdir)
-    try:
-        yield
-    finally:
-        os.chdir(cwd)
-        shutil.rmtree(tmpdir)
-
-
-@contextmanager
-def redirect(stdchannel, dest_filename):
-    oldstdchannel = os.dup(stdchannel.fileno())
-    dest_file = open(dest_filename, 'w')
-    os.dup2(dest_file.fileno(), stdchannel.fileno())
-    try:
-        yield
-    finally:
-        if oldstdchannel is not None:
-            os.dup2(oldstdchannel, stdchannel.fileno())
-        if dest_file is not None:
-            dest_file.close()
+from contextlib import suppress
 
 
 def absolute(*paths):
@@ -47,10 +20,14 @@ def build_flags(library, type_, path):
         pkg_config_path.append(os.environ['LIB_DIR'])
         pkg_config_path.append(os.path.join(os.environ['LIB_DIR'], 'pkgconfig'))
 
+    # Update PKG_CONFIG_PATH, it may be needed in later stages
+    new_path = str(os.pathsep).join(pkg_config_path)
+    os.environ['PKG_CONFIG_PATH'] = new_path + os.pathsep + os.environ.get('PKG_CONFIG_PATH', '')
+
     options = {'I': '--cflags-only-I', 'L': '--libs-only-L', 'l': '--libs-only-l'}
-    env = dict(os.environ, PKG_CONFIG_PATH=':'.join(pkg_config_path))
-    flags = subprocess.check_output(['pkg-config', '--static', options[type_], library], env=env)  # noqa S603
-    flags = list(flags.decode('UTF-8').split())
+    cmd = ['pkg-config', options[type_], library]
+    flags = subprocess_run(cmd)
+    flags = list(flags.split())
 
     return [flag.strip(f'-{type_}') for flag in flags]
 
@@ -62,10 +39,8 @@ def _find_lib():
     from cffi import FFI
 
     try:
-        subprocess.check_output(['pkg-config', '--exists', 'libsecp256k1'])  # noqa S603
-
-        includes = subprocess.check_output(['pkg-config', '--cflags-only-I', 'libsecp256k1'])  # noqa S603
-        includes = includes.strip().decode('utf-8')
+        cmd = ['pkg-config', '--cflags-only-I', 'libsecp256k1']
+        includes = subprocess_run(cmd)
 
         return os.path.exists(os.path.join(includes[2:], 'secp256k1_ecdh.h'))
 
@@ -95,3 +70,17 @@ def detect_dll():
         if fn.endswith('.dll'):
             return True
     return False
+
+
+def subprocess_run(cmd, *, debug=False):
+    try:
+        result = subprocess.run(cmd, capture_output=True, text=True, check=True)  # noqa S603
+        if debug:
+            logging.info(f'Command log:\n{result.stderr}')
+
+        return result.stdout.strip()
+
+    except subprocess.CalledProcessError as e:
+        logging.error(f'An error occurred during the command execution: {e}')
+        logging.error(f'Command log:\n{e.stderr}')
+        raise e

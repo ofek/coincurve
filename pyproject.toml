@@ -49,7 +49,7 @@ lint.unfixable = [
   "F401",
 ]
 extend-exclude = [
-  "tests/conftest.py",
+    "tests/conftest.py",
 ]
 
 [tool.ruff.lint.isort]

@@ -1,3 +1,5 @@
+import pytest
+
 PRIVATE_KEY_BYTES = b'\xc2\x8a\x9f\x80s\x8fw\rRx\x03\xa5f\xcfo\xc3\xed\xf6\xce\xa5\x86\xc4\xfcJR#\xa5\xady~\x1a\xc3'
 PRIVATE_KEY_DER = (
     b'0\x81\x84\x02\x01\x000\x10\x06\x07*\x86H\xce=\x02\x01\x06'
@@ -51,3 +53,23 @@ RECOVERABLE_SIGNATURE = (
 
 X_ONLY_PUBKEY = b"Ncx\x00\xf1_'BV\x9ac\x0b\xec)\x0eH\xdf\xebc\xa9\\\x85\x19:\xf9L{B\xe6\x14\xfe\xa8"
 X_ONLY_PUBKEY_INVALID = bytes(32)
+
+
+@pytest.fixture
+def samples():
+    return {
+        'MESSAGE': MESSAGE,
+        'PRIVATE_KEY_BYTES': PRIVATE_KEY_BYTES,
+        'PRIVATE_KEY_DER': PRIVATE_KEY_DER,
+        'PRIVATE_KEY_HEX': PRIVATE_KEY_HEX,
+        'PRIVATE_KEY_NUM': PRIVATE_KEY_NUM,
+        'PRIVATE_KEY_PEM': PRIVATE_KEY_PEM,
+        'PUBLIC_KEY_COMPRESSED': PUBLIC_KEY_COMPRESSED,
+        'PUBLIC_KEY_UNCOMPRESSED': PUBLIC_KEY_UNCOMPRESSED,
+        'PUBLIC_KEY_X': PUBLIC_KEY_X,
+        'PUBLIC_KEY_Y': PUBLIC_KEY_Y,
+        'SIGNATURE': SIGNATURE,
+        'RECOVERABLE_SIGNATURE': RECOVERABLE_SIGNATURE,
+        'X_ONLY_PUBKEY': X_ONLY_PUBKEY,
+        'X_ONLY_PUBKEY_INVALID': X_ONLY_PUBKEY_INVALID,
+    }

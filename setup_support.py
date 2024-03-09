@@ -79,7 +79,7 @@ def subprocess_run(cmd, *, debug=False):
             logging.info(f'Command log:\n{result.stderr}')
 
         return result.stdout.strip()
-    
+
     except subprocess.CalledProcessError as e:
         logging.error(f'An error occurred during the command execution: {e}')
         logging.error(f'Command log:\n{e.stderr}')

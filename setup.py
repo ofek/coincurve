@@ -300,6 +300,61 @@ class BuildClibWithCMake(_build_clib):
         return ['cmake', '--build', '.', '--target', 'install', '--config', 'Release', '--clean-first']
 
 
+class SharedLinker(object):
+    @staticmethod
+    def update_link_args(compiler, libraries, libraries_dirs, extra_link_args):
+        if compiler.__class__.__name__ == 'UnixCCompiler':
+            extra_link_args.extend([f'-l{lib}' for lib in libraries])
+            if sys.platform == 'darwin':
+                extra_link_args.extend([
+                    '-Wl,-rpath,@loader_path/lib',
+                ])
+            else:
+                extra_link_args.extend([
+                    '-Wl,-rpath,$ORIGIN/lib',
+                    '-Wl,-rpath,$ORIGIN/lib64',
+                ])
+        elif compiler.__class__.__name__ == 'MSVCCompiler':
+            for ld in libraries_dirs:
+                ld = ld.replace('/', '\\')
+                for lib in libraries:
+                    lib_file = os.path.join(ld, f'lib{lib}.lib')
+                    lib_path = [f'/LIBPATH:{ld}', f'lib{lib}.lib']
+                    if os.path.exists(lib_file):
+                        extra_link_args.extend(lib_path)
+        else:
+            raise NotImplementedError(f'Unsupported compiler: {compiler.__class__.__name__}')
+
+
+class StaticLinker(object):
+    @staticmethod
+    def update_link_args(compiler, libraries, libraries_dirs, extra_link_args):
+        if compiler.__class__.__name__ == 'UnixCCompiler':
+            # It is possible that the library was compiled without fPIC option
+            for lib in libraries:
+                # On MacOS the mix static/dynamic option is different
+                # It requires a -force_load <full_lib_path> option for each library
+                if sys.platform == 'darwin':
+                    for lib_dir in libraries_dirs:
+                        if os.path.exists(os.path.join(lib_dir, f'lib{lib}.a')):
+                            extra_link_args.extend(
+                                ['-Wl,-force_load', os.path.join(lib_dir, f'lib{lib}.a')]
+                            )
+                            break
+                else:
+                    extra_link_args.extend(['-Wl,-Bstatic', f'-l{lib}', '-Wl,-Bdynamic'])
+
+        elif compiler.__class__.__name__ == 'MSVCCompiler':
+            for ld in libraries_dirs:
+                ld = ld.replace('/', '\\')
+                for lib in libraries:
+                    lib_file = os.path.join(ld, f'lib{lib}.lib')
+                    if os.path.exists(lib_file):
+                        extra_link_args.append(lib_file)
+        else:
+            raise NotImplementedError(f'Unsupported compiler: {compiler.__class__.__name__}')
+
+
 class build_clib(_build_clib):
     def initialize_options(self):
         _build_clib.initialize_options(self)

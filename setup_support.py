@@ -1,8 +1,6 @@
-import glob
 import logging
 import os
 import subprocess
-from contextlib import suppress
 
 
 def absolute(*paths):

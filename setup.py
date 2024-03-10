@@ -297,6 +297,10 @@ if has_system_lib():
                 v = v.replace('-l', 'lib')
                 extension.__dict__['extra_link_args'][i] = f'{v}.lib'
 
+        for i, v in enumerate(extension.__dict__.get('extra_compile_args')):
+            v_ = v.replace('Library/Library', 'Library')
+            extension.__dict__['extra_compile_args'][i] = v_
+
     setup_kwargs = dict(
         ext_modules=[extension],
         cmdclass={

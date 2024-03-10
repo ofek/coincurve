@@ -27,7 +27,7 @@ except ImportError:
 
 sys.path.append(os.path.abspath(os.path.dirname(__file__)))
 from setup_support import absolute, build_flags, detect_dll, has_system_lib, define_secp256k1_local_lib_info, \
-    call_pkg_config
+    call_pkg_config, subprocess_run
 
 BUILDING_FOR_WINDOWS = detect_dll()
 
@@ -143,14 +143,14 @@ class BuildClibWithCMake(_build_clib):
 
     def get_source_files(self):
         # Ensure library has been downloaded (sdist might have been skipped)
-        if not self.distribution.uses_system_lib():
+        if not has_system_lib():
             download_library(self)
 
         # This seems to create issues in MANIFEST.in
         return [f for _, _, fs in os.walk(absolute(LIB_NAME)) for f in fs]
 
     def run(self):
-        if self.distribution.uses_system_lib():
+        if has_system_lib():
             logging.info('Using system library')
             return
 
@@ -183,18 +183,9 @@ class BuildClibWithCMake(_build_clib):
             self.get_source_files()
 
     def bc_update_pkg_config_path(self):
-        self.pkgconfig_dir = [
-            os.path.join(self._install_lib_dir, 'lib', 'pkgconfig'),
-            os.path.join(self._install_lib_dir, 'lib64', 'pkgconfig'),
-        ]
-        os.environ['PKG_CONFIG_PATH'] = (
-            f'{str(os.pathsep).join(self.pkgconfig_dir)}'
-            f'{os.pathsep}'
-            f'{os.getenv("PKG_CONFIG_PATH", "")}'
-        ).replace('\\', '/')
-
-        # Verify installation
-        # subprocess.check_call(['pkg-config', '--exists', LIB_NAME])  # S603
+        self.pkgconfig_dir = [os.path.join(self._install_lib_dir, n,  'pkgconfig') for n in ['lib', 'lib64']]
+        self.pkgconfig_dir.append(os.getenv('PKG_CONFIG_PATH', ''))
+        os.environ['PKG_CONFIG_PATH'] = os.pathsep.join(self.pkgconfig_dir)
         call_pkg_config(['--exists'], LIB_NAME)
 
     @staticmethod
@@ -327,6 +318,66 @@ class StaticLinker(object):
                         extra_link_args.append(lib_file)
         else:
             raise NotImplementedError(f'Unsupported compiler: {compiler.__class__.__name__}')
+
+
+class BuildExtensionFromCFFI(_build_ext):
+    static_lib = True if SECP256K1_BUILD == 'STATIC' else False
+
+    def update_link_args(self, libraries, libraries_dirs, extra_link_args):
+        if self.static_lib:
+            StaticLinker.update_link_args(self.compiler, libraries, libraries_dirs, extra_link_args)
+        else:
+            SharedLinker.update_link_args(self.compiler, libraries, libraries_dirs, extra_link_args)
+
+    def create_c_files(self, ext):
+        # Construct C-file from CFFI
+        build_script = os.path.join('_cffi_build', 'build_shared.py')
+        for i, c_file in enumerate(ext.sources):
+            os.makedirs(self.build_temp, exist_ok=True)
+            c_file = os.path.join(self.build_temp, os.path.basename(c_file))
+            # This puts c-file a temp location (and not in the coincurve src directory)
+            ext.sources[i] = c_file
+            cmd = [sys.executable, build_script, c_file, '1' if self.static_lib else '0']
+            subprocess_run(cmd)
+
+    def build_extension(self, ext, build_flags):
+        # Construct C-file from CFFI
+        self.create_c_files(ext)
+
+        # Enforce API interface
+        ext.py_limited_api = False
+
+        # Location of locally built library
+        lib, inst_dir = define_secp256k1_local_lib_info()
+        prefix = os.path.join(self.build_lib.replace('lib', inst_dir), lib)
+        postfix = os.path.join('pkgconfig', f'{LIB_NAME}.pc')
+
+        c_lib_pkg = None
+        if not any([
+            os.path.isfile(c_lib_pkg := os.path.join(prefix, 'lib', postfix)),
+            os.path.isfile(c_lib_pkg := os.path.join(prefix, 'lib64', postfix)),
+            has_system_lib()
+        ]):
+            raise RuntimeError(
+                f'Library not found: {os.path.join(prefix, "lib/lib64", postfix)}'
+                f'\nSystem lib is {has_system_lib() = }. '
+                'Please check that the library was properly built.'
+            )
+
+        # PKG_CONFIG_PATH is updated by build_clib if built locally,
+        # however, it would not work for a step-by-step build, thus we specify the lib path
+        build_flags = self.distribution.build_flags
+        ext.extra_compile_args.extend([f'-I{build_flags(LIB_NAME, "I", c_lib_pkg)[0]}'])
+        ext.library_dirs.extend(build_flags(LIB_NAME, 'L', c_lib_pkg))
+
+        libraries = build_flags(LIB_NAME, 'l', c_lib_pkg)
+        logging.info(f'  Libraries:{libraries}')
+
+        # We do not set ext.libraries, this would add the default link instruction
+        # Instead, we use extra_link_args to customize the link command
+        self.update_link_args(libraries, ext.library_dirs, ext.extra_link_args)
+
+        super().build_extension(ext)
 
 
 class build_clib(_build_clib):
@@ -506,7 +557,7 @@ if has_system_lib():
     setup_kwargs = dict(
         ext_modules=[extension],
         cmdclass={
-            'build_clib': build_clib,
+            'build_clib': None if has_system_lib() else BuildClibWithCMake,
             'build_ext': BuildCFFIForSharedLib,
             'develop': develop,
             'egg_info': egg_info,
@@ -533,12 +584,18 @@ else:
                 return not has_system_lib()
 
 
+        extension = Extension(
+            name='coincurve._libsecp256k1',
+            sources=['_c_file_for_extension.c'],
+            py_limited_api=False,
+            extra_compile_args=['/d2FH4-'] if SYSTEM == 'Windows' else [],
+        )
+
         setup_kwargs = dict(
-            ext_package='coincurve',
-            cffi_modules=['_cffi_build/build.py:ffi'],
+            ext_modules=[extension],
             cmdclass={
-                'build_clib': build_clib,
-                'build_ext': build_ext,
+                'build_clib': None if has_system_lib() else BuildClibWithCMake,
+                'build_ext': BuildCFFIForSharedLib,
                 'develop': develop,
                 'egg_info': egg_info,
                 'sdist': sdist,

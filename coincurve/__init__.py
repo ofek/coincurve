@@ -29,6 +29,7 @@ def load_secp256k1_conda_library():
             return
     except Exception as e:
         import warnings
+
         warnings.warn(f'The required library {SECP256K1_LIBRARY_NAME}l is not loaded.\n{e}', stacklevel=2)
 
 

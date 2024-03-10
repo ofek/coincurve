@@ -157,6 +157,45 @@ jobs:
         path: dist/*
         if-no-files-found: error
 
+  windows-wheels-conda-x86_64:
+    name: Build Windows (CONDA) wheels AMD64
+    needs:
+    - test
+    runs-on: windows-latest
+
+    steps:
+    - uses: actions/checkout@v4
+
+    - name: Set up Python ${{ env.PYTHON_VERSION }}
+      uses: actions/setup-python@v5
+      with:
+        python-version: '3.12'
+
+    - name: Install Miniconda
+      uses: conda-incubator/setup-miniconda@v3
+
+    - name: Build wheels
+      uses: pypa/cibuildwheel@v2.16.5
+      env:
+        CIBW_ENVIRONMENT:
+            COINCURVE_IGNORE_SYSTEM_LIB="0"
+            COINCURVE_UPSTREAM_REF="__no_tag__"
+            COINCURVE_SECP256K1_BUILD='SHARED'
+        CIBW_BUILD: "cp312-win_amd64"
+        CIBW_ARCHS_WINDOWS: "AMD64"
+        CIBW_BEFORE_ALL: >
+            conda install -c conda-forge pkg-config libsecp256k1
+        CIBW_BUILD_VERBOSITY: 1
+        # pytest needs to be defined here to find 'coincurve' package?
+        CIBW_TEST_REQUIRES: pytest pytest-benchmark
+        CIBW_TEST_COMMAND: >
+            conda install -c conda-forge libsecp256k1 &&
+            python -c
+            "from coincurve import PrivateKey;
+            a=PrivateKey();
+            b=PrivateKey();
+            assert a.ecdh(b.public_key.format())==b.ecdh(a.public_key.format())
+
   linux-wheels-arm:
     name: Build Linux wheels for ARM
     needs:

@@ -1,34 +1,34 @@
 def load_secp256k1_conda_library():
     """Load the secp256k1 library from the conda environment."""
-    import warnings
-
     from coincurve._secp256k1_library_info import SECP256K1_LIBRARY_NAME, SECP256K1_LIBRARY_TYPE
 
     if SECP256K1_LIBRARY_TYPE != 'EXTERNAL':
-        warnings.warn(f'DBG: {SECP256K1_LIBRARY_NAME}:{SECP256K1_LIBRARY_TYPE}', stacklevel=2)
+        # coincurve was built with an internal library, either static or shared. It 'knows' where the library is.
         return
 
     import os
 
-    if (conda := os.getenv('CONDA_PREFIX')) is None:
-        warnings.warn('This coincurve package requires a CONDA environment', stacklevel=2)
-        return
-
-    import platform
-
-    if platform.system() == 'Windows':
-        library = os.path.join(conda, 'Library', 'bin', f'{SECP256K1_LIBRARY_NAME}.dll')
-    elif platform.system() == 'Darwin':
-        library = os.path.join(conda, 'lib', f'{SECP256K1_LIBRARY_NAME}.dylib')
-    else:
-        library = os.path.join(conda, 'lib', f'{SECP256K1_LIBRARY_NAME}.so')
-
     try:
-        import ctypes
+        import ctypes.util import find_library
 
-        ctypes.CDLL(library)
+        # Find the library in the typical installation paths
+        if lib := find_library(SECP256K1_LIBRARY_NAME):
+            ctypes.CDLL(lib)
+            return
+
+        # Find the library in the conda environment
+        if (conda := os.getenv('CONDA_PREFIX')) is not None:
+            import platform
+
+            if platform.system() == 'Windows':
+                library = os.path.join(conda, 'Library', 'bin', SECP256K1_LIBRARY_NAME)
+            else:
+                library = os.path.join(conda, 'lib', SECP256K1_LIBRARY_NAME)
+
+            ctypes.CDLL(library)
     except Exception as e:
-        warnings.warn(f'The required library {SECP256K1_LIBRARY_NAME}.so/dylib/dll is not loaded.\n{e}', stacklevel=2)
+        import warnings
+        warnings.warn(f'The required library {SECP256K1_LIBRARY_NAME}l is not loaded.\n{e}', stacklevel=2)
 
 
 load_secp256k1_conda_library()

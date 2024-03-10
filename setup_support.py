@@ -23,7 +23,10 @@ def build_flags(library, type_, path):
     os.environ['PKG_CONFIG_PATH'] = new_path + os.pathsep + os.environ.get('PKG_CONFIG_PATH', '')
 
     options = {'I': '--cflags-only-I', 'L': '--libs-only-L', 'l': '--libs-only-l'}
-    cmd = ['pkg-config', options[type_], library]
+    if os.name == 'nt':
+        cmd = ['pkg-config', options[type_], '--dont-define-prefix', library]
+    else:
+        cmd = ['pkg-config', options[type_], library]
     flags = subprocess_run(cmd)
     flags = list(flags.split())
 

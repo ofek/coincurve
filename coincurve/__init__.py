@@ -1,7 +1,5 @@
 def load_secp256k1_conda_library():
     """Load the secp256k1 library from the conda environment."""
-    import warnings
-
     from coincurve._secp256k1_library_info import SECP256K1_LIBRARY_NAME, SECP256K1_LIBRARY_TYPE
 
     if SECP256K1_LIBRARY_TYPE != 'EXTERNAL':
@@ -30,6 +28,7 @@ def load_secp256k1_conda_library():
             CDLL(library)
             return
     except Exception as e:
+        import warnings
         warnings.warn(f'The required library {SECP256K1_LIBRARY_NAME}l is not loaded.\n{e}', stacklevel=2)
 
 

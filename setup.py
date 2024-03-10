@@ -290,7 +290,8 @@ if has_system_lib():
     if os.name == 'nt' or sys.platform == 'win32':
         # Apparently, the linker on Windows interprets -lxxx as xxx.lib, not libxxx.lib
         for i, v in enumerate(extension.__dict__.get('extra_link_args')):
-            extension.__dict__['extra_link_args'][i] = v.replace('-L', '/LIBPATH:').replace('Library/Library', 'Library')
+            v_ = v.replace('-L', '/LIBPATH:').replace('Library/Library', 'Library')
+            extension.__dict__['extra_link_args'][i] = v_
 
             if v.startswith('-l'):
                 v = v.replace('-l', 'lib')

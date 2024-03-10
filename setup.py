@@ -48,10 +48,6 @@ with open(join(COINCURVE_SRC_DIR, 'coincurve', '_version.py')) as fp:
     exec(fp.read(), globals_)  # noqa S102
     __version__ = globals_['__version__']
 
-with open(join(COINCURVE_SRC_DIR, 'coincurve', '_secp256k1_library_info.py'), 'w') as fp:
-    fp.write("SECP256K1_LIBRARY_TYPE = 'INTERNAL'\n")
-    fp.write("SECP256K1_LIBRARY_NAME = '_TBD_'\n")
-
 # We require setuptools >= 3.3
 if [int(i) for i in setuptools_version.split('.', 2)[:2]] < [3, 3]:
     raise SystemExit(

@@ -1,8 +1,6 @@
-import glob
 import logging
 import os
 import subprocess
-from contextlib import suppress
 
 
 def absolute(*paths):
@@ -25,7 +23,10 @@ def build_flags(library, type_, path):
     os.environ['PKG_CONFIG_PATH'] = new_path + os.pathsep + os.environ.get('PKG_CONFIG_PATH', '')
 
     options = {'I': '--cflags-only-I', 'L': '--libs-only-L', 'l': '--libs-only-l'}
-    cmd = ['pkg-config', options[type_], library]
+    if os.name == 'nt':
+        cmd = ['pkg-config', options[type_], '--dont-define-prefix', library]
+    else:
+        cmd = ['pkg-config', options[type_], library]
     flags = subprocess_run(cmd)
     flags = list(flags.split())
 
@@ -33,25 +34,24 @@ def build_flags(library, type_, path):
 
 
 def _find_lib():
-    if 'COINCURVE_IGNORE_SYSTEM_LIB' in os.environ:
+    if os.getenv('COINCURVE_IGNORE_SYSTEM_LIB', '1') == '1':
         return False
 
-    from cffi import FFI
+    update_pkg_config_path()
 
     try:
-        cmd = ['pkg-config', '--cflags-only-I', 'libsecp256k1']
-        includes = subprocess_run(cmd)
+        if os.name == 'nt':
+            cmd = ['pkg-config', '--libs-only-L', '--dont-define-prefix', 'libsecp256k1']
+        else:
+            cmd = ['pkg-config', '--libs-only-L', 'libsecp256k1']
+        lib_dir = subprocess_run(cmd)
 
-        return os.path.exists(os.path.join(includes[2:], 'secp256k1_ecdh.h'))
+        return verify_system_lib(lib_dir[2:].strip())
 
     except (OSError, subprocess.CalledProcessError):
-        if 'LIB_DIR' in os.environ:
-            for path in glob.glob(os.path.join(os.environ['LIB_DIR'], '*secp256k1*')):
-                with suppress(OSError):
-                    FFI().dlopen(path)
-                    return True
-        # We couldn't locate libsecp256k1, so we'll use the bundled one
-        return False
+        from ctypes.util import find_library
+
+        return bool(find_library('secp256k1'))
 
 
 _has_system_lib = None
@@ -127,3 +127,48 @@ def update_pkg_config_path(path='.'):
 
     # Update environment
     os.environ['PKG_CONFIG_PATH'] = os.pathsep.join(pkg_config_paths)
+
+
+def verify_system_lib(lib_dir):
+    """Verifies that the system library is installed and of the expected type."""
+    import ctypes
+    import platform
+    from ctypes.util import find_library
+    from pathlib import Path
+
+    LIB_NAME = 'libsecp256k1'  # noqa N806
+    PKG_NAME = 'coincurve'  # noqa N806
+    SECP256K1_BUILD = os.getenv('COINCURVE_SECP256K1_BUILD') or 'STATIC'  # noqa N806
+    SYSTEM = platform.system()  # noqa N806
+
+    def load_library(lib):
+        try:
+            return ctypes.CDLL(lib)
+        except OSError:
+            return None
+
+    logging.warning(f'find_library: {find_library(LIB_NAME[3:])}')
+    lib_dir = Path(lib_dir).with_name('bin') if SYSTEM == 'Windows' else Path(lib_dir)
+    lib_ext = '.dll' if SYSTEM == 'Windows' else '.[sd][oy]*'
+    logging.warning(f'dir: {lib_dir}')
+    logging.warning(f'patt: *{LIB_NAME[3:]}{lib_ext}')
+    l_dyn = list(lib_dir.glob(f'*{LIB_NAME[3:]}*{lib_ext}'))
+
+    # Evaluates the dynamic libraries found,
+    logging.warning(f'Found libraries: {l_dyn}')
+    dyn_lib = next((lib for lib in l_dyn if load_library(lib) is not None), False)
+
+    found = any((dyn_lib and SECP256K1_BUILD == 'SHARED', not dyn_lib and SECP256K1_BUILD != 'SHARED'))
+    if not found:
+        logging.warning(
+            f'WARNING: {LIB_NAME} is installed, but it is not the expected type. '
+            f'Please ensure that the {SECP256K1_BUILD} library is installed.'
+        )
+
+    if dyn_lib:
+        lib_base = dyn_lib.stem
+        # Update coincurve._secp256k1_library_info
+        info_file = Path(PKG_NAME, '_secp256k1_library_info.py')
+        info_file.write_text(f"SECP256K1_LIBRARY_NAME = '{lib_base}'\nSECP256K1_LIBRARY_TYPE = 'EXTERNAL'\n")
+
+    return found

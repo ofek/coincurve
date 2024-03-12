@@ -196,6 +196,55 @@ jobs:
             b=PrivateKey();
             assert a.ecdh(b.public_key.format())==b.ecdh(a.public_key.format())
 
+  macoss-wheels-conda-x86_64:
+    name: Build macOS (CONDA) wheels AMD64
+    needs:
+    - test
+    runs-on: macos-latest
+    defaults:
+      run:
+        shell: bash -l {0}
+
+    steps:
+    - uses: actions/checkout@v4
+
+    - name: Set up Python ${{ env.PYTHON_VERSION }}
+      uses: actions/setup-python@v5
+      with:
+        python-version: '3.12'
+
+    - name: Install Miniconda
+      uses: conda-incubator/setup-miniconda@v3
+      with:
+        python-version: ${{ env.PYTHON_VERSION }}
+        auto-activate-base: false
+
+    - name: Install cibuildwheel and twine
+      run: |
+        conda install -c conda-forge libsecp256k1
+        pip install cibuildwheel twine
+
+    - name: Build wheels
+      env:
+        CIBW_ENVIRONMENT:
+            COINCURVE_IGNORE_SYSTEM_LIB="0"
+            COINCURVE_UPSTREAM_REF="__no_tag__"
+            COINCURVE_SECP256K1_BUILD='SHARED'
+            PKG_CONFIG_PATH=$CONDA_PREFIX/lib/pkgconfig
+            DYLD_LIBRARY_PATH=$CONDA_PREFIX/lib
+        CIBW_BUILD_VERBOSITY: 1
+        # pytest needs to be defined here to find 'coincurve' package?
+        CIBW_TEST_REQUIRES: pytest pytest-benchmark
+        CIBW_TEST_COMMAND: >
+            conda install -c conda-forge libsecp256k1 &&
+            python -c
+            "from coincurve import PrivateKey;
+            a=PrivateKey();
+            b=PrivateKey();
+            assert a.ecdh(b.public_key.format())==b.ecdh(a.public_key.format())
+            "
+      run: python -m cibuildwheel --output-dir wheelhouse
+
   linux-wheels-arm:
     name: Build Linux wheels for ARM
     needs:

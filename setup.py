@@ -271,6 +271,8 @@ class SharedLinker(object):
         if compiler.__class__.__name__ == 'UnixCCompiler':
             extra_link_args.extend([f'-l{lib}' for lib in libraries])
             if has_system_lib():
+                # This requires to add DYLD_LIBRARY_PATH to the environment
+                # When repairing the wheel on MacOS (linux not tested yet)
                 extra_link_args.extend([f'-L{lib}' for lib in libraries_dirs])
             elif sys.platform == 'darwin':
                 extra_link_args.extend(['-Wl,-rpath,@loader_path/lib'])

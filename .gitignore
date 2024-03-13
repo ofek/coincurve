@@ -13,5 +13,5 @@
 /wheelhouse
 /pip-wheel-metadata
 
-/coincurve/_libsecp256k1.py
-/coincurve/libsecp256k1.dll
+/src/coincurve/_libsecp256k1.py
+/src/coincurve/libsecp256k1.dll

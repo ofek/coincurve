@@ -12,7 +12,7 @@ sudo apt-get -f install
 
 mkdir .hidden
 cp * .hidden -R
-mv .hidden/coincurve/_windows_libsecp256k1.py .hidden/coincurve/_libsecp256k1.py
+mv .hidden/src/coincurve/_windows_libsecp256k1.py .hidden/src/coincurve/_libsecp256k1.py
 mv .hidden ../clean
 
 cd ..
@@ -27,17 +27,17 @@ cp 64bit 32bit -R
 cd 64bit
 build_dll x86_64-w64-mingw32
 # Not sure why it ended-up being a -2.dll instead of -0.dll: Researching
-mv .libs/libsecp256k1-?.dll ../clean/coincurve/libsecp256k1.dll
+mv .libs/libsecp256k1-?.dll ../clean/src/coincurve/libsecp256k1.dll
 cd ../clean
-python setup.py bdist_wheel --plat-name=win_amd64
-rm coincurve/libsecp256k1.dll
+python setup.py bdist_wheel --plat-name=win_amd64 -vvv
+rm src/coincurve/libsecp256k1.dll
 
 cd ../32bit
 build_dll i686-w64-mingw32
 # Not sure why it ended-up being a -2.dll instead of -0.dll: Researching
-mv .libs/libsecp256k1-?.dll ../clean/coincurve/libsecp256k1.dll
+mv .libs/libsecp256k1-?.dll ../clean/src/coincurve/libsecp256k1.dll
 cd ../clean
 python setup.py bdist_wheel --plat-name=win32
 
-mv dist/* ../coincurve/dist/
+mv dist/* ../coincurve/dist
 cd ../coincurve

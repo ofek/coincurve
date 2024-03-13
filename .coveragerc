@@ -2,7 +2,7 @@
 branch = True
 
 source =
-    coincurve
+    src/coincurve
     tests
 
 omit =

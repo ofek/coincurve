@@ -4,20 +4,20 @@ import os.path
 import platform
 import shutil
 import subprocess
+import sys
 import tarfile
 from io import BytesIO
-import sys
 
-from setuptools import Distribution as _Distribution, setup, find_packages, __version__ as setuptools_version
+from setuptools import Distribution as _Distribution, setup, __version__ as setuptools_version
 from setuptools._distutils import log
 from setuptools._distutils.errors import DistutilsError
 from setuptools.command.build_clib import build_clib as _build_clib
 from setuptools.command.build_ext import build_ext as _build_ext
-from setuptools.extension import Extension
 from setuptools.command.develop import develop as _develop
 from setuptools.command.dist_info import dist_info as _dist_info
 from setuptools.command.egg_info import egg_info as _egg_info
 from setuptools.command.sdist import sdist as _sdist
+from setuptools.extension import Extension
 
 try:
     from wheel.bdist_wheel import bdist_wheel as _bdist_wheel
@@ -265,7 +265,7 @@ if has_system_lib():
 
     extension = Extension(
         name='coincurve._libsecp256k1',
-        sources=[os.path.join('coincurve', '_libsecp256k1.c')],
+        sources=[os.path.join('src/coincurve', '_libsecp256k1.c')],
         # ABI?: py_limited_api=True,
     )
 
@@ -342,8 +342,8 @@ setup(
     python_requires='>=3.8',
     install_requires=['asn1crypto', 'cffi>=1.3.0'],
 
-    packages=find_packages(exclude=('_cffi_build', '_cffi_build.*', 'libsecp256k1', 'tests')),
-    package_data=package_data,
+    packages=['coincurve'],
+    package_dir={'coincurve': 'src/coincurve'},
 
     distclass=Distribution,
     zip_safe=False,

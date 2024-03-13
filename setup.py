@@ -31,8 +31,6 @@ from setup_support import absolute, build_flags, detect_dll, has_system_lib, def
 
 BUILDING_FOR_WINDOWS = detect_dll()
 
-MAKE = 'gmake' if platform.system() in ['FreeBSD', 'OpenBSD'] else 'make'
-
 # IMPORTANT: keep in sync with .github/workflows/build.yml
 #
 # Version of libsecp256k1 to download if none exists in the `libsecp256k1` directory

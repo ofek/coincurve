@@ -9,7 +9,7 @@ import sys
 import tarfile
 from io import BytesIO
 
-from setuptools import Distribution as _Distribution, setup, find_packages, __version__ as setuptools_version
+from setuptools import Distribution as _Distribution, setup, __version__ as setuptools_version
 from setuptools._distutils import log
 from setuptools._distutils.errors import DistutilsError
 from setuptools.command.build_clib import build_clib as _build_clib
@@ -529,7 +529,7 @@ def main():
 
         extension = Extension(
             name='coincurve._libsecp256k1',
-            sources=[os.path.join('coincurve', '_libsecp256k1.c')],
+            sources=[os.path.join('src/coincurve', '_libsecp256k1.c')],
             # ABI?: py_limited_api=True,
         )
 
@@ -612,8 +612,8 @@ def main():
         python_requires='>=3.8',
         install_requires=['asn1crypto', 'cffi>=1.3.0'],
 
-        packages=find_packages(exclude=('_cffi_build', '_cffi_build.*', 'libsecp256k1', 'tests')),
-        package_data=package_data,
+        packages=['coincurve'],
+        package_dir={'coincurve': 'src/coincurve'},
 
         distclass=Distribution,
         zip_safe=False,

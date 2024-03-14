@@ -7,7 +7,6 @@ import subprocess
 import sys
 import tarfile
 from io import BytesIO
-import sys
 from os.path import dirname, abspath, join
 from sys import path as PATH
 
@@ -44,7 +43,7 @@ UPSTREAM_REF = os.getenv('COINCURVE_UPSTREAM_TAG') or '1ad5185cd42c0636104129fcc
 LIB_TARBALL_URL = f'https://github.com/bitcoin-core/secp256k1/archive/{UPSTREAM_REF}.tar.gz'
 
 globals_ = {}
-with open(join(COINCURVE_SRC_DIR, 'coincurve', '_version.py')) as fp:
+with open(join(COINCURVE_SRC_DIR, 'src', 'coincurve', '_version.py')) as fp:
     exec(fp.read(), globals_)  # noqa S102
     __version__ = globals_['__version__']
 

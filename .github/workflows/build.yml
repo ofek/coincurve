@@ -167,6 +167,7 @@ jobs:
       env:
         COINCURVE_SECP256K1_BUILD: 'SHARED'
         CIBW_ARCHS_WINDOWS: "AMD64"
+        CIBW_BUILD_VERBOSITY: 1
         CIBW_BEFORE_ALL: choco install -y --no-progress --no-color cmake>=3.28 pkgconfiglite
 
 
@@ -202,6 +203,7 @@ jobs:
         COINCURVE_SECP256K1_BUILD: 'SHARED'
         COINCURVE_CROSS_HOST: "x86"
         CIBW_ARCHS_WINDOWS: "x86"
+        CIBW_BUILD_VERBOSITY: 1
         CIBW_BEFORE_ALL: choco install -y --no-progress --no-color cmake>=3.28 pkgconfiglite
 
 

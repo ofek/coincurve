@@ -346,19 +346,13 @@ class BuildExtensionFromCFFI(_build_ext):
         # Enforce API interface
         ext.py_limited_api = False
 
-        # Location of locally built library
-        lib, inst_dir = define_secp256k1_local_lib_info()
-        prefix = os.path.join(self.build_temp.replace('lib', inst_dir), lib)
-        postfix = os.path.join('pkgconfig', f'{LIB_NAME}.pc')
+        # Find pkgconfig file for locally built library
+        pkg_dirs = self.get_finalized_command('build_clib').pkgconfig_dir  # type: ignore
+        c_lib_pkg = [d for d in pkg_dirs if os.path.isfile(os.path.join(d, f'{LIB_NAME}.pc'))][0]
 
-        c_lib_pkg = None
-        if not any([
-            os.path.isfile(c_lib_pkg := os.path.join(prefix, 'lib', postfix)),
-            os.path.isfile(c_lib_pkg := os.path.join(prefix, 'lib64', postfix)),
-            has_system_lib()
-        ]):
+        if not has_system_lib() and not c_lib_pkg:
             raise RuntimeError(
-                f'Library not found: {os.path.join(prefix, "(lib|lib64)", postfix)}'
+                f'pkgconfig file not found: {LIB_NAME}.pc in : {pkg_dirs}.'
                 f'\nSystem lib is {has_system_lib() = }. '
                 'Please check that the library was properly built.'
             )
@@ -369,7 +363,6 @@ class BuildExtensionFromCFFI(_build_ext):
         ext.library_dirs.extend(build_flags(LIB_NAME, 'L', c_lib_pkg))
 
         libraries = build_flags(LIB_NAME, 'l', c_lib_pkg)
-        logging.info(f'  Libraries:{libraries}')
 
         # We do not set ext.libraries, this would add the default link instruction
         # Instead, we use extra_link_args to customize the link command

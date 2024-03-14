@@ -15,6 +15,7 @@ from setuptools._distutils import log
 from setuptools._distutils.errors import DistutilsError
 from setuptools.command.build_clib import build_clib as _build_clib
 from setuptools.command.build_ext import build_ext as _build_ext
+from setuptools.command.build_py import build_py as _build_py
 from setuptools.command.develop import develop as _develop
 from setuptools.command.dist_info import dist_info as _dist_info
 from setuptools.command.egg_info import egg_info as _egg_info
@@ -107,6 +108,31 @@ class sdist(_sdist):
         if not has_system_lib():
             download_library(self)
         _sdist.run(self)
+
+
+class BuildLibInfo(_build_py):
+    """Create SECP256K1 library build info."""
+
+    def run(self):
+        import contextlib
+        from setup_support import update_pkg_config_path, verify_system_lib, subprocess_run
+
+        update_pkg_config_path()
+
+        with contextlib.suppress(Exception):
+            cmd = (
+                [
+                    'pkg-config',
+                    '--libs-only-L',
+                    '--dont-define-prefix',
+                    'libsecp256k1',
+                ]
+                if os.name == 'nt'
+                else ['pkg-config', '--libs-only-L', 'libsecp256k1']
+            )
+            lib_dir = subprocess_run(cmd)
+            verify_system_lib(lib_dir[2:].strip(), os.path.join(self.build_lib, 'coincurve'))
+        super().run()
 
 
 if _bdist_wheel:
@@ -252,7 +278,7 @@ class develop(_develop):
         _develop.run(self)
 
 
-package_data = {'coincurve': ['py.typed']}
+package_data = {'coincurve': ['py.typed', '_secp256k1__library_info.py']}
 
 
 class BuildCFFIForSharedLib(_build_ext):
@@ -268,6 +294,7 @@ if has_system_lib():
     class Distribution(_Distribution):
         def has_c_libraries(self):
             return not has_system_lib()
+
 
     # --- SECP256K1 package definitions ---
     secp256k1_package = 'libsecp256k1'
@@ -303,6 +330,7 @@ if has_system_lib():
     setup_kwargs = dict(
         ext_modules=[extension],
         cmdclass={
+            'build_py': BuildLibInfo,
             'build_clib': build_clib,
             'build_ext': BuildCFFIForSharedLib,
             'develop': develop,
@@ -334,6 +362,7 @@ else:
             ext_package='coincurve',
             cffi_modules=['_cffi_build/build.py:ffi'],
             cmdclass={
+                'build_py': BuildLibInfo,
                 'build_clib': build_clib,
                 'build_ext': build_ext,
                 'develop': develop,
@@ -358,6 +387,8 @@ setup(
 
     packages=['coincurve'],
     package_dir={'coincurve': 'src/coincurve'},
+    package_data={'coincurve': ['_secp256k1__library_info.py']},
+    include_package_data=True,
 
     distclass=Distribution,
     zip_safe=False,

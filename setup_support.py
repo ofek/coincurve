@@ -46,7 +46,7 @@ def _find_lib():
             cmd = ['pkg-config', '--libs-only-L', 'libsecp256k1']
         lib_dir = subprocess_run(cmd)
 
-        return verify_system_lib(lib_dir[2:].strip())
+        return verify_system_lib(lib_dir[2:].strip(), None)
 
     except (OSError, subprocess.CalledProcessError):
         from ctypes.util import find_library
@@ -103,7 +103,7 @@ def update_pkg_config_path(path='.'):
     os.environ['PKG_CONFIG_PATH'] = os.pathsep.join(pkg_config_paths)
 
 
-def verify_system_lib(lib_dir):
+def verify_system_lib(lib_dir, inst_dir):
     """Verifies that the system library is installed and of the expected type."""
     import ctypes
     import platform
@@ -139,10 +139,10 @@ def verify_system_lib(lib_dir):
             f'Please ensure that the {SECP256K1_BUILD} library is installed.'
         )
 
-    if dyn_lib:
+    if dyn_lib and inst_dir is not None:
         lib_base = dyn_lib.stem
         # Update coincurve._secp256k1_library_info
-        info_file = Path(PKG_NAME, '_secp256k1_library_info.py')
+        info_file = Path(inst_dir, '_secp256k1_library_info.py')
         info_file.write_text(f"SECP256K1_LIBRARY_NAME = '{lib_base}'\nSECP256K1_LIBRARY_TYPE = 'EXTERNAL'\n")
 
     return found

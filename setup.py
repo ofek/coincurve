@@ -60,33 +60,6 @@ SECP256K1_BUILD = os.getenv('COINCURVE_SECP256K1_BUILD') or 'STATIC'
 SECP256K1_IGNORE_EXT_LIB = os.getenv('COINCURVE_IGNORE_SYSTEM_LIB')
 
 
-def define_secp256k1_local_lib_info():
-    """
-    Define the library name and the installation directory
-    The purpose is to automatically include the shared library in the package and
-    prevent inclusion the static library. This is probably hacky, but it works.
-    """
-    if SECP256K1_BUILD == 'SHARED':
-        logging.info('Building shared library')
-        # This will place the shared library inside the coincurve package data
-        return PKG_NAME, 'lib'
-
-    logging.info('Building static library')
-    # This will place the static library in a separate x_lib and in a lib_name directory
-    return LIB_NAME, 'x_lib'
-
-
-def call_pkg_config(options, library, *, debug=False):
-    """Calls pkg-config with the given options and returns the output."""
-    if SYSTEM == 'Windows':
-        options.append('--dont-define-prefix')
-
-    pkg_config = shutil.which('pkg-config')
-    cmd = [pkg_config, *options, library]
-
-    return subprocess_run(cmd, debug=debug)
-
-
 def download_library(command):
     if command.dry_run:
         return
@@ -195,7 +168,7 @@ class BuildClibWithCMake(_build_clib):
     def bc_set_dirs_download(self):
         self._cwd = os.getcwd()
         os.makedirs(self.build_temp, exist_ok=True)
-        self._install_dir = str(self.build_temp).replace('temp', 'lib')
+        self._install_dir = self.build_temp # .replace('temp', 'lib')
 
         # Install path
         #  SHARED: lib/coincurve       -> path/lib.xxx/coincurve/path      # included in coincurve wheel
@@ -376,7 +349,7 @@ class BuildExtensionFromCFFI(_build_ext):
 
         # Location of locally built library
         lib, inst_dir = define_secp256k1_local_lib_info()
-        prefix = os.path.join(self.build_lib.replace('lib', inst_dir), lib)
+        prefix = os.path.join(self.build_temp.replace('lib', inst_dir), lib)
         postfix = os.path.join('pkgconfig', f'{LIB_NAME}.pc')
 
         c_lib_pkg = None
@@ -386,7 +359,7 @@ class BuildExtensionFromCFFI(_build_ext):
             has_system_lib()
         ]):
             raise RuntimeError(
-                f'Library not found: {os.path.join(prefix, "lib/lib64", postfix)}'
+                f'Library not found: {os.path.join(prefix, "(lib|lib64)", postfix)}'
                 f'\nSystem lib is {has_system_lib() = }. '
                 'Please check that the library was properly built.'
             )

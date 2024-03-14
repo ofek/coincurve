@@ -550,6 +550,7 @@ class BuildCFFIForSharedLib(_build_ext):
 def main():
     if has_system_lib():
 
+
         class Distribution(_Distribution):
             def has_c_libraries(self):
                 return not has_system_lib()

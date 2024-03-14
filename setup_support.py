@@ -66,7 +66,7 @@ def has_system_lib():
 
 def detect_dll():
     here = os.path.dirname(os.path.abspath(__file__))
-    for fn in os.listdir(os.path.join(here, 'coincurve')):
+    for fn in os.listdir(os.path.join(here, 'src/coincurve')):
         if fn.endswith('.dll'):
             return True
     return False

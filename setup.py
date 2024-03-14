@@ -167,7 +167,7 @@ class BuildClibWithCMake(_build_clib):
     def bc_set_dirs_download(self):
         self._cwd = os.getcwd()
         os.makedirs(self.build_temp, exist_ok=True)
-        self._install_dir = self.build_temp # .replace('temp', 'lib')
+        self._install_dir = self.build_temp.replace('temp', 'lib')
 
         # Install path
         #  SHARED: lib/coincurve       -> path/lib.xxx/coincurve/path      # included in coincurve wheel

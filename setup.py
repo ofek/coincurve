@@ -348,7 +348,7 @@ class BuildExtensionFromCFFI(_build_ext):
 
         # Find pkgconfig file for locally built library
         pkg_dirs = self.get_finalized_command('build_clib').pkgconfig_dir  # type: ignore
-        c_lib_pkg = [d for d in pkg_dirs if os.path.isfile(os.path.join(d, f'{LIB_NAME}.pc'))][0]
+        c_lib_pkg = next((d for d in pkg_dirs if os.path.isfile(os.path.join(d, f'{LIB_NAME}.pc'))), None)
 
         if not has_system_lib() and not c_lib_pkg:
             raise RuntimeError(

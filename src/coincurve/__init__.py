@@ -1,6 +1,9 @@
 def load_secp256k1_conda_library():
     """Load the secp256k1 library from the conda environment."""
-    from coincurve._secp256k1_library_info import SECP256K1_LIBRARY_NAME, SECP256K1_LIBRARY_TYPE
+    try:
+        from ._secp256k1_library_info import SECP256K1_LIBRARY_NAME, SECP256K1_LIBRARY_TYPE
+    except ImportError:
+        return
 
     if SECP256K1_LIBRARY_TYPE != 'EXTERNAL':
         # coincurve was built with an internal library, either static or shared. It 'knows' where the library is.

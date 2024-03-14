@@ -137,8 +137,113 @@ jobs:
         path: wheelhouse/*.whl
         if-no-files-found: error
 
-  windows-wheels-and-sdist:
-    name: Build Windows wheels and source distribution
+  windows-wheels-x86_64:
+    name: Build Windows wheels AMD64
+    needs:
+    - test
+    runs-on: windows-latest
+
+    steps:
+    - uses: actions/checkout@v4
+
+    - uses: actions/setup-python@v5
+      with:
+        python-version: '3.12'
+
+    - name: Build wheels
+      uses: pypa/cibuildwheel@v2.16.5
+      env:
+        CIBW_ARCHS_WINDOWS: "AMD64"
+        CIBW_BEFORE_ALL: choco install -y --no-progress --no-color cmake>=3.28 pkgconfiglite
+
+    - uses: actions/upload-artifact@v3
+      with:
+        name: artifacts
+        path: wheelhouse/*.whl
+        if-no-files-found: error
+
+    - name: Build SHARED wheels
+      uses: pypa/cibuildwheel@v2.16.5
+      env:
+        COINCURVE_SECP256K1_BUILD: 'SHARED'
+        CIBW_ARCHS_WINDOWS: "AMD64"
+        CIBW_BEFORE_ALL: choco install -y --no-progress --no-color cmake>=3.28 pkgconfiglite
+
+
+  windows-wheels-x86:
+    name: Build Windows wheels x86
+    needs:
+    - test
+    runs-on: windows-latest
+
+    steps:
+    - uses: actions/checkout@v4
+
+    - uses: actions/setup-python@v5
+      with:
+        python-version: '3.12'
+
+    - name: Build wheels
+      uses: pypa/cibuildwheel@v2.16.5
+      env:
+        COINCURVE_CROSS_HOST: "x86"
+        CIBW_ARCHS_WINDOWS: "x86"
+        CIBW_BEFORE_ALL: choco install -y --no-progress --no-color cmake>=3.28 pkgconfiglite
+
+    - uses: actions/upload-artifact@v3
+      with:
+        name: artifacts
+        path: wheelhouse/*.whl
+        if-no-files-found: error
+
+    - name: Build SHARED wheels
+      uses: pypa/cibuildwheel@v2.16.5
+      env:
+        COINCURVE_SECP256K1_BUILD: 'SHARED'
+        COINCURVE_CROSS_HOST: "x86"
+        CIBW_ARCHS_WINDOWS: "x86"
+        CIBW_BEFORE_ALL: choco install -y --no-progress --no-color cmake>=3.28 pkgconfiglite
+
+
+  windows-wheels-arm64:
+    name: Build Windows wheels for ARM64
+    needs:
+    - test
+    runs-on: windows-latest
+
+    steps:
+    - uses: actions/checkout@v4
+
+    - uses: actions/setup-python@v5
+      with:
+        python-version: '3.12'
+
+    - name: Build wheels
+      uses: pypa/cibuildwheel@v2.16.5
+      env:
+        COINCURVE_CROSS_HOST: "arm64"
+        CIBW_ARCHS_WINDOWS: "ARM64"
+        CIBW_BUILD_VERBOSITY: 1
+        CIBW_BEFORE_ALL: choco install -y --no-progress --no-color cmake>=3.28 pkgconfiglite
+
+    - uses: actions/upload-artifact@v3
+      with:
+        name: artifacts
+        path: wheelhouse/*.whl
+        if-no-files-found: error
+
+    - name: Build SHARED wheels
+      uses: pypa/cibuildwheel@v2.16.5
+      env:
+        COINCURVE_SECP256K1_BUILD: 'SHARED'
+        COINCURVE_CROSS_HOST: "arm64"
+        CIBW_ARCHS_WINDOWS: "ARM64"
+        CIBW_BUILD_VERBOSITY: 1
+        CIBW_BEFORE_ALL: choco install -y --no-progress --no-color cmake>=3.28 pkgconfiglite
+
+
+  sdist:
+    name: Build source distribution
     needs:
     - test
     runs-on: ubuntu-latest
@@ -151,9 +256,6 @@ jobs:
 
     - name: Build source distribution
       run: python -m build --sdist
-
-    - name: Build Windows wheels
-      run: ./.github/scripts/build-windows-wheels.sh
 
     - uses: actions/upload-artifact@v3
       with:
@@ -196,7 +298,7 @@ jobs:
     - linux-wheels-standard
     - macos-wheels-x86-64
     - macos-wheels-arm
-    - windows-wheels-and-sdist
+    - sdist
     - linux-wheels-arm
     runs-on: ubuntu-latest
     if: >

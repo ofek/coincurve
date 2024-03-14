@@ -388,6 +388,7 @@ setup(
     packages=['coincurve'],
     package_dir={'coincurve': 'src/coincurve'},
     package_data={'coincurve': ['py.typed', '_secp256k1__library_info.py']},
+    include_package_data=True,
 
     distclass=Distribution,
     zip_safe=False,

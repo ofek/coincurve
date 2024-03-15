@@ -131,6 +131,7 @@ class BuildLibInfo(_build_py):
                 else ['pkg-config', '--libs-only-L', 'libsecp256k1']
             )
             lib_dir = subprocess_run(cmd)
+            os.makedirs(self.build_lib, exist_ok=True)
             verify_system_lib(lib_dir[2:].strip(), os.path.join(self.build_lib, 'coincurve'))
         super().run()
 
@@ -387,8 +388,8 @@ setup(
 
     packages=['coincurve'],
     package_dir={'coincurve': 'src/coincurve'},
-    package_data={'coincurve': ['py.typed', '_secp256k1__library_info.py']},
-    include_package_data=True,
+    package_data={'coincurve': ['py.typed', '_secp256k1_library_info.py']},
+    # include_package_data=True,
 
     distclass=Distribution,
     zip_safe=False,

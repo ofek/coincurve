@@ -9,7 +9,6 @@ import tarfile
 from io import BytesIO
 
 from setuptools import Distribution as _Distribution, setup, __version__ as setuptools_version
-from setuptools._distutils import log
 from setuptools._distutils.errors import DistutilsError
 from setuptools.command.build_clib import build_clib as _build_clib
 from setuptools.command.build_ext import build_ext as _build_ext
@@ -67,7 +66,8 @@ def download_library(command):
         # Library already downloaded
         return
     if not os.path.exists(libdir):
-        command.announce('downloading libsecp256k1 source code', level=log.INFO)
+        from logging import INFO
+        command.announce('downloading libsecp256k1 source code', level=INFO)
         try:
             import requests
             try:

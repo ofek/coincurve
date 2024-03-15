@@ -139,10 +139,12 @@ def verify_system_lib(lib_dir, inst_dir):
             f'Please ensure that the {SECP256K1_BUILD} library is installed.'
         )
 
+    logging.warning(f'   {inst_dir = }')
     if dyn_lib and inst_dir is not None:
         lib_base = dyn_lib.stem
         # Update coincurve._secp256k1_library_info
         info_file = Path(inst_dir, '_secp256k1_library_info.py')
+        logging.warning(f'   {info_file = }')
         info_file.write_text(f"SECP256K1_LIBRARY_NAME = '{lib_base}'\nSECP256K1_LIBRARY_TYPE = 'EXTERNAL'\n")
 
     return found

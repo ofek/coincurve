@@ -428,41 +428,29 @@ def main():
         )
 
     else:
-        if BUILDING_FOR_WINDOWS:
-
-            class Distribution(_Distribution):
-                def is_pure(self):
-                    return False
+        class Distribution(_Distribution):
+            def has_c_libraries(self):
+                return not has_system_lib()
 
 
-            package_data['coincurve'].append('libsecp256k1.dll')
-            setup_kwargs = {}
+        extension = Extension(
+            name='coincurve._libsecp256k1',
+            sources=['_c_file_for_extension.c'],
+            py_limited_api=False,
+            extra_compile_args=['/d2FH4-'] if SYSTEM == 'Windows' else [],
+        )
 
-        else:
-
-            class Distribution(_Distribution):
-                def has_c_libraries(self):
-                    return not has_system_lib()
-
-
-            extension = Extension(
-                name='coincurve._libsecp256k1',
-                sources=['_c_file_for_extension.c'],
-                py_limited_api=False,
-                extra_compile_args=['/d2FH4-'] if SYSTEM == 'Windows' else [],
-            )
-
-            setup_kwargs = dict(
-                ext_modules=[extension],
-                cmdclass={
-                    'build_clib': None if has_system_lib() else BuildClibWithCMake,
-                    'build_ext': BuildExtensionFromCFFI,
-                    'develop': develop,
-                    'egg_info': egg_info,
-                    'sdist': sdist,
-                    'bdist_wheel': bdist_wheel,
-                },
-            )
+        setup_kwargs = dict(
+            ext_modules=[extension],
+            cmdclass={
+                'build_clib': None if has_system_lib() else BuildClibWithCMake,
+                'build_ext': BuildExtensionFromCFFI,
+                'develop': develop,
+                'egg_info': egg_info,
+                'sdist': sdist,
+                'bdist_wheel': bdist_wheel,
+            },
+        )
 
     setup(
         name='coincurve',

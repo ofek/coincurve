@@ -116,26 +116,6 @@ jobs:
         if-no-files-found: error
 
   macos-wheels-arm:
-    name: Build macOS wheels for ARM
-    needs:
-    - test
-    runs-on: macos-12
-
-    steps:
-    - uses: actions/checkout@v4
-
-    - name: Build wheels
-      uses: pypa/cibuildwheel@v2.16.2
-      env:
-        CIBW_ARCHS_MACOS: arm64
-
-    - uses: actions/upload-artifact@v3
-      with:
-        name: artifacts
-        path: wheelhouse/*.whl
-        if-no-files-found: error
-
-  macos-wheels-native-arm:
     name: Build macOS wheels for ARM (Native)
     needs:
     - test
@@ -178,15 +158,6 @@ jobs:
         path: wheelhouse/*.whl
         if-no-files-found: error
 
-    - name: Build SHARED wheels
-      uses: pypa/cibuildwheel@v2.16.5
-      env:
-        COINCURVE_SECP256K1_BUILD: 'SHARED'
-        CIBW_ARCHS_WINDOWS: "AMD64"
-        CIBW_BUILD_VERBOSITY: 1
-        CIBW_BEFORE_ALL: choco install -y --no-progress --no-color cmake>=3.28 pkgconfiglite
-
-
   windows-wheels-x86:
     name: Build Windows wheels x86
     needs:
@@ -213,16 +184,6 @@ jobs:
         path: wheelhouse/*.whl
         if-no-files-found: error
 
-    - name: Build SHARED wheels
-      uses: pypa/cibuildwheel@v2.16.5
-      env:
-        COINCURVE_SECP256K1_BUILD: 'SHARED'
-        COINCURVE_CROSS_HOST: "x86"
-        CIBW_ARCHS_WINDOWS: "x86"
-        CIBW_BUILD_VERBOSITY: 1
-        CIBW_BEFORE_ALL: choco install -y --no-progress --no-color cmake>=3.28 pkgconfiglite
-
-
   windows-wheels-arm64:
     name: Build Windows wheels for ARM64
     needs:
@@ -241,7 +202,6 @@ jobs:
       env:
         COINCURVE_CROSS_HOST: "arm64"
         CIBW_ARCHS_WINDOWS: "ARM64"
-        CIBW_BUILD_VERBOSITY: 1
         CIBW_BEFORE_ALL: choco install -y --no-progress --no-color cmake>=3.28 pkgconfiglite
 
     - uses: actions/upload-artifact@v3
@@ -249,16 +209,6 @@ jobs:
         name: artifacts
         path: wheelhouse/*.whl
         if-no-files-found: error
-
-    - name: Build SHARED wheels
-      uses: pypa/cibuildwheel@v2.16.5
-      env:
-        COINCURVE_SECP256K1_BUILD: 'SHARED'
-        COINCURVE_CROSS_HOST: "arm64"
-        CIBW_ARCHS_WINDOWS: "ARM64"
-        CIBW_BUILD_VERBOSITY: 1
-        CIBW_BEFORE_ALL: choco install -y --no-progress --no-color cmake>=3.28 pkgconfiglite
-
 
   sdist:
     name: Build source distribution
@@ -316,6 +266,9 @@ jobs:
     - linux-wheels-standard
     - macos-wheels-x86-64
     - macos-wheels-arm
+    - windows-wheels-x86-64
+    - windows-wheels-x86
+    - windows-wheels-arm
     - sdist
     - linux-wheels-arm
     runs-on: ubuntu-latest

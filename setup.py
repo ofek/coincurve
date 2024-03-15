@@ -330,7 +330,7 @@ class BuildExtensionFromCFFI(_build_ext):
 
     def create_c_files(self, ext):
         # Construct C-file from CFFI
-        build_script = os.path.join('_cffi_build', 'build_shared.py')
+        build_script = os.path.join('_cffi_build', 'build.py')
         for i, c_file in enumerate(ext.sources):
             os.makedirs(self.build_temp, exist_ok=True)
             c_file = os.path.join(self.build_temp, os.path.basename(c_file))

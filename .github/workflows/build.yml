@@ -128,8 +128,8 @@ jobs:
       uses: pypa/cibuildwheel@v2.16.2
       env:
         CIBW_ARCHS_MACOS: arm64
-        COINCURVE_CROSS_HOST: aarch64-apple-darwin
-        CFLAGS: -target arm64-apple-macos11
+    #    COINCURVE_CROSS_HOST: aarch64-apple-darwin
+    #    CFLAGS: -target arm64-apple-macos11
 
     - uses: actions/upload-artifact@v3
       with:

@@ -385,41 +385,18 @@ class develop(_develop):
         _develop.run(self)
 
 
-package_data = {'coincurve': ['py.typed']}
-
-
 class Distribution(_Distribution):
     def has_c_libraries(self):
         return not has_system_lib()
 
 
-extension = Extension(
-    name='coincurve._libsecp256k1',
-    sources=['_c_file_for_extension.c'],
-    py_limited_api=False,
-    extra_compile_args=['/d2FH4-'] if SYSTEM == 'Windows' else [],
-)
-
-
 def main():
-    if has_system_lib():
-
-        extension.extra_compile_args = [
-            subprocess.check_output(['pkg-config', '--cflags-only-I', 'libsecp256k1']).strip().decode()  # noqa S603
-        ]
-        extension.extra_link_args = [
-            subprocess.check_output(['pkg-config', '--libs-only-L', 'libsecp256k1']).strip().decode(),  # noqa S603
-            subprocess.check_output(['pkg-config', '--libs-only-l', 'libsecp256k1']).strip().decode(),  # noqa S603
-        ]
-
-        if os.name == 'nt' or sys.platform == 'win32':
-            # Apparently, the linker on Windows interprets -lxxx as xxx.lib, not libxxx.lib
-            for i, v in enumerate(extension.__dict__.get('extra_link_args')):
-                extension.__dict__['extra_link_args'][i] = v.replace('-L', '/LIBPATH:')
-
-                if v.startswith('-l'):
-                    v = v.replace('-l', 'lib')
-                    extension.__dict__['extra_link_args'][i] = f'{v}.lib'
+    extension = Extension(
+        name='coincurve._libsecp256k1',
+        sources=['_c_file_for_extension.c'],
+        py_limited_api=False,
+        extra_compile_args=['/d2FH4-'] if SYSTEM == 'Windows' else [],
+    )
 
     setup_kwargs = dict(
         ext_modules=[extension],

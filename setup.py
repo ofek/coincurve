@@ -427,7 +427,7 @@ def main():
             ext_modules=[extension],
             cmdclass={
                 'build_clib': None if has_system_lib() else BuildClibWithCMake,
-                'build_ext': BuildCFFIForSharedLib,
+                'build_ext': BuildExtensionFromCFFI,
                 'develop': develop,
                 'egg_info': egg_info,
                 'sdist': sdist,

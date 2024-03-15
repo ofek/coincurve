@@ -24,8 +24,14 @@ except ImportError:
     _bdist_wheel = None
 
 sys.path.append(os.path.abspath(os.path.dirname(__file__)))
-from setup_support import absolute, build_flags, detect_dll, has_system_lib, define_secp256k1_local_lib_info, \
-    call_pkg_config, subprocess_run
+from setup_support import (  # noqa: E402
+    absolute,
+    build_flags,
+    has_system_lib,
+    define_secp256k1_local_lib_info,
+    call_pkg_config,
+    subprocess_run
+)
 
 # IMPORTANT: keep in sync with .github/workflows/build.yml
 #

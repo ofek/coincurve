@@ -27,8 +27,6 @@ sys.path.append(os.path.abspath(os.path.dirname(__file__)))
 from setup_support import absolute, build_flags, detect_dll, has_system_lib, define_secp256k1_local_lib_info, \
     call_pkg_config, subprocess_run
 
-BUILDING_FOR_WINDOWS = detect_dll()
-
 # IMPORTANT: keep in sync with .github/workflows/build.yml
 #
 # Version of libsecp256k1 to download if none exists in the `libsecp256k1` directory

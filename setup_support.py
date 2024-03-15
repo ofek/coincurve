@@ -64,14 +64,6 @@ def has_system_lib():
     return _has_system_lib
 
 
-def detect_dll():
-    here = os.path.dirname(os.path.abspath(__file__))
-    for fn in os.listdir(os.path.join(here, 'src/coincurve')):
-        if fn.endswith('.dll'):
-            return True
-    return False
-
-
 def subprocess_run(cmd, *, debug=False):
     try:
         result = subprocess.run(cmd, capture_output=True, text=True, check=True)  # noqa S603

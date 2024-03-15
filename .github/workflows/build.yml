@@ -95,7 +95,7 @@ jobs:
         path: wheelhouse/*.whl
         if-no-files-found: error
 
-  macos-wheels-x86-64:
+  macos-wheels-x86_64:
     name: Build macOS wheels
     needs:
     - test
@@ -184,7 +184,7 @@ jobs:
         path: wheelhouse/*.whl
         if-no-files-found: error
 
-  windows-wheels-arm64:
+  windows-wheels-arm:
     name: Build Windows wheels for ARM64
     needs:
     - test
@@ -264,9 +264,9 @@ jobs:
     name: Publish release
     needs:
     - linux-wheels-standard
-    - macos-wheels-x86-64
+    - macos-wheels-x86_64
     - macos-wheels-arm
-    - windows-wheels-x86-64
+    - windows-wheels-x86_64
     - windows-wheels-x86
     - windows-wheels-arm
     - sdist

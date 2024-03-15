@@ -384,14 +384,6 @@ class develop(_develop):
 package_data = {'coincurve': ['py.typed']}
 
 
-class BuildCFFIForSharedLib(_build_ext):
-    def build_extensions(self):
-        build_script = os.path.join('_cffi_build', 'build_shared.py')
-        c_file = self.extensions[0].sources[0]
-        subprocess.run([sys.executable, build_script, c_file, '0'], shell=False, check=True)  # noqa S603
-        super().build_extensions()
-
-
 def main():
     if has_system_lib():
 

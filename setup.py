@@ -24,7 +24,7 @@ except ImportError:
     _bdist_wheel = None
 
 sys.path.append(os.path.abspath(os.path.dirname(__file__)))
-from setup_support import (  # noqa: E402
+from setup_support import (
     absolute,
     build_flags,
     has_system_lib,
@@ -184,7 +184,7 @@ class BuildClibWithCMake(_build_clib):
             self.get_source_files()
 
     def bc_update_pkg_config_path(self):
-        self.pkgconfig_dir = [os.path.join(self._install_lib_dir, n,  'pkgconfig') for n in ['lib', 'lib64']]
+        self.pkgconfig_dir = [os.path.join(self._install_lib_dir, n, 'pkgconfig') for n in ['lib', 'lib64']]
         self.pkgconfig_dir.append(os.getenv('PKG_CONFIG_PATH', ''))
         os.environ['PKG_CONFIG_PATH'] = os.pathsep.join(self.pkgconfig_dir)
         call_pkg_config(['--exists'], LIB_NAME)
@@ -388,26 +388,28 @@ class develop(_develop):
 package_data = {'coincurve': ['py.typed']}
 
 
+class Distribution(_Distribution):
+    def has_c_libraries(self):
+        return not has_system_lib()
+
+
+extension = Extension(
+    name='coincurve._libsecp256k1',
+    sources=['_c_file_for_extension.c'],
+    py_limited_api=False,
+    extra_compile_args=['/d2FH4-'] if SYSTEM == 'Windows' else [],
+)
+
+
 def main():
     if has_system_lib():
 
-
-        class Distribution(_Distribution):
-            def has_c_libraries(self):
-                return not has_system_lib()
-
-        extension = Extension(
-            name='coincurve._libsecp256k1',
-            sources=[os.path.join('src/coincurve', '_libsecp256k1.c')],
-            # ABI?: py_limited_api=True,
-        )
-
         extension.extra_compile_args = [
-            subprocess.check_output(['pkg-config', '--cflags-only-I', 'libsecp256k1']).strip().decode('utf-8')  # noqa S603
+            subprocess.check_output(['pkg-config', '--cflags-only-I', 'libsecp256k1']).strip().decode()  # noqa S603
         ]
         extension.extra_link_args = [
-            subprocess.check_output(['pkg-config', '--libs-only-L', 'libsecp256k1']).strip().decode('utf-8'),  # noqa S603
-            subprocess.check_output(['pkg-config', '--libs-only-l', 'libsecp256k1']).strip().decode('utf-8'),  # noqa S603
+            subprocess.check_output(['pkg-config', '--libs-only-L', 'libsecp256k1']).strip().decode(),  # noqa S603
+            subprocess.check_output(['pkg-config', '--libs-only-l', 'libsecp256k1']).strip().decode(),  # noqa S603
         ]
 
         if os.name == 'nt' or sys.platform == 'win32':
@@ -419,42 +421,17 @@ def main():
                     v = v.replace('-l', 'lib')
                     extension.__dict__['extra_link_args'][i] = f'{v}.lib'
 
-        setup_kwargs = dict(
-            ext_modules=[extension],
-            cmdclass={
-                'build_clib': None if has_system_lib() else BuildClibWithCMake,
-                'build_ext': BuildExtensionFromCFFI,
-                'develop': develop,
-                'egg_info': egg_info,
-                'sdist': sdist,
-                'bdist_wheel': bdist_wheel,
-            },
-        )
-
-    else:
-        class Distribution(_Distribution):
-            def has_c_libraries(self):
-                return not has_system_lib()
-
-
-        extension = Extension(
-            name='coincurve._libsecp256k1',
-            sources=['_c_file_for_extension.c'],
-            py_limited_api=False,
-            extra_compile_args=['/d2FH4-'] if SYSTEM == 'Windows' else [],
-        )
-
-        setup_kwargs = dict(
-            ext_modules=[extension],
-            cmdclass={
-                'build_clib': None if has_system_lib() else BuildClibWithCMake,
-                'build_ext': BuildExtensionFromCFFI,
-                'develop': develop,
-                'egg_info': egg_info,
-                'sdist': sdist,
-                'bdist_wheel': bdist_wheel,
-            },
-        )
+    setup_kwargs = dict(
+        ext_modules=[extension],
+        cmdclass={
+            'build_clib': None if has_system_lib() else BuildClibWithCMake,
+            'build_ext': BuildExtensionFromCFFI,
+            'develop': develop,
+            'egg_info': egg_info,
+            'sdist': sdist,
+            'bdist_wheel': bdist_wheel,
+        },
+    )
 
     setup(
         name='coincurve',

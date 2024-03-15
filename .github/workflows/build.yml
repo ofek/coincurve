@@ -231,8 +231,11 @@ jobs:
             COINCURVE_UPSTREAM_REF="__no_tag__"
             COINCURVE_SECP256K1_BUILD='SHARED'
             PKG_CONFIG_PATH=$CONDA_PREFIX/lib/pkgconfig
-            DYLD_LIBRARY_PATH=$CONDA_PREFIX/lib
+            REPAIR_LIBRARY_PATH=$CONDA_PREFIX/lib
         CIBW_BUILD_VERBOSITY: 1
+        CIBW_REPAIR_WHEEL_COMMAND_MACOS: >
+            DYLD_LIBRARY_PATH=$REPAIR_LIBRARY_PATH delocate-listdeps {wheel} &&
+            DYLD_LIBRARY_PATH=$REPAIR_LIBRARY_PATH delocate-wheel --require-archs {delocate_archs} -w {dest_dir} {wheel}
         # pytest needs to be defined here to find 'coincurve' package?
         CIBW_TEST_REQUIRES: pytest pytest-benchmark
         CIBW_TEST_COMMAND: >

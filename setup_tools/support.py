@@ -69,11 +69,8 @@ def has_system_lib():
     return _has_system_lib
 
 
-def detect_dll(root_dir):
-    for fn in os.listdir(os.path.join(root_dir)):
-        if fn.endswith('.dll'):
-            return True
-    return False
+def detect_dll(root_dir: str):
+    return any(fn.endswith('.dll') for fn in os.listdir(os.path.join(root_dir)))
 
 
 def subprocess_run(cmd, *, debug=False):

@@ -1,11 +1,17 @@
 import logging
 import os
+import shutil
 import subprocess
+import tarfile
+from contextlib import suppress
+from io import BytesIO
 
 
 def absolute(*paths):
+    from setup import COINCURVE_ROOT_DIR
+
     op = os.path
-    return op.realpath(op.abspath(op.join(op.dirname(__file__), *paths)))
+    return op.realpath(op.abspath(op.join(COINCURVE_ROOT_DIR, *paths)))
 
 
 def build_flags(library, type_, path):
@@ -64,9 +70,8 @@ def has_system_lib():
     return _has_system_lib
 
 
-def detect_dll():
-    here = os.path.dirname(os.path.abspath(__file__))
-    for fn in os.listdir(os.path.join(here, 'src/coincurve')):
+def detect_dll(root_dir):
+    for fn in os.listdir(os.path.join(root_dir)):
         if fn.endswith('.dll'):
             return True
     return False
@@ -84,6 +89,43 @@ def subprocess_run(cmd, *, debug=False):
         logging.error(f'An error occurred during the command execution: {e}')
         logging.error(f'Command log:\n{e.stderr}')
         raise e
+
+
+def download_library(command):
+    if command.dry_run:
+        return
+
+    from setup import COINCURVE_ROOT_DIR
+
+    libdir = absolute(COINCURVE_ROOT_DIR, 'libsecp256k1')
+    if os.path.exists(os.path.join(libdir, 'autogen.sh')):
+        # Library already downloaded
+        return
+    if not os.path.exists(libdir):
+        import logging
+
+        command.announce('downloading libsecp256k1 source code', level=logging.INFO)
+        try:
+            import requests
+
+            try:
+                from setup import LIB_TARBALL_URL
+
+                r = requests.get(LIB_TARBALL_URL, stream=True, timeout=10)
+                status_code = r.status_code
+                if status_code == 200:
+                    content = BytesIO(r.raw.read())
+                    content.seek(0)
+                    with tarfile.open(fileobj=content) as tf:
+                        dirname = tf.getnames()[0].partition('/')[0]
+                        tf.extractall()  # noqa: S202
+                    shutil.move(dirname, libdir)
+                else:
+                    raise SystemExit('Unable to download secp256k1 library: HTTP-Status: %d', status_code)
+            except requests.exceptions.RequestException as e:
+                raise SystemExit('Unable to download secp256k1 library: %s') from e
+        except ImportError as e:
+            raise SystemExit('Unable to download secp256k1 library: %s') from e
 
 
 def update_pkg_config_path(path='.'):

@@ -30,8 +30,7 @@ def build_flags(library, type_, path):
     os.environ['PKG_CONFIG_PATH'] = new_path + os.pathsep + os.environ.get('PKG_CONFIG_PATH', '')
 
     options = {'I': '--cflags-only-I', 'L': '--libs-only-L', 'l': '--libs-only-l'}
-    cmd = ['pkg-config', options[type_], library]
-    flags = subprocess_run(cmd)
+    flags = call_pkg_config([options[type_]], library)
     flags = list(flags.split())
 
     return [flag.strip(f'-{type_}') for flag in flags]
@@ -44,8 +43,8 @@ def _find_lib():
     from cffi import FFI
 
     try:
-        cmd = ['pkg-config', '--cflags-only-I', 'libsecp256k1']
-        includes = subprocess_run(cmd)
+        options = ['--cflags-only-I']
+        includes = call_pkg_config(options, 'libsecp256k1')
 
         return os.path.exists(os.path.join(includes[2:], 'secp256k1_ecdh.h'))
 

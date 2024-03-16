@@ -40,12 +40,7 @@ def _find_lib():
     update_pkg_config_path()
 
     try:
-        if os.name == 'nt':
-            cmd = ['pkg-config', '--libs-only-L', '--dont-define-prefix', 'libsecp256k1']
-        else:
-            cmd = ['pkg-config', '--libs-only-L', 'libsecp256k1']
-        lib_dir = subprocess_run(cmd)
-
+        lib_dir = call_pkg_config(['--libs-only-L'], 'libsecp256k1')
         return verify_system_lib(lib_dir[2:].strip())
 
     except (OSError, subprocess.CalledProcessError):

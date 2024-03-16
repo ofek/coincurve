@@ -31,7 +31,7 @@ UPSTREAM_REF = os.getenv('COINCURVE_UPSTREAM_REF') or '1ad5185cd42c0636104129fcc
 LIB_TARBALL_URL = f'https://github.com/bitcoin-core/secp256k1/archive/{UPSTREAM_REF}.tar.gz'
 
 globals_ = {}
-with open(join(COINCURVE_SRC_DIR, 'src', 'coincurve', '_version.py')) as fp:
+with open(join(COINCURVE_ROOT_DIR, 'src', 'coincurve', '_version.py')) as fp:
     exec(fp.read(), globals_)  # noqa S102
     __version__ = globals_['__version__']
 
@@ -42,37 +42,13 @@ if [int(i) for i in setuptools_version.split('.', 2)[:2]] < [3, 3]:
         f'to a newer version (>= 3.3).'
     )
 
-class BuildLibInfo(_build_py):
-    """Create SECP256K1 library build info."""
-
-    def run(self):
-        import contextlib
-        from setup_support import update_pkg_config_path, verify_system_lib, subprocess_run
-
-        update_pkg_config_path()
-
-        with contextlib.suppress(Exception):
-            cmd = (
-                [
-                    'pkg-config',
-                    '--libs-only-L',
-                    '--dont-define-prefix',
-                    'libsecp256k1',
-                ]
-                if os.name == 'nt'
-                else ['pkg-config', '--libs-only-L', 'libsecp256k1']
-            )
-            lib_dir = subprocess_run(cmd)
-            os.makedirs(self.build_lib, exist_ok=True)
-            verify_system_lib(lib_dir[2:].strip(), os.path.join('src', 'coincurve'))
-        super().run()
-
 
 package_data = {'coincurve': ['py.typed']}
 
 
 def main():
     from setup_tools.commands import BdistWheel, EggInfo, Sdist, Develop
+    from setup_tools.build_py import BuildLibInfo
     from setup_tools.build_clib import BuildClib
     from setup_tools.build_ext import BuildCFFIForSharedLib, BuildExt
 

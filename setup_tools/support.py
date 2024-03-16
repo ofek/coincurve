@@ -3,7 +3,6 @@ import os
 import shutil
 import subprocess
 import tarfile
-from contextlib import suppress
 from io import BytesIO
 
 

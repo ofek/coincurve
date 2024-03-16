@@ -1,7 +1,6 @@
 import os
 import os.path
 import platform
-import subprocess
 import sys
 from os.path import join
 from sys import path as PATH

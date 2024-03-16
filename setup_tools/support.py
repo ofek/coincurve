@@ -87,6 +87,20 @@ def subprocess_run(cmd, *, debug=False):
         raise e
 
 
+def call_pkg_config(options, library, *, debug=False):
+    """Calls pkg-config with the given options and returns the output."""
+    import shutil
+    from platform import system
+
+    if system() == 'Windows':
+        options.append('--dont-define-prefix')
+
+    pkg_config = shutil.which('pkg-config')
+    cmd = [pkg_config, *options, library]
+
+    return subprocess_run(cmd, debug=debug)
+
+
 def download_library(command):
     if command.dry_run:
         return

@@ -44,6 +44,7 @@ def main():
     from setup_tools.commands import BdistWheel, EggInfo, Sdist, Develop
     from setup_tools.build_clib import BuildClib
     from setup_tools.build_ext import BuildCFFIForSharedLib, BuildExt
+    from setup_tools.support import call_pkg_config
 
     if has_system_lib():
 
@@ -57,12 +58,10 @@ def main():
             # ABI?: py_limited_api=True,
         )
 
-        extension.extra_compile_args = [
-            subprocess.check_output(['pkg-config', '--cflags-only-I', 'libsecp256k1']).strip().decode()  # noqa S603
-        ]
+        extension.extra_compile_args = [call_pkg_config(['--cflags-only-I'], 'libsecp256k1')]
         extension.extra_link_args = [
-            subprocess.check_output(['pkg-config', '--libs-only-L', 'libsecp256k1']).strip().decode(),  # noqa S603
-            subprocess.check_output(['pkg-config', '--libs-only-l', 'libsecp256k1']).strip().decode(),  # noqa S603
+            call_pkg_config(['--libs-only-L'], 'libsecp256k1'),
+            call_pkg_config(['--libs-only-l'], 'libsecp256k1'),
         ]
 
         if os.name == 'nt' or sys.platform == 'win32':

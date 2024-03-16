@@ -30,8 +30,7 @@ def build_flags(library, type_, path):
     os.environ['PKG_CONFIG_PATH'] = new_path + os.pathsep + os.environ.get('PKG_CONFIG_PATH', '')
 
     options = {'I': '--cflags-only-I', 'L': '--libs-only-L', 'l': '--libs-only-l'}
-    cmd = ['pkg-config', options[type_], library]
-    flags = subprocess_run(cmd)
+    flags = call_pkg_config([options[type_]], library)
     flags = list(flags.split())
 
     return [flag.strip(f'-{type_}') for flag in flags]
@@ -44,8 +43,8 @@ def _find_lib():
     from cffi import FFI
 
     try:
-        cmd = ['pkg-config', '--cflags-only-I', 'libsecp256k1']
-        includes = subprocess_run(cmd)
+        options = ['--cflags-only-I']
+        includes = call_pkg_config(options, 'libsecp256k1')
 
         return os.path.exists(os.path.join(includes[2:], 'secp256k1_ecdh.h'))
 
@@ -69,11 +68,8 @@ def has_system_lib():
     return _has_system_lib
 
 
-def detect_dll(root_dir):
-    for fn in os.listdir(os.path.join(root_dir)):
-        if fn.endswith('.dll'):
-            return True
-    return False
+def detect_dll(root_dir: str):
+    return any(fn.endswith('.dll') for fn in os.listdir(os.path.join(root_dir)))
 
 
 def subprocess_run(cmd, *, debug=False):
@@ -88,6 +84,20 @@ def subprocess_run(cmd, *, debug=False):
         logging.error(f'An error occurred during the command execution: {e}')
         logging.error(f'Command log:\n{e.stderr}')
         raise e
+
+
+def call_pkg_config(options, library, *, debug=False):
+    """Calls pkg-config with the given options and returns the output."""
+    import shutil
+    from platform import system
+
+    if system() == 'Windows':
+        options.append('--dont-define-prefix')
+
+    pkg_config = shutil.which('pkg-config')
+    cmd = [pkg_config, *options, library]
+
+    return subprocess_run(cmd, debug=debug)
 
 
 def download_library(command):

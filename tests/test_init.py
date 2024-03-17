@@ -1,38 +1,82 @@
 import os
 from importlib import import_module
-from unittest import mock
-
-import pytest
+from importlib.util import find_spec
+from unittest.mock import patch
 
 import coincurve
+import pytest
 
 
 def test_secp256k1_library_info_exists():
-    # Check if the _secp256k1_library_info.py file exists in the installed package
-    file_path = os.path.join(os.path.dirname(coincurve.__file__), '_secp256k1_library_info.py')
-
-    if os.path.exists(file_path):
+    """Test _secp256k1_library_info.py file has correct information."""
+    if find_spec('coincurve._secp256k1_library_info'):
         # This test is run on the installed package, so the file may exist
         # Verify that the information is as expected: Only EXTERNAL and a dynamic library
         _secp256k1_library_info = import_module('coincurve._secp256k1_library_info')
-
-        # import logging
-        # logging.warning(f'info: {_secp256k1_library_info.SECP256K1_LIBRARY_NAME}')
 
         assert 'secp256k1' in _secp256k1_library_info.SECP256K1_LIBRARY_NAME
         assert any(ext in _secp256k1_library_info.SECP256K1_LIBRARY_NAME for ext in ('dll', 'so', 'dylib'))
         assert _secp256k1_library_info.SECP256K1_LIBRARY_TYPE == 'EXTERNAL'
 
+
+def test_secp256k1_library_info_does_not_exists():
+    """Test _secp256k1_library_info.py file has correct information.
+    """
+    if not find_spec('coincurve._secp256k1_library_info'):
+        with pytest.raises(ImportError):
+            import coincurve
+            coincurve.load_secp256k1_conda_library()
+
+
+@patch('ctypes.CDLL')
+@patch('ctypes.util.find_library', return_value=None)
+def test_load_secp256k1_conda_library_internal(mock_find_library, mock_cdll):
+    """Test loading the secp256k1 library."""
+    if not find_spec('coincurve._secp256k1_library_info'):
+        with pytest.raises(ImportError):
+            coincurve.load_secp256k1_conda_library()
     else:
-        # If the file does not exist, test the load_secp256k1_conda_library function
-        with mock.patch('importlib.import_module') as mock_import_module:
-            mock_import_module.side_effect = ImportError
+        with patch('coincurve._secp256k1_library_info.SECP256K1_LIBRARY_TYPE', 'INTERNAL'):
+            coincurve.load_secp256k1_conda_library()
+            mock_find_library.assert_not_called()
+            mock_cdll.assert_not_called()
 
-            # Verify that the function does not raise an exception
-            try:
-                coincurve.load_secp256k1_conda_library()
-            except Exception:
-                pytest.fail('load_secp256k1_conda_library() raised an exception')
 
-            # Verify that the import was called
-            mock_import_module.assert_called_once_with('coincurve._secp256k1_library_info')
+@patch('ctypes.CDLL')
+@patch('ctypes.util.find_library', return_value=None)
+def test_load_secp256k1_conda_library_external_nolib(mock_find_library, mock_cdll):
+    """Test loading the secp256k1 library."""
+    import coincurve
+    if not find_spec('coincurve._secp256k1_library_info'):
+        with pytest.raises(ImportError):
+            coincurve.load_secp256k1_conda_library()
+    else:
+        with patch('coincurve._secp256k1_library_info.SECP256K1_LIBRARY_TYPE', 'EXTERNAL'):
+            with patch('coincurve._secp256k1_library_info.SECP256K1_LIBRARY_NAME', 'libname.so'):
+                with patch('os.getenv', return_value=None) as mock_getenv:
+                    assert os.getenv('CONDA_PREFIX') is None
+                    with pytest.raises(RuntimeError):
+                        coincurve.load_secp256k1_conda_library()
+                    mock_find_library.assert_called_once_with('libname.so')
+                    mock_cdll.assert_not_called()
+
+
+@patch('ctypes.CDLL')
+@patch('ctypes.util.find_library', return_value=None)
+def test_load_secp256k1_conda_library(mock_find_library, mock_cdll):
+    """Test loading the secp256k1 library."""
+    import coincurve
+    if not find_spec('coincurve._secp256k1_library_info'):
+        with pytest.raises(ImportError):
+            coincurve.load_secp256k1_conda_library()
+    else:
+        with patch('coincurve._secp256k1_library_info.SECP256K1_LIBRARY_TYPE', 'EXTERNAL'):
+            with patch('coincurve._secp256k1_library_info.SECP256K1_LIBRARY_NAME', 'libname.so'):
+                with patch('os.getenv', return_value='/path/to/libname') as mock_getenv:
+                    assert os.getenv('CONDA_PREFIX') == '/path/to/libname'
+                    coincurve.load_secp256k1_conda_library()
+                    mock_find_library.assert_called_once_with('libname.so')
+                    mock_cdll.assert_called_once()
+                    assert '/path/to/libname' in mock_cdll.call_args[0][0]
+                    assert 'libname.so' in mock_cdll.call_args[0][0]
+

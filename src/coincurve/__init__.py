@@ -3,9 +3,7 @@ def load_secp256k1_conda_library():
     try:
         from ._secp256k1_library_info import SECP256K1_LIBRARY_NAME, SECP256K1_LIBRARY_TYPE
     except ImportError:
-        return
-
-    from ._secp256k1_library_info import SECP256K1_LIBRARY_NAME, SECP256K1_LIBRARY_TYPE
+        raise
 
     if SECP256K1_LIBRARY_TYPE != 'EXTERNAL':
         # coincurve was built with an internal library, either static or shared. It 'knows' where the library is.
@@ -32,13 +30,19 @@ def load_secp256k1_conda_library():
 
             CDLL(library)
             return
-    except Exception as e:
-        import warnings
 
-        warnings.warn(f'The required library {SECP256K1_LIBRARY_NAME}l is not loaded.\n{e}', stacklevel=2)
+        raise RuntimeError(f'The required library {SECP256K1_LIBRARY_NAME}l is not loaded.')
+
+    except Exception as _e:
+        raise RuntimeError(f'The required library {SECP256K1_LIBRARY_NAME}l is not loaded.') from _e
 
 
-load_secp256k1_conda_library()
+try:
+    load_secp256k1_conda_library()
+except ImportError:
+    pass
+except Exception as e:
+    raise e
 
 from coincurve.context import GLOBAL_CONTEXT, Context  # noqa: E402
 from coincurve.keys import PrivateKey, PublicKey, PublicKeyXOnly  # noqa: E402

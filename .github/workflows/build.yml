@@ -23,7 +23,7 @@ env:
     COINCURVE_UPSTREAM_REF
     COINCURVE_IGNORE_SYSTEM_LIB
     COINCURVE_SECP256K1_BUILD
-  CIBW_PROJECT_REQUIRES_PYTHON: ">=3.8"
+  CIBW_PROJECT_REQUIRES_PYTHON: '>=3.8'
   CIBW_BEFORE_ALL_MACOS: ./.github/scripts/install-macos-build-deps.sh
   CIBW_TEST_REQUIRES: pytest pytest-benchmark
   CIBW_TEST_COMMAND: >
@@ -149,7 +149,7 @@ jobs:
     - name: Build wheels
       uses: pypa/cibuildwheel@v2.16.5
       env:
-        CIBW_ARCHS_WINDOWS: "AMD64"
+        CIBW_ARCHS_WINDOWS: 'AMD64'
         CIBW_BEFORE_ALL: choco install -y --no-progress --no-color cmake>=3.28 pkgconfiglite
 
     - uses: actions/upload-artifact@v3
@@ -174,8 +174,8 @@ jobs:
     - name: Build wheels
       uses: pypa/cibuildwheel@v2.16.5
       env:
-        COINCURVE_CROSS_HOST: "x86"
-        CIBW_ARCHS_WINDOWS: "x86"
+        COINCURVE_CROSS_HOST: 'x86'
+        CIBW_ARCHS_WINDOWS: 'x86'
         CIBW_BEFORE_ALL: choco install -y --no-progress --no-color cmake>=3.28 pkgconfiglite
 
     - uses: actions/upload-artifact@v3
@@ -196,8 +196,8 @@ jobs:
     - name: Build wheels
       uses: pypa/cibuildwheel@v2.16.5
       env:
-        COINCURVE_CROSS_HOST: "arm64"
-        CIBW_ARCHS_WINDOWS: arm64
+        COINCURVE_CROSS_HOST: 'arm64'
+        CIBW_ARCHS_WINDOWS: 'ARM64'
         CIBW_BEFORE_ALL: choco install -y --no-progress --no-color cmake>=3.28 pkgconfiglite
 
     - uses: actions/upload-artifact@v4

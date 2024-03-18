@@ -3,7 +3,7 @@ branch = True
 
 source =
     src/coincurve
-    # tests
+    tests
 
 omit =
     */_windows_libsecp256k1.py

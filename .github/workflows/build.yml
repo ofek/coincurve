@@ -202,7 +202,7 @@ jobs:
 
     - uses: actions/upload-artifact@v4
       with:
-        name: artifact-macos-wheels-arm
+        name: artifact-windows-wheels-arm
         path: wheelhouse/*.whl
         if-no-files-found: error
 

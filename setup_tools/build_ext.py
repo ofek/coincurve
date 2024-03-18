@@ -37,16 +37,25 @@ class BuildExtensionFromCFFI(build_ext.build_ext):
         # Enforce API interface
         ext.py_limited_api = False
 
-        # Find pkgconfig file for locally built library
-        pkg_dirs = self.get_finalized_command('build_clib').pkgconfig_dir  # type: ignore
-        c_lib_pkg = next((d for d in pkg_dirs if os.path.isfile(os.path.join(d, f'{LIB_NAME}.pc'))), None)
+        c_lib_pkg = None
+        if not has_system_lib():
+            # Find pkgconfig file for locally built library
+            if (pkg_dirs := self.get_finalized_command('build_clib')) is None:
+                raise RuntimeError(
+                    f'No C-lib command when System lib is {has_system_lib() = }. '
+                    'The build system failed to trigger the build_clib.'
+                )
 
-        if not has_system_lib() and not c_lib_pkg:
-            raise RuntimeError(
-                f'pkgconfig file not found: {LIB_NAME}.pc in : {pkg_dirs}.'
-                f'\nSystem lib is {has_system_lib() = }. '
-                'Please check that the library was properly built.'
+            c_lib_pkg = next(
+                (d for d in pkg_dirs.pkgconfig_dir if os.path.isfile(os.path.join(d, f'{LIB_NAME}.pc'))), None
             )
+
+            if c_lib_pkg is None:
+                raise RuntimeError(
+                    f'pkgconfig file not found: {LIB_NAME}.pc in : {pkg_dirs}.'
+                    f'\nSystem lib is {has_system_lib() = }. '
+                    'Please check that the library was properly built.'
+                )
 
         # PKG_CONFIG_PATH is updated by build_clib if built locally,
         # however, it would not work for a step-by-step build, thus we specify the lib path

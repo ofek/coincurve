@@ -86,13 +86,13 @@ jobs:
     - name: Build wheels
       uses: pypa/cibuildwheel@v2.17
 
-    - uses: actions/upload-artifact@v3
+    - uses: actions/upload-artifact@v4
       with:
-        name: artifacts
+        name: artifacts-linux-wheels-standard
         path: wheelhouse/*.whl
         if-no-files-found: error
 
-  macos-wheels-x86-64:
+  macos-wheels-x86_64:
     name: Build macOS wheels
     needs:
     - test
@@ -106,9 +106,9 @@ jobs:
       env:
         CIBW_ARCHS_MACOS: x86_64
 
-    - uses: actions/upload-artifact@v3
+    - uses: actions/upload-artifact@v4
       with:
-        name: artifacts
+        name: artifacts-macos-wheels-x86_64
         path: wheelhouse/*.whl
         if-no-files-found: error
 
@@ -128,9 +128,9 @@ jobs:
         COINCURVE_CROSS_HOST: aarch64-apple-darwin
         CFLAGS: -target arm64-apple-macos11
 
-    - uses: actions/upload-artifact@v3
+    - uses: actions/upload-artifact@v4
       with:
-        name: artifacts
+        name: artifacts-macos-wheels-arm
         path: wheelhouse/*.whl
         if-no-files-found: error
 
@@ -152,9 +152,9 @@ jobs:
     - name: Build Windows wheels
       run: ./.github/scripts/build-windows-wheels.sh
 
-    - uses: actions/upload-artifact@v3
+    - uses: actions/upload-artifact@v4
       with:
-        name: artifacts
+        name: artifacts-windows-wheels-and-sdist
         path: dist/*
         if-no-files-found: error
 
@@ -162,7 +162,7 @@ jobs:
     name: Build Linux wheels for ARM
     needs:
     - test
-    runs-on: ubuntu-20.04
+    runs-on: ubuntu-latest
     if: >
       github.event_name == 'push'
       &&
@@ -181,9 +181,9 @@ jobs:
       env:
         CIBW_ARCHS_LINUX: aarch64
 
-    - uses: actions/upload-artifact@v3
+    - uses: actions/upload-artifact@v4
       with:
-        name: artifacts
+        name: artifacts-linux-wheels-arm
         path: wheelhouse/*.whl
         if-no-files-found: error
 
@@ -191,7 +191,7 @@ jobs:
     name: Publish release
     needs:
     - linux-wheels-standard
-    - macos-wheels-x86-64
+    - macos-wheels-x86_64
     - macos-wheels-arm
     - windows-wheels-and-sdist
     - linux-wheels-arm

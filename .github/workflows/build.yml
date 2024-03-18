@@ -193,10 +193,6 @@ jobs:
     steps:
     - uses: actions/checkout@v4
 
-    - uses: actions/setup-python@v5
-      with:
-        python-version: '3.12'
-
     - name: Build wheels
       uses: pypa/cibuildwheel@v2.16.5
       env:

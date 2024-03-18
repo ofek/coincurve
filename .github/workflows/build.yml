@@ -147,7 +147,7 @@ jobs:
         python-version: '3.12'
 
     - name: Build wheels
-      uses: pypa/cibuildwheel@v2.16.5
+      uses: pypa/cibuildwheel@v2.17
       env:
         CIBW_ARCHS_WINDOWS: 'AMD64'
         CIBW_BEFORE_ALL: choco install -y --no-progress --no-color cmake>=3.28 pkgconfiglite
@@ -172,7 +172,7 @@ jobs:
         python-version: '3.12'
 
     - name: Build wheels
-      uses: pypa/cibuildwheel@v2.16.5
+      uses: pypa/cibuildwheel@v2.17
       env:
         COINCURVE_CROSS_HOST: 'x86'
         CIBW_ARCHS_WINDOWS: 'x86'
@@ -202,7 +202,7 @@ jobs:
 
     - uses: actions/upload-artifact@v4
       with:
-        name: artifact-macos-wheels-arm
+        name: artifact-windows-wheels-arm
         path: wheelhouse/*.whl
         if-no-files-found: error
 

@@ -1,4 +1,4 @@
-name: build
+name: shared_build
 
 on:
   push:
@@ -11,14 +11,14 @@ on:
     - master
 
 concurrency:
-  group: build-${{ github.head_ref }}
+  group: build_shared-${{ github.head_ref }}
   cancel-in-progress: true
 
 env:
   COINCURVE_UPSTREAM_REF: 1ad5185cd42c0636104129fcc9f6a4bf9c67cc40
   COINCURVE_IGNORE_SYSTEM_LIB: '1'
   # Only 'SHARED' is recognized, any other string means 'not SHARED'
-  COINCURVE_SECP256K1_BUILD: 'STATIC'
+  COINCURVE_SECP256K1_BUILD: 'SHARED'
   CIBW_ENVIRONMENT_PASS_LINUX: >
     COINCURVE_UPSTREAM_REF
     COINCURVE_IGNORE_SYSTEM_LIB
@@ -89,12 +89,6 @@ jobs:
     - name: Build wheels
       uses: pypa/cibuildwheel@v2.17
 
-    - uses: actions/upload-artifact@v4
-      with:
-        name: artifact-linux-wheels-standard
-        path: wheelhouse/*.whl
-        if-no-files-found: error
-
   macos-wheels-x86_64:
     name: Build macOS wheels
     needs:
@@ -109,12 +103,6 @@ jobs:
       env:
         CIBW_ARCHS_MACOS: x86_64
 
-    - uses: actions/upload-artifact@v4
-      with:
-        name: artifact-macos-wheels-x86_64
-        path: wheelhouse/*.whl
-        if-no-files-found: error
-
   macos-wheels-arm:
     name: Build macOS wheels for ARM (Native)
     needs:
@@ -126,12 +114,6 @@ jobs:
 
     - name: Build wheels
       uses: pypa/cibuildwheel@v2.17
-
-    - uses: actions/upload-artifact@v4
-      with:
-        name: artifact-macos-wheels-arm
-        path: wheelhouse/*.whl
-        if-no-files-found: error
 
   windows-wheels-x86_64:
     name: Build Windows wheels AMD64
@@ -152,11 +134,6 @@ jobs:
         CIBW_ARCHS_WINDOWS: 'AMD64'
         CIBW_BEFORE_ALL: choco install -y --no-progress --no-color cmake>=3.28 pkgconfiglite
 
-    - uses: actions/upload-artifact@v4
-      with:
-        name: artifact-windows-wheels-x86_64
-        path: wheelhouse/*.whl
-        if-no-files-found: error
 
   windows-wheels-x86:
     name: Build Windows wheels x86
@@ -178,11 +155,6 @@ jobs:
         CIBW_ARCHS_WINDOWS: 'x86'
         CIBW_BEFORE_ALL: choco install -y --no-progress --no-color cmake>=3.28 pkgconfiglite
 
-    - uses: actions/upload-artifact@v4
-      with:
-        name: artifact-windows-wheels-x86
-        path: wheelhouse/*.whl
-        if-no-files-found: error
 
   windows-wheels-arm:
     name: Build Windows wheels for ARM64
@@ -199,90 +171,3 @@ jobs:
         COINCURVE_CROSS_HOST: 'arm64'
         CIBW_ARCHS_WINDOWS: 'ARM64'
         CIBW_BEFORE_ALL: choco install -y --no-progress --no-color cmake>=3.28 pkgconfiglite
-
-    - uses: actions/upload-artifact@v4
-      with:
-        name: artifact-macos-wheels-arm
-        path: wheelhouse/*.whl
-        if-no-files-found: error
-
-  sdist:
-    name: Build source distribution
-    needs:
-    - test
-    runs-on: ubuntu-latest
-
-    steps:
-    - uses: actions/checkout@v4
-
-    - name: Install build dependencies
-      run: python -m pip install build
-
-    - name: Build source distribution
-      run: python -m build --sdist
-
-    - uses: actions/upload-artifact@v4
-      with:
-        name: artifact-sdist
-        path: dist/*
-        if-no-files-found: error
-
-  linux-wheels-arm:
-    name: Build Linux wheels for ARM
-    needs:
-    - test
-    runs-on: ubuntu-latest
-    if: >
-      github.event_name == 'push'
-      &&
-      (github.ref == 'refs/heads/master' || startsWith(github.event.ref, 'refs/tags'))
-
-    steps:
-    - uses: actions/checkout@v4
-
-    - name: Set up QEMU
-      uses: docker/setup-qemu-action@v3
-      with:
-        platforms: arm64
-
-    - name: Build wheels
-      uses: pypa/cibuildwheel@v2.17
-      env:
-        CIBW_ARCHS_LINUX: aarch64
-
-    - uses: actions/upload-artifact@v4
-      with:
-        name: artifact-linux-wheels-arm
-        path: wheelhouse/*.whl
-        if-no-files-found: error
-
-  publish:
-    name: Publish release
-    needs:
-    - linux-wheels-standard
-    - macos-wheels-x86_64
-    - macos-wheels-arm
-    - windows-wheels-x86_64
-    - windows-wheels-x86
-    - windows-wheels-arm
-    - sdist
-    - linux-wheels-arm
-    runs-on: ubuntu-latest
-    if: >
-      github.event_name == 'push' && startsWith(github.event.ref, 'refs/tags')
-
-    steps:
-    - uses: actions/download-artifact@v4
-      with:
-        name: artifacts
-        pattern: artifact-*
-        merge-multiple: true
-        path: dist
-    - run: ls -l dist
-
-    - name: Push build artifacts to PyPI
-      uses: pypa/gh-action-pypi-publish@v1.8.11
-      with:
-        skip_existing: true
-        user: __token__
-        password: ${{ secrets.PYPI_API_TOKEN }}

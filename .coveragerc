@@ -13,7 +13,7 @@ omit =
 
 [paths]
 source =
-   coincurve
+   src/coincurve
    .tox/*/lib/python*/site-packages/coincurve
    .tox/pypy*/site-packages/coincurve
 

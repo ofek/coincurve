@@ -91,7 +91,7 @@ jobs:
 
     - uses: actions/upload-artifact@v4
       with:
-        name: artifacts-linux-wheels-standard
+        name: artifact-linux-wheels-standard
         path: wheelhouse/*.whl
         if-no-files-found: error
 
@@ -111,7 +111,7 @@ jobs:
 
     - uses: actions/upload-artifact@v4
       with:
-        name: artifacts-macos-wheels-x86_64
+        name: artifact-macos-wheels-x86_64
         path: wheelhouse/*.whl
         if-no-files-found: error
 
@@ -127,9 +127,9 @@ jobs:
     - name: Build wheels
       uses: pypa/cibuildwheel@v2.17
 
-    - uses: actions/upload-artifact@v3
+    - uses: actions/upload-artifact@v4
       with:
-        name: artifacts
+        name: artifact-macos-wheels-arm
         path: wheelhouse/*.whl
         if-no-files-found: error
 
@@ -152,9 +152,9 @@ jobs:
         CIBW_ARCHS_WINDOWS: 'AMD64'
         CIBW_BEFORE_ALL: choco install -y --no-progress --no-color cmake>=3.28 pkgconfiglite
 
-    - uses: actions/upload-artifact@v3
+    - uses: actions/upload-artifact@v4
       with:
-        name: artifacts
+        name: artifact-windows-wheels-x86_64
         path: wheelhouse/*.whl
         if-no-files-found: error
 
@@ -178,9 +178,9 @@ jobs:
         CIBW_ARCHS_WINDOWS: 'x86'
         CIBW_BEFORE_ALL: choco install -y --no-progress --no-color cmake>=3.28 pkgconfiglite
 
-    - uses: actions/upload-artifact@v3
+    - uses: actions/upload-artifact@v4
       with:
-        name: artifacts
+        name: artifact-windows-wheels-x86
         path: wheelhouse/*.whl
         if-no-files-found: error
 
@@ -202,7 +202,7 @@ jobs:
 
     - uses: actions/upload-artifact@v4
       with:
-        name: artifacts-macos-wheels-arm
+        name: artifact-macos-wheels-arm
         path: wheelhouse/*.whl
         if-no-files-found: error
 
@@ -223,7 +223,7 @@ jobs:
 
     - uses: actions/upload-artifact@v4
       with:
-        name: artifacts-sdist
+        name: artifact-sdist
         path: dist/*
         if-no-files-found: error
 
@@ -252,7 +252,7 @@ jobs:
 
     - uses: actions/upload-artifact@v4
       with:
-        name: artifacts-linux-wheels-arm
+        name: artifact-linux-wheels-arm
         path: wheelhouse/*.whl
         if-no-files-found: error
 
@@ -272,10 +272,13 @@ jobs:
       github.event_name == 'push' && startsWith(github.event.ref, 'refs/tags')
 
     steps:
-    - uses: actions/download-artifact@v3
+    - uses: actions/download-artifact@v4
       with:
         name: artifacts
+        pattern: artifact-*
+        merge-multiple: true
         path: dist
+    - run: ls -l dist
 
     - name: Push build artifacts to PyPI
       uses: pypa/gh-action-pypi-publish@v1.8.11

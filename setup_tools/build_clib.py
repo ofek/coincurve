@@ -6,8 +6,8 @@ import subprocess
 from setuptools.command import build_clib
 
 from setup import LIB_NAME, MACHINE, SECP256K1_BUILD, SYSTEM, X_HOST
-from setup_support import define_secp256k1_local_lib_info
-from setup_tools.support import absolute, call_pkg_config, download_library, has_system_lib
+from setup_tools.support import absolute, call_pkg_config, download_library, has_system_lib, \
+    define_secp256k1_local_lib_info
 
 
 class BuildClibWithCMake(build_clib.build_clib):

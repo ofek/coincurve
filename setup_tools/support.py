@@ -17,17 +17,7 @@ def absolute(*paths):
 
 def build_flags(library, type_, path):
     """Return separated build flags from pkg-config output"""
-
-    pkg_config_path = [path]
-    if 'PKG_CONFIG_PATH' in os.environ:
-        pkg_config_path.append(os.environ['PKG_CONFIG_PATH'])
-    if 'LIB_DIR' in os.environ:
-        pkg_config_path.append(os.environ['LIB_DIR'])
-        pkg_config_path.append(os.path.join(os.environ['LIB_DIR'], 'pkgconfig'))
-
-    # Update PKG_CONFIG_PATH, it may be needed in later stages
-    new_path = str(os.pathsep).join(pkg_config_path)
-    os.environ['PKG_CONFIG_PATH'] = new_path + os.pathsep + os.environ.get('PKG_CONFIG_PATH', '')
+    update_pkg_config_path(path)
 
     options = {'I': '--cflags-only-I', 'L': '--libs-only-L', 'l': '--libs-only-l'}
     flags = call_pkg_config([options[type_]], library)
@@ -37,25 +27,19 @@ def build_flags(library, type_, path):
 
 
 def _find_lib():
-    if 'COINCURVE_IGNORE_SYSTEM_LIB' in os.environ:
+    if os.getenv('COINCURVE_IGNORE_SYSTEM_LIB', '1') == '1':
         return False
 
-    from cffi import FFI
+    update_pkg_config_path()
 
     try:
-        options = ['--cflags-only-I']
-        includes = call_pkg_config(options, 'libsecp256k1')
-
-        return os.path.exists(os.path.join(includes[2:], 'secp256k1_ecdh.h'))
+        lib_dir = call_pkg_config(['--libs-only-L'], 'libsecp256k1')
+        return verify_system_lib(lib_dir[2:].strip())
 
     except (OSError, subprocess.CalledProcessError):
-        if 'LIB_DIR' in os.environ:
-            for path in glob.glob(os.path.join(os.environ['LIB_DIR'], '*secp256k1*')):
-                with suppress(OSError):
-                    FFI().dlopen(path)
-                    return True
-        # We couldn't locate libsecp256k1, so we'll use the bundled one
-        return False
+        from ctypes.util import find_library
+
+        return bool(find_library('secp256k1'))
 
 
 _has_system_lib = None

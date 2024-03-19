@@ -5,7 +5,7 @@ import sys
 from os.path import join
 from sys import path as PATH
 
-from setuptools import Distribution as _Distribution, setup, __version__ as setuptools_version
+from setuptools import Distribution as _Distribution, setup
 from setuptools.extension import Extension
 
 # Define the package root directory and add it to the system path
@@ -28,6 +28,7 @@ MAKE = 'gmake' if platform.system() in ['FreeBSD', 'OpenBSD'] else 'make'
 UPSTREAM_REF = os.getenv('COINCURVE_UPSTREAM_REF') or '1ad5185cd42c0636104129fcc9f6a4bf9c67cc40'
 
 LIB_TARBALL_URL = f'https://github.com/bitcoin-core/secp256k1/archive/{UPSTREAM_REF}.tar.gz'
+
 
 def main():
     from setup_tools.commands import BdistWheel, EggInfo, Sdist, Develop

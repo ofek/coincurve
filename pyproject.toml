@@ -48,6 +48,7 @@ Documentation = "https://ofek.dev/coincurve/"
 Repository = "https://github.com/ofek/coincurve"
 "Bug Tracker" = "https://github.com/ofek/coincurve/issues"
 
+# --- setuptools ---
 [tool.setuptools]
 packages = ['coincurve']
 package-dir = {'' = 'src'}
@@ -56,6 +57,8 @@ package-data = {'coincurve' = ['py.typed']}
 [tool.setuptools.dynamic]
 version = {attr = "coincurve._version.__version__"}
 readme = {content-type = "text/markdown", file = "README.md"}
+
+# --- hatch ---
 
 [tool.pytest.ini_options]
 addopts = [

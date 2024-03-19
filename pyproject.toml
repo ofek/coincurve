@@ -51,6 +51,7 @@ Repository = "https://github.com/ofek/coincurve"
 [tool.setuptools]
 packages = ['coincurve']
 package-dir = {'' = 'src'}
+package-data = {'coincurve' = ['py.typed']}
 
 [tool.setuptools.dynamic]
 version = {attr = "coincurve._version.__version__"}

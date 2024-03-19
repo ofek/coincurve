@@ -25,6 +25,11 @@ UPSTREAM_REF = os.getenv('COINCURVE_UPSTREAM_REF') or '1ad5185cd42c0636104129fcc
 
 LIB_TARBALL_URL = f'https://github.com/bitcoin-core/secp256k1/archive/{UPSTREAM_REF}.tar.gz'
 
+globals_ = {}
+with open(join(COINCURVE_ROOT_DIR, 'src', 'coincurve', '_version.py')) as fp:
+    exec(fp.read(), globals_)  # noqa S102
+    __version__ = globals_['__version__']
+
 # We require setuptools >= 3.3
 if [int(i) for i in setuptools_version.split('.', 2)[:2]] < [3, 3]:
     raise SystemExit(
@@ -78,7 +83,7 @@ def main():
 
     setup(
         name='coincurve',
-        version='19.0.1',
+        version=__version__,
 
         description='Cross-platform Python CFFI bindings for libsecp256k1',
         long_description=open('README.md', 'r').read(),

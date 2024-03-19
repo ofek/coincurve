@@ -18,8 +18,8 @@ exclude = '''
   | \.mypy_cache
   | \.tox
   | \.venv
-  | _build
   | _cffi_build
+  | libsecp256k1
   | build
   | dist
 )/
@@ -50,6 +50,7 @@ lint.unfixable = [
 ]
 extend-exclude = [
     "tests/conftest.py",
+    "libsecp256k1"
 ]
 
 [tool.ruff.lint.isort]

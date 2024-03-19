@@ -119,56 +119,8 @@ def main():
             )
 
     setup(
-        name='coincurve',
-        version=__version__,
-
-        description='Cross-platform Python CFFI bindings for libsecp256k1',
-        long_description=open('README.md', 'r').read(),
-        long_description_content_type='text/markdown',
-        author_email='Ofek Lev <oss@ofek.dev>',
-        license='MIT OR Apache-2.0',
-
-        python_requires='>=3.8',
-        setup_requires=['cffi>=1.3.0'],
-        install_requires=['asn1crypto', 'cffi>=1.3.0'],
-
-        packages=['coincurve'],
-        package_dir={'coincurve': 'src/coincurve'},
-
         distclass=Distribution,
         zip_safe=False,
-
-        project_urls={
-            'Documentation': 'https://ofek.dev/coincurve/',
-            'Issues': 'https://github.com/ofek/coincurve/issues',
-            'Source': 'https://github.com/ofek/coincurve',
-        },
-        keywords=[
-            'secp256k1',
-            'crypto',
-            'elliptic curves',
-            'bitcoin',
-            'ethereum',
-            'cryptocurrency',
-        ],
-        classifiers=[
-            'Development Status :: 5 - Production/Stable',
-            'Intended Audience :: Developers',
-            'License :: OSI Approved :: MIT License',
-            'License :: OSI Approved :: Apache Software License',
-            'Natural Language :: English',
-            'Operating System :: OS Independent',
-            'Programming Language :: Python :: 3',
-            'Programming Language :: Python :: 3.8',
-            'Programming Language :: Python :: 3.9',
-            'Programming Language :: Python :: 3.10',
-            'Programming Language :: Python :: 3.11',
-            'Programming Language :: Python :: 3.12',
-            'Programming Language :: Python :: Implementation :: CPython',
-            'Programming Language :: Python :: Implementation :: PyPy',
-            'Topic :: Software Development :: Libraries',
-            'Topic :: Security :: Cryptography',
-        ],
         **setup_kwargs
     )
 

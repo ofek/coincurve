@@ -1,6 +1,60 @@
 [build-system]
-requires = ["setuptools>=61", "cffi>=1.3.0", "requests"]
+requires = ["setuptools>=61", "cffi>=1.3.0", "requests", "setuptools-scm", 'asn1crypto']
 build-backend = "setuptools.build_meta"
+
+[project]
+name = "coincurve"
+authors = [
+    { name="Ofek Lev", email="oss@ofek.dev" },
+]
+description = "Cross-platform Python CFFI bindings for libsecp256k1"
+keywords = ["secp256k1", "crypto", "elliptic curves", "bitcoin", "ethereum", "cryptocurrency"]
+requires-python = ">=3.8"
+dependencies = [
+    "asn1crypto",
+    "cffi>=1.3.0"
+]
+classifiers = [
+    'Development Status :: 5 - Production/Stable',
+    'Intended Audience :: Developers',
+    'License :: OSI Approved :: MIT License',
+    'License :: OSI Approved :: Apache Software License',
+    'Natural Language :: English',
+    'Operating System :: OS Independent',
+    'Programming Language :: Python :: 3',
+    'Programming Language :: Python :: 3.7',
+    'Programming Language :: Python :: 3.8',
+    'Programming Language :: Python :: 3.9',
+    'Programming Language :: Python :: 3.10',
+    'Programming Language :: Python :: 3.11',
+    'Programming Language :: Python :: 3.12',
+    'Programming Language :: Python :: Implementation :: CPython',
+    'Programming Language :: Python :: Implementation :: PyPy',
+    'Topic :: Software Development :: Libraries',
+    'Topic :: Security :: Cryptography',
+]
+dynamic = ['version', 'readme']
+
+[project.optional-dependencies]
+dev = [
+    "coverage",
+    "pytest",
+    "pytest-benchmark"
+]
+
+[project.urls]
+Homepage = "https://github.com/ofek/coincurve"
+Documentation = "https://ofek.dev/coincurve/"
+Repository = "https://github.com/ofek/coincurve"
+"Bug Tracker" = "https://github.com/ofek/coincurve/issues"
+
+[tool.setuptools]
+packages = ['coincurve']
+package-dir = {'' = 'src'}
+
+[tool.setuptools.dynamic]
+version = {attr = "coincurve._version.__version__"}
+readme = {content-type = "text/markdown", file = "README.md"}
 
 [tool.pytest.ini_options]
 addopts = [

@@ -34,13 +34,6 @@ with open(join(COINCURVE_ROOT_DIR, 'src', 'coincurve', '_version.py')) as fp:
     exec(fp.read(), globals_)  # noqa S102
     __version__ = globals_['__version__']
 
-# We require setuptools >= 3.3
-if [int(i) for i in setuptools_version.split('.', 2)[:2]] < [3, 3]:
-    raise SystemExit(
-        f'Your setuptools version ({setuptools_version}) is too old to correctly install this package. Please upgrade '
-        f'to a newer version (>= 3.3).'
-    )
-
 package_data = {'coincurve': ['py.typed']}
 
 

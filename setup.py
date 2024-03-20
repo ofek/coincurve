@@ -5,7 +5,7 @@ import sys
 from os.path import join
 from sys import path as PATH
 
-from setuptools import Distribution as _Distribution, setup, __version__ as setuptools_version
+from setuptools import Distribution as _Distribution, setup
 from setuptools.extension import Extension
 
 # Define the package root directory and add it to the system path
@@ -28,21 +28,6 @@ MAKE = 'gmake' if platform.system() in ['FreeBSD', 'OpenBSD'] else 'make'
 UPSTREAM_REF = os.getenv('COINCURVE_UPSTREAM_REF') or '1ad5185cd42c0636104129fcc9f6a4bf9c67cc40'
 
 LIB_TARBALL_URL = f'https://github.com/bitcoin-core/secp256k1/archive/{UPSTREAM_REF}.tar.gz'
-
-globals_ = {}
-with open(join(COINCURVE_ROOT_DIR, 'src', 'coincurve', '_version.py')) as fp:
-    exec(fp.read(), globals_)  # noqa S102
-    __version__ = globals_['__version__']
-
-# We require setuptools >= 3.3
-if [int(i) for i in setuptools_version.split('.', 2)[:2]] < [3, 3]:
-    raise SystemExit(
-        f'Your setuptools version ({setuptools_version}) is too old to correctly install this package. Please upgrade '
-        f'to a newer version (>= 3.3).'
-    )
-
-
-package_data = {'coincurve': ['py.typed']}
 
 
 def main():
@@ -105,7 +90,6 @@ def main():
                 def is_pure(self):
                     return False
 
-            package_data['coincurve'].append('libsecp256k1.dll')
             setup_kwargs = {}
 
         else:
@@ -129,56 +113,8 @@ def main():
             )
 
     setup(
-        name='coincurve',
-        version=__version__,
-
-        description='Cross-platform Python CFFI bindings for libsecp256k1',
-        long_description=open('README.md', 'r').read(),
-        long_description_content_type='text/markdown',
-        author_email='Ofek Lev <oss@ofek.dev>',
-        license='MIT OR Apache-2.0',
-
-        python_requires='>=3.8',
-        setup_requires=['cffi>=1.3.0'],
-        install_requires=['asn1crypto', 'cffi>=1.3.0'],
-
-        packages=['coincurve'],
-        package_dir={'coincurve': 'src/coincurve'},
-
         distclass=Distribution,
         zip_safe=False,
-
-        project_urls={
-            'Documentation': 'https://ofek.dev/coincurve/',
-            'Issues': 'https://github.com/ofek/coincurve/issues',
-            'Source': 'https://github.com/ofek/coincurve',
-        },
-        keywords=[
-            'secp256k1',
-            'crypto',
-            'elliptic curves',
-            'bitcoin',
-            'ethereum',
-            'cryptocurrency',
-        ],
-        classifiers=[
-            'Development Status :: 5 - Production/Stable',
-            'Intended Audience :: Developers',
-            'License :: OSI Approved :: MIT License',
-            'License :: OSI Approved :: Apache Software License',
-            'Natural Language :: English',
-            'Operating System :: OS Independent',
-            'Programming Language :: Python :: 3',
-            'Programming Language :: Python :: 3.8',
-            'Programming Language :: Python :: 3.9',
-            'Programming Language :: Python :: 3.10',
-            'Programming Language :: Python :: 3.11',
-            'Programming Language :: Python :: 3.12',
-            'Programming Language :: Python :: Implementation :: CPython',
-            'Programming Language :: Python :: Implementation :: PyPy',
-            'Topic :: Software Development :: Libraries',
-            'Topic :: Security :: Cryptography',
-        ],
         **setup_kwargs
     )
 

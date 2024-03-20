@@ -29,7 +29,7 @@ build_dll x86_64-w64-mingw32
 # As the API changes, the -x.dll will change to -y.dll, so we use a wildcard
 mv .libs/libsecp256k1-?.dll ../clean/src/coincurve/libsecp256k1.dll
 cd ../clean
-python -m build --wheel -C="--build-option=bdist_wheel" -C="--build-option=--plat-name" -C="--build-option=win_amd64"
+python -m build --wheel -C="--build-option=--plat-name win_amd64"
 rm src/coincurve/libsecp256k1.dll
 rm -rf build/temp.*
 
@@ -38,7 +38,7 @@ build_dll i686-w64-mingw32
 # As the API changes, the -x.dll will change to -y.dll, so we use a wildcard
 mv .libs/libsecp256k1-?.dll ../clean/src/coincurve/libsecp256k1.dll
 cd ../clean
-python -m build --wheel -C="--build-option=bdist_wheel" -C="--build-option=--plat-name" -C="--build-option==win32"
+python -m build --wheel -C="--build-option--plat-name win32"
 
 mv dist/* ../coincurve/dist
 cd ../coincurve

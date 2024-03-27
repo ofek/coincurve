@@ -107,16 +107,9 @@ exclude = '''
   | \.mypy_cache
   | \.tox
   | \.venv
-  | _cffi_build
-  | libsecp256k1
   | build
   | dist
 )/
-  |
-(
-    setup\.py$
-  | _libsecp256k1\.py$
-)
 '''
 
 [tool.ruff]
@@ -139,7 +132,6 @@ lint.unfixable = [
 ]
 extend-exclude = [
     'tests/conftest.py',
-    'libsecp256k1'
 ]
 
 [tool.ruff.lint.isort]
@@ -149,7 +141,6 @@ known-first-party = ['coincurve']
 inline-quotes = 'single'
 
 [tool.ruff.lint.per-file-ignores]
-'setup.py' = ['B', 'C', 'I', 'N', 'U']
 # Tests can use assertions
 'tests/*' = ['S101']
 'tests/**/*' = ['S101']

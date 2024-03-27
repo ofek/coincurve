@@ -1,18 +1,19 @@
 [build-system]
-requires = ["setuptools>=61", "cffi>=1.3.0", "requests", "setuptools-scm", 'asn1crypto']
-build-backend = "setuptools.build_meta"
+requires = ['scikit-build-core', 'cffi>=1.3.0']
+build-backend = 'scikit_build_core.build'
 
 [project]
-name = "coincurve"
+name = 'coincurve'
 authors = [
-    { name="Ofek Lev", email="oss@ofek.dev" },
+    { name='Ofek Lev', email='oss@ofek.dev' },
 ]
-description = "Cross-platform Python CFFI bindings for libsecp256k1"
-keywords = ["secp256k1", "crypto", "elliptic curves", "bitcoin", "ethereum", "cryptocurrency"]
-requires-python = ">=3.8"
+description = 'Cross-platform Python CFFI bindings for libsecp256k1'
+keywords = ['secp256k1', 'crypto', 'elliptic curves', 'bitcoin', 'ethereum', 'cryptocurrency']
+readme = {"file" = "README.md", "content-type" = "text/markdown"}
+requires-python = '>=3.8'
 dependencies = [
-    "asn1crypto",
-    "cffi>=1.3.0"
+    'asn1crypto',
+    'cffi>=1.3.0'
 ]
 classifiers = [
     'Development Status :: 5 - Production/Stable',
@@ -33,39 +34,69 @@ classifiers = [
     'Topic :: Software Development :: Libraries',
     'Topic :: Security :: Cryptography',
 ]
-dynamic = ['version', 'readme']
+dynamic = ['version']
 
 [project.optional-dependencies]
 dev = [
-    "coverage",
-    "pytest",
-    "pytest-benchmark"
+    'coverage',
+    'pytest',
+    'pytest-benchmark'
 ]
 
 [project.urls]
-Homepage = "https://github.com/ofek/coincurve"
-Documentation = "https://ofek.dev/coincurve/"
-Repository = "https://github.com/ofek/coincurve"
-"Bug Tracker" = "https://github.com/ofek/coincurve/issues"
+Homepage = 'https://github.com/ofek/coincurve'
+Documentation = 'https://ofek.dev/coincurve/'
+Repository = 'https://github.com/ofek/coincurve'
+'Bug Tracker' = 'https://github.com/ofek/coincurve/issues'
 
-# --- setuptools ---
-[tool.setuptools]
-packages = ['coincurve']
-package-dir = {'' = 'src'}
-package-data = {'coincurve' = ['py.typed']}
+# --- scikit-build-core ---
+[tool.scikit-build]
+metadata.version.provider = "scikit_build_core.metadata.setuptools_scm"
+cmake.verbose = true
+logging.level = 'INFO'
+wheel.packages = ['src/coincurve']
+cmake.build-type = 'Release'
 
-[tool.setuptools.dynamic]
-version = {attr = "coincurve._version.__version__"}
-readme = {content-type = "text/markdown", file = "README.md"}
+# Needed for scikit-build-core to compute the version
+# (do not put the module, it would be overwritten)
+[tool.setuptools_scm]
 
-# --- hatch ---
+[tool.scikit-build.cmake.define]
+CMAKE_BUILD_TYPE = 'Release'
+# Coincurve build options - This may be better extracted from the ENV by the CMake directly?
+PROJECT_IGNORE_SYSTEM_LIB = {env='COINCURVE_IGNORE_SYSTEM_LIB', default='ON'}
+PROJECT_CROSS_COMPILE_TARGET = {env='COINCURVE_CROSS_HOST', default=''}
+# Vendored library: SECP256K1
+VENDORED_LIBRARY_PKG_CONFIG = 'secp256k1'
+VENDORED_UPSTREAM_URL = 'https://github.com/bitcoin-core/secp256k1/archive/'
+VENDORED_UPSTREAM_REF = {env='COINCURVE_UPSTREAM_REF', default='1ad5185cd42c0636104129fcc9f6a4bf9c67cc40'}
+VENDORED_UPSTREAM_SHA = {env='COINCURVE_UPSTREAM_SHA', default='ba34be4319f505c5766aa80b99cfa696cbb2993bfecf7d7eb8696106c493cb8c'}
+# SECP256K1 library specific build options
+# `VENDORED_OPTION` is reserved prefix for vendored library build options
+VENDORED_LIBRARY_OPTION_PREFIX = 'SECP256K1'
+VENDORED_OPTION_DISABLE_SHARED = {env='COINCURVE_SECP256K1_STATIC', default='ON'}
+VENDORED_OPTION_BUILD_BENCHMARK='OFF'
+VENDORED_OPTION_BUILD_TESTS='OFF'
+VENDORED_OPTION_BUILD_CTIME_TESTS='OFF'
+VENDORED_OPTION_BUILD_EXHAUSTIVE_TESTS='OFF'
+VENDORED_OPTION_BUILD_EXAMPLES='OFF'
+VENDORED_OPTION_ENABLE_MODULE_ECDH='ON'
+VENDORED_OPTION_ENABLE_MODULE_RECOVERY='ON'
+VENDORED_OPTION_ENABLE_MODULE_SCHNORRSIG='ON'
+VENDORED_OPTION_ENABLE_MODULE_EXTRAKEYS='ON'
+VENDORED_OPTION_EXPERIMENTAL='ON'
+# Vendored library build options (cmake, compiler, linker, etc.)
+# VENDORED_CMAKE is reserved prefix for vendored library cmake options
+# VENDORED_CMAKE_<STATIC|SHARED>_<CMAKE_OPTION> = <VALUE>
+VENDORED_LIBRARY_STATIC_BUILD = {env='COINCURVE_SECP256K1_STATIC', default='ON'}
 
+# --- other tools ---
 [tool.pytest.ini_options]
 addopts = [
-    "--import-mode=importlib",
+    '--import-mode=importlib',
 ]
 [tool.black]
-target-version = ["py38"]
+target-version = ['py38']
 line-length = 120
 skip-string-normalization = true
 exclude = '''
@@ -89,36 +120,36 @@ exclude = '''
 '''
 
 [tool.ruff]
-target-version = "py38"
+target-version = 'py38'
 line-length = 120
-lint.select = ["A", "B", "C", "E", "F", "I", "M", "N", "Q", "RUF", "S", "T", "U", "W", "YTT"]
+lint.select = ['A', 'B', 'C', 'E', 'F', 'I', 'M', 'N', 'Q', 'RUF', 'S', 'T', 'U', 'W', 'YTT']
 lint.ignore = [
   # Allow non-abstract empty methods in abstract base classes
-  "B027",
+  'B027',
   # Ignore McCabe complexity
-  "C901",
+  'C901',
   # Allow boolean positional values in function calls, like `dict.get(... True)`
-  "FBT003",
+  'FBT003',
   # Ignore checks for possible passwords
-  "S105", "S106", "S107",
+  'S105', 'S106', 'S107',
 ]
 lint.unfixable = [
   # Don't touch unused imports
-  "F401",
+  'F401',
 ]
 extend-exclude = [
-    "tests/conftest.py",
-    "libsecp256k1"
+    'tests/conftest.py',
+    'libsecp256k1'
 ]
 
 [tool.ruff.lint.isort]
-known-first-party = ["coincurve"]
+known-first-party = ['coincurve']
 
 [tool.ruff.lint.flake8-quotes]
-inline-quotes = "single"
+inline-quotes = 'single'
 
 [tool.ruff.lint.per-file-ignores]
-"setup.py" = ["B", "C", "I", "N", "U"]
+'setup.py' = ['B', 'C', 'I', 'N', 'U']
 # Tests can use assertions
-"tests/*" = ["S101"]
-"tests/**/*" = ["S101"]
+'tests/*' = ['S101']
+'tests/**/*' = ['S101']

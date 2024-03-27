@@ -56,7 +56,7 @@ def main():
         py_limited_api=False,
         extra_compile_args=['/d2FH4-'] if SYSTEM == 'Windows' else [],
     )
-    
+
     setup_kwargs = dict(
         ext_modules=[extension],
         cmdclass={

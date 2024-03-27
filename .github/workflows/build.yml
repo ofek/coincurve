@@ -35,7 +35,6 @@ env:
     assert a.ecdh(b.public_key.format())==b.ecdh(a.public_key.format())
     " &&
     python -m pytest {project}
-  CIBW_TEST_SKIP: "*-macosx_arm64"
   CIBW_SKIP: >
       pp*
 

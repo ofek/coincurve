@@ -146,14 +146,10 @@ def update_pkg_config_path(path=None):
 def verify_system_lib(lib_dir):
     """Verifies that the system library is installed and of the expected type."""
     import ctypes
-    import platform
     from ctypes.util import find_library
     from pathlib import Path
 
-    LIB_NAME = 'libsecp256k1'  # noqa N806
-    PKG_NAME = 'coincurve'  # noqa N806
-    SECP256K1_BUILD = os.getenv('COINCURVE_SECP256K1_BUILD') or 'STATIC'  # noqa N806
-    SYSTEM = platform.system()  # noqa N806
+    from setup import LIB_NAME, PKG_NAME, SECP256K1_BUILD, SYSTEM
 
     def load_library(lib):
         try:
@@ -161,15 +157,11 @@ def verify_system_lib(lib_dir):
         except OSError:
             return None
 
-    logging.warning(f'find_library: {find_library(LIB_NAME[3:])}')
     lib_dir = Path(lib_dir).with_name('bin') if SYSTEM == 'Windows' else Path(lib_dir)
     lib_ext = '.dll' if SYSTEM == 'Windows' else '.[sd][oy]*'
-    logging.warning(f'dir: {lib_dir}')
-    logging.warning(f'patt: *{LIB_NAME[3:]}{lib_ext}')
     l_dyn = list(lib_dir.glob(f'*{LIB_NAME[3:]}*{lib_ext}'))
 
     # Evaluates the dynamic libraries found,
-    logging.warning(f'Found libraries: {l_dyn}')
     dyn_lib = next((lib for lib in l_dyn if load_library(lib) is not None), False)
 
     found = any((dyn_lib and SECP256K1_BUILD == 'SHARED', not dyn_lib and SECP256K1_BUILD != 'SHARED'))
@@ -179,10 +171,10 @@ def verify_system_lib(lib_dir):
             f'Please ensure that the {SECP256K1_BUILD} library is installed.'
         )
 
-    if dyn_lib:
-        lib_base = dyn_lib.stem
-        # Update coincurve._secp256k1_library_info
-        info_file = Path(PKG_NAME, '_secp256k1_library_info.py')
-        info_file.write_text(f"SECP256K1_LIBRARY_NAME = '{lib_base}'\nSECP256K1_LIBRARY_TYPE = 'EXTERNAL'\n")
+    # if dyn_lib:
+    #     lib_base = dyn_lib.stem
+    #     # Update coincurve._secp256k1_library_info
+    #     info_file = Path(PKG_NAME, '_secp256k1_library_info.py')
+    #     info_file.write_text(f"SECP256K1_LIBRARY_NAME = '{lib_base}'\nSECP256K1_LIBRARY_TYPE = 'EXTERNAL'\n")
 
     return found

@@ -146,10 +146,9 @@ def update_pkg_config_path(path=None):
 def verify_system_lib(lib_dir):
     """Verifies that the system library is installed and of the expected type."""
     import ctypes
-    from ctypes.util import find_library
     from pathlib import Path
 
-    from setup import LIB_NAME, PKG_NAME, SECP256K1_BUILD, SYSTEM
+    from setup import LIB_NAME, SECP256K1_BUILD, SYSTEM
 
     def load_library(lib):
         try:
@@ -171,6 +170,7 @@ def verify_system_lib(lib_dir):
             f'Please ensure that the {SECP256K1_BUILD} library is installed.'
         )
 
+    # TODO: Remove if it passes checks
     # if dyn_lib:
     #     lib_base = dyn_lib.stem
     #     # Update coincurve._secp256k1_library_info

@@ -44,6 +44,7 @@ class Distribution(_Distribution):
     def has_c_libraries(self):
         return not has_system_lib()
 
+
 def main():
     from setup_tools.commands import BdistWheel, EggInfo, Sdist, Develop
     from setup_tools.build_clib import BuildClibWithCMake
@@ -55,6 +56,7 @@ def main():
         py_limited_api=False,
         extra_compile_args=['/d2FH4-'] if SYSTEM == 'Windows' else [],
     )
+    
     setup_kwargs = dict(
         ext_modules=[extension],
         cmdclass={

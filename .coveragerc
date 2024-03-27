@@ -7,7 +7,6 @@ source =
 
 omit =
     */_version.py
-    */_windows_libsecp256k1.py
     */test_bench.py
 
 [paths]

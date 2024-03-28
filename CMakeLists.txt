@@ -10,15 +10,15 @@ project(${SKBUILD_PROJECT_NAME}
 set(CMAKE_MODULE_PATH "${PROJECT_SOURCE_DIR}/cmake" ${CMAKE_MODULE_PATH})
 
 # Name of the vendored library recognized by pkg-config
-set(CFFI_INPUT_LIBRARY ${VENDORED_LIBRARY_PKG_CONFIG})
+set(CFFI_INPUT_LIBRARY ${VENDORED_LIBRARY_CMAKE_TARGET})
 
 # Set the output directories for the generated C code and headers
 set(CFFI_C_CODE_DIR ${PROJECT_BINARY_DIR}/_gen_c_file)
 set(CFFI_C_CODE "${CFFI_INPUT_LIBRARY}_cffi_bindings.c")
 set(CFFI_HEADERS_DIR ${PROJECT_BINARY_DIR}/_gen_cffi_headers)
 
-# Shared object that wraps the CFFI binding and the vendored library
-set(CFFI_OUTPUT_LIBRARY "_lib${CFFI_INPUT_LIBRARY}")
+# Shared object that wraps the CFFI binding of the vendored library
+set(CFFI_OUTPUT_LIBRARY "_${CFFI_INPUT_LIBRARY}")
 
 
 # Setting python for the host system (before change in CMAKE_SYSTEM_PROCESSOR)
@@ -48,19 +48,32 @@ elseif (PROJECT_CROSS_COMPILE_TARGET AND CMAKE_SYSTEM_NAME STREQUAL "Windows")
 endif()
 
 # Add the subdirectories. Append CONDA to the PKG_CONFIG_PATH
+if (CMAKE_SYSTEM_NAME STREQUAL "Windows")
+    set(PKG_CONFIG_ARGN "--dont-define-prefix")
+endif()
 find_package(PkgConfig REQUIRED)
-list(APPEND ENV{PKG_CONFIG_PATH} "$ENV{CONDA_PREFIX}/lib/pkgconfig" "$ENV{CONDA_PREFIX}/lib64/pkgconfig" "$ENV{CONDA_PREFIX}/Library//lib/pkgconfig")
-pkg_check_modules(PKGCONFIG_INPUT_LIB IMPORTED_TARGET ${CFFI_INPUT_LIBRARY}>=2)
 
+# Set PKG_CONFIG_PATH for CONDA (How about other environment?)
+set(_paths "$ENV{PKG_CONFIG_PATH}" "$ENV{CONDA_PREFIX}/Library/lib/pkgconfig" "$ENV{CONDA_PREFIX}/lib/pkgconfig")
+cmake_path(CONVERT "${_paths}" TO_NATIVE_PATH_LIST _paths)
+set(ENV{PKG_CONFIG_PATH} ${_paths})
 
-# Try to find the library in the system
-find_library(LOCAL_INPUT_LIBRARY ${CFFI_INPUT_LIBRARY})
-if (COINCURVE_IGNORE_SYSTEM_LIB OR NOT LOCAL_INPUT_LIBRARY)
+pkg_check_modules(VENDORED_AS_SYSTEM_LIB IMPORTED_TARGET GLOBAL ${VENDORED_LIBRARY_PKG_CONFIG}>=0.4.1)
+
+if (PROJECT_IGNORE_SYSTEM_LIB OR NOT VENDORED_AS_SYSTEM_LIB_FOUND)
     add_subdirectory(cm_vendored_library)
     if (NOT VENDORED_HEADERS_DIR)
         message(FATAL_ERROR "Vendored library headers not found")
     endif()
     message(STATUS "The vendored library include located at: ${VENDORED_HEADERS_DIR}")
+else()
+    include(UnsetVendoredLibraryOptions)
+    UnsetVendoredLibraryOptions("VENDORED_OPTION")
+    unset(VENDORED_LIBRARY_OPTION_PREFIX)
+    unset(VENDORED_LIBRARY_STATIC_BUILD)
+    unset(VENDORED_UPSTREAM_URL)
+    unset(VENDORED_UPSTREAM_REF)
+    unset(VENDORED_UPSTREAM_SHA)
 endif()
 add_subdirectory(cm_library_cffi_headers)
 add_subdirectory(cm_library_c_binding)

@@ -4,7 +4,6 @@
 # https://cmake.org/cmake/help/latest/module/FetchContent.html
 include(GNUInstallDirs)
 include(FetchContent)
-include(UpdateVendoredLibraryOptions)
 
 # Set ULR based upon CMake definitions
 if (NOT VENDORED_UPSTREAM_URL)
@@ -28,6 +27,7 @@ if (VENDORED_LIBRARY_STATIC_BUILD)
     set(CMAKE_POSITION_INDEPENDENT_CODE ON)
 endif()
 
+include(UpdateVendoredLibraryOptions)
 UpdateVendoredLibraryOptions("VENDORED_OPTION" ${VENDORED_LIBRARY_OPTION_PREFIX})
 
 

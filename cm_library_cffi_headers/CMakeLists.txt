@@ -16,8 +16,11 @@ endmacro()
 # Extract files from full path of src_headers
 if(VENDORED_HEADERS_DIR)
     file(GLOB src_headers ${VENDORED_HEADERS_DIR}/*.h)
-elseif(PKG_INPUT_LIB_FOUND)
-    file(GLOB src_headers ${PKG_INPUT_LIB_FOUND_INCLUDE_DIRS})
+elseif(VENDORED_AS_SYSTEM_LIB_FOUND)
+    message(WARNING "Using system library ${VENDORED_LIBRARY_CMAKE_TARGET}. The list of headers is set to:"
+                    "   <system_include>/*${VENDORED_LIBRARY_CMAKE_TARGET}/*.h
+    ")
+    file(GLOB src_headers ${VENDORED_AS_SYSTEM_LIB_INCLUDE_DIRS}/*${VENDORED_LIBRARY_CMAKE_TARGET}/*.h)
 else()
     message(FATAL_ERROR "Headers for CFFI cannot be found. Exiting")
 endif()

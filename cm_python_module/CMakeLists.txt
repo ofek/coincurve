@@ -10,7 +10,7 @@ endif()
 set_source_files_properties("${CFFI_C_CODE_DIR}${CFFI_C_CODE}" PROPERTIES GENERATED 1)
 
 # Detect whether the vendored library is a system library or not
-if (PROJECT_IGNORE_SYSTEM_LIB OR NOT LOCAL_INPUT_LIBRARY)
+if (PROJECT_IGNORE_SYSTEM_LIB OR NOT VENDORED_AS_SYSTEM_LIB_FOUND)
     # The build-type seems to be defined as 'MODULE', which creates issues with missing variables
     # for CMake: (This only happens on Windows though ...)
     set(CMAKE_MODULE_LINKER_FLAGS_COVERAGE "")
@@ -22,8 +22,10 @@ if (PROJECT_IGNORE_SYSTEM_LIB OR NOT LOCAL_INPUT_LIBRARY)
     # Link the vendored library to the output library
     # https://docs.python.org/3/c-api/stable.html#limited-c-api
     target_link_libraries(${CFFI_OUTPUT_LIBRARY} PRIVATE ${CFFI_INPUT_LIBRARY})
+elseif(VENDORED_AS_SYSTEM_LIB_FOUND)
+    target_link_libraries(${CFFI_OUTPUT_LIBRARY} PRIVATE ${VENDORED_AS_SYSTEM_LIB_LINK_LIBRARIES})
 else()
-    target_link_libraries(${CFFI_OUTPUT_LIBRARY} PRIVATE PkgConfig::PKGCONFIG_INPUT_LIB)
+    message(FATAL_ERROR "Vendored library not found.")
 endif()
 
 

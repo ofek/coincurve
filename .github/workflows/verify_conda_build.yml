@@ -63,7 +63,7 @@ jobs:
       run: tox -e lint,typing
 
     - name: Run tests
-      run: LD_LIBRARY_PATH=$CONDA_PREFIX/lib tox -e ${PYTHON_VERSION}
+      run: LD_LIBRARY_PATH=$CONDA_PREFIX/lib tox -e ${PYTHON_VERSION} -vvv
 
     - name: Run benchmarks
       run: LD_LIBRARY_PATH=$CONDA_PREFIX/lib tox -e bench

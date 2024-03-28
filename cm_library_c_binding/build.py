@@ -67,10 +67,10 @@ if __name__ == '__main__':
     parser = argparse.ArgumentParser(description='Generate C code using CFFI.')
     parser.add_argument('headers_dir', help='Path to the header files.', type=str)
     parser.add_argument('c_file', help='Generated C code filename.', type=str)
-    parser.add_argument('static_lib', help='Generate static lib in Windows.', default='0', type=str)
+    parser.add_argument('static_lib', help='Generate static lib in Windows.', default='0N', type=str)
     args = parser.parse_args()
 
     modules = gather_sources_from_directory(args.headers_dir)
-    ffi = mk_ffi(args.headers_dir, modules, args.static_lib == '1')
+    ffi = mk_ffi(args.headers_dir, modules, args.static_lib == 'ON')
     ffi.emit_c_code(args.c_file)
     logging.info(f'   Generated C code: {args.c_file}')

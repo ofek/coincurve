@@ -18,9 +18,9 @@ if(VENDORED_HEADERS_DIR)
     file(GLOB src_headers ${VENDORED_HEADERS_DIR}/*.h)
 elseif(VENDORED_AS_SYSTEM_LIB_FOUND)
     message(WARNING "Using system library ${VENDORED_LIBRARY_CMAKE_TARGET}. The list of headers is set to:"
-                    "   <system_include>/*${VENDORED_LIBRARY_CMAKE_TARGET}/*.h
-    ")
-    file(GLOB src_headers ${VENDORED_AS_SYSTEM_LIB_INCLUDE_DIRS}/*${VENDORED_LIBRARY_CMAKE_TARGET}/*.h)
+                    "   <system_include>/*${VENDORED_LIBRARY_CMAKE_TARGET}/*.h")
+    file(GLOB src_headers ${VENDORED_AS_SYSTEM_LIB_INCLUDE_DIRS}/*${VENDORED_LIBRARY_CMAKE_TARGET}*.h)
+    message(STATUS "   Generating CFFI header for ${src_headers}")
 else()
     message(FATAL_ERROR "Headers for CFFI cannot be found. Exiting")
 endif()

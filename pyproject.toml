@@ -58,12 +58,45 @@ package-data = {'coincurve' = ['py.typed']}
 version = {attr = "coincurve._version.__version__"}
 readme = {content-type = "text/markdown", file = "README.md"}
 
-# --- hatch ---
+# --- Coverage ---
+[tool.coverage.run]
+branch = true
+source = [
+    'src/coincurve',
+    'tests',
+]
+omit = [
+    '*/_version.py',
+    '*/test_bench.py',
+]
 
+[tool.coverage.report]
+exclude_lines =[
+    'no cov',
+    'no qa',
+
+    # Ignore missing debug-only code
+    'def __repr__',
+    'if self\.debug',
+
+    # Ignore non-runnable code
+    'if __name__ == .__main__.:',
+]
+
+[tool.coverage.paths]
+source = [
+   'src/coincurve',
+   '.tox/*/lib/python*/site-packages/coincurve',
+   '.tox/pypy*/site-packages/coincurve',
+]
+
+# --- Pytest ---
 [tool.pytest.ini_options]
 addopts = [
     "--import-mode=importlib",
 ]
+
+# --- Black ---
 [tool.black]
 target-version = ["py38"]
 line-length = 120
@@ -88,6 +121,7 @@ exclude = '''
 )
 '''
 
+# --- Ruff ---
 [tool.ruff]
 target-version = "py38"
 line-length = 120
@@ -122,3 +156,13 @@ inline-quotes = "single"
 # Tests can use assertions
 "tests/*" = ["S101"]
 "tests/**/*" = ["S101"]
+
+# --- Mypy ---
+[tool.mypy]
+disallow_untyped_defs = false
+follow_imports = 'normal'
+ignore_missing_imports = true
+pretty = true
+show_column_numbers = true
+warn_no_return = false
+warn_unused_ignores = true

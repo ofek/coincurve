@@ -1,0 +1,101 @@
+name: conda_build
+
+on:
+  push:
+    tags:
+    - v*
+    branches:
+    - master
+  pull_request:
+    branches:
+    - master
+
+concurrency:
+  group: build_conda-${{ github.head_ref }}
+  cancel-in-progress: true
+
+env:
+  COINCURVE_UPSTREAM_REF: __no_upstream__
+  COINCURVE_IGNORE_SYSTEM_LIB: '0'
+  # conda-forge only has SHARED libsecp256k1
+  COINCURVE_SECP256K1_BUILD: 'SHARED'
+  CIBW_ENVIRONMENT_PASS_LINUX: >
+    COINCURVE_UPSTREAM_REF
+    COINCURVE_IGNORE_SYSTEM_LIB
+    COINCURVE_SECP256K1_BUILD
+  CIBW_PROJECT_REQUIRES_PYTHON: '>=3.8'
+  CIBW_BEFORE_ALL_MACOS: ./.github/scripts/install-macos-build-deps.sh
+  CIBW_TEST_REQUIRES: pytest pytest-benchmark
+  CIBW_TEST_COMMAND: >
+    python -c
+    "from coincurve import PrivateKey;
+    a=PrivateKey();
+    b=PrivateKey();
+    assert a.ecdh(b.public_key.format())==b.ecdh(a.public_key.format())
+    " &&
+    python -m pytest {project}
+  CIBW_TEST_SKIP: "*-macosx_arm64"
+  CIBW_SKIP: >
+      pp*
+
+jobs:
+  test:
+    name: Test with Conda libsecp256k1
+    runs-on: ubuntu-latest
+    defaults:
+      run:
+        shell: bash -el {0}
+    env:
+      PYTHON_VERSION: '3.12'
+
+    steps:
+    - uses: actions/checkout@v4
+
+    - name: Install Miniconda
+      uses: conda-incubator/setup-miniconda@v3
+      with:
+        environment-file: ./.conda/environment-dev.yml
+        activate-environment: coincurve-with-conda
+        python-version: ${{ env.PYTHON_VERSION }}
+        auto-activate-base: false
+
+    - name: Check style and typing
+      run: tox -e lint,typing
+
+    - name: Run tests
+      run: LD_LIBRARY_PATH=$CONDA_PREFIX/lib tox -e ${PYTHON_VERSION}
+
+    - name: Run benchmarks
+      run: LD_LIBRARY_PATH=$CONDA_PREFIX/lib tox -e bench
+
+  linux-wheels-standard:
+    name: Build Linux wheels
+    needs:
+    - test
+    runs-on: ubuntu-latest
+    defaults:
+      run:
+        shell: bash -el {0}
+
+    steps:
+    - uses: actions/checkout@v4
+
+    - name: Install Miniconda
+      uses: conda-incubator/setup-miniconda@v3
+      with:
+        environment-file: ./.conda/environment-dev.yml
+        activate-environment: coincurve-with-conda
+        python-version: ${{ env.PYTHON_VERSION }}
+        auto-activate-base: false
+
+    - name: Build sdist & wheel
+      run: |
+        conda install python-build
+        python -m build --outdir conda_dist
+
+    - name: Test wheel in a clean environment
+      run: |
+        conda install pip
+        pip install conda_dist/*.whl
+        python -m pytest tests
+        

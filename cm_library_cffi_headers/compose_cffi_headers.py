@@ -200,14 +200,14 @@ def make_header_cffi_compliant(src_header, cffi_header, cffi_dir):
                 'SECP256K1_CONTEXT_SIGN',
                 # Testing flags
                 'SECP256K1_CONTEXT_DECLASSIFY',
-                # Not for direct use
-                'SECP256K1_FLAGS_TYPE_MASK',
-                'SECP256K1_FLAGS_TYPE_CONTEXT',
-                'SECP256K1_FLAGS_TYPE_COMPRESSION',
-                'SECP256K1_FLAGS_BIT_CONTEXT_VERIFY',
-                'SECP256K1_FLAGS_BIT_CONTEXT_SIGN',
-                'SECP256K1_FLAGS_BIT_CONTEXT_DECLASSIFY',
-                'SECP256K1_FLAGS_BIT_COMPRESSION',
+                # Not for direct use - That may not mean to remove them!
+                #      'SECP256K1_FLAGS_TYPE_MASK',
+                #      'SECP256K1_FLAGS_TYPE_CONTEXT',
+                #      'SECP256K1_FLAGS_TYPE_COMPRESSION',
+                #      'SECP256K1_FLAGS_BIT_CONTEXT_VERIFY',
+                #      'SECP256K1_FLAGS_BIT_CONTEXT_SIGN',
+                #      'SECP256K1_FLAGS_BIT_CONTEXT_DECLASSIFY',
+                #      'SECP256K1_FLAGS_BIT_COMPRESSION',
                 # Not supported
                 'SECP256K1_SCHNORRSIG_EXTRAPARAMS_MAGIC',
                 'SECP256K1_SCHNORRSIG_EXTRAPARAMS',

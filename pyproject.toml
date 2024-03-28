@@ -122,9 +122,6 @@ source = [
    '.tox/pypy*/site-packages/coincurve',
 ]
 
-[tool.coverage.html]
-
-
 [tool.pytest.ini_options]
 addopts = [
     '--import-mode=importlib',

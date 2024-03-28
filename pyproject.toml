@@ -91,6 +91,40 @@ VENDORED_OPTION_EXPERIMENTAL='ON'
 VENDORED_LIBRARY_STATIC_BUILD = {env='COINCURVE_SECP256K1_STATIC', default='ON'}
 
 # --- other tools ---
+[tool.coverage.run]
+branch = true
+source = [
+    'src/coincurve',
+    'tests',
+]
+omit = [
+    '*/_version.py',
+    '*/test_bench.py',
+]
+
+[tool.coverage.report]
+exclude_lines =[
+    'no cov',
+    'no qa',
+
+    # Ignore missing debug-only code
+    'def __repr__',
+    'if self\.debug',
+
+    # Ignore non-runnable code
+    'if __name__ == .__main__.:',
+]
+
+[tool.coverage.paths]
+source = [
+   'src/coincurve',
+   '.tox/*/lib/python*/site-packages/coincurve',
+   '.tox/pypy*/site-packages/coincurve',
+]
+
+[tool.coverage.html]
+
+
 [tool.pytest.ini_options]
 addopts = [
     '--import-mode=importlib',

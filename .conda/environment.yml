@@ -1,0 +1,9 @@
+name: coincurve-with-conda
+channels:
+  - conda-forge
+  - defaults
+dependencies:
+  - libsecp256k1
+  - cffi >=1.3.0
+  - asn1crypto
+

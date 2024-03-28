@@ -29,6 +29,7 @@ add_custom_target(headers-for-cffi)
 
 foreach(src_header ${src_headers})
     get_filename_component(cffi_header ${src_header} NAME)
-    generate_cffi_header(${src_header} ${cffi_header} ${CFFI_HEADERS_DIR})
+    get_filename_component(src_header_dir ${src_header} DIRECTORY)
+    generate_cffi_header(${src_header_dir} ${cffi_header} ${CFFI_HEADERS_DIR})
     add_dependencies(headers-for-cffi ${cffi_header})
 endforeach()

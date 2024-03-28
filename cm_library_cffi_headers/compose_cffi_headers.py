@@ -172,62 +172,73 @@ def concatenate_c_struct(lines):
     return processed_lines
 
 
-def make_header_cffi_compliant(src_header, cffi_header, cffi_dir):
-    if os.path.isfile(src_header):
-        with open(src_header) as f:
-            text = remove_c_comments_emptylines(f.read())
-        lines = text.split('\n')
+def make_header_cffi_compliant(src_header_dir, src_header, cffi_dir):
+    with open(os.path.join(src_header_dir, src_header)) as f:
+        text = remove_c_comments_emptylines(f.read())
+    lines = text.split('\n')
 
-        lines = remove_c_includes(lines)
-        lines = remove_c_ifdef(lines)
-        lines = concatenate_c_defines(lines)
-        lines = remove_deprecated_functions(lines, ['DEPRECATED'])
-        lines = remove_header_guard(lines, ['SECP256K1'])
-        lines = remove_function_attributes(
-            lines,
-            {
-                'SECP256K1_API': 'extern',
-                'SECP256K1_WARN_UNUSED_RESULT': '',
-                'SECP256K1_DEPRECATED': '',
-                'SECP256K1_ARG_NONNULL': '',
-            },
-        )
-        lines = remove_special_defines(
-            lines,
-            [
-                # Deprecated flags
-                'SECP256K1_CONTEXT_VERIFY',
-                'SECP256K1_CONTEXT_SIGN',
-                # Testing flags
-                'SECP256K1_CONTEXT_DECLASSIFY',
-                # Not for direct use - That may not mean to remove them!
-                #      'SECP256K1_FLAGS_TYPE_MASK',
-                #      'SECP256K1_FLAGS_TYPE_CONTEXT',
-                #      'SECP256K1_FLAGS_TYPE_COMPRESSION',
-                #      'SECP256K1_FLAGS_BIT_CONTEXT_VERIFY',
-                #      'SECP256K1_FLAGS_BIT_CONTEXT_SIGN',
-                #      'SECP256K1_FLAGS_BIT_CONTEXT_DECLASSIFY',
-                #      'SECP256K1_FLAGS_BIT_COMPRESSION',
-                # Not supported
-                'SECP256K1_SCHNORRSIG_EXTRAPARAMS_MAGIC',
-                'SECP256K1_SCHNORRSIG_EXTRAPARAMS',
-            ],
-        )
-        lines = apply_cffi_defines_syntax(lines)
+    lines = remove_c_includes(lines)
+    lines = remove_c_ifdef(lines)
+    lines = concatenate_c_defines(lines)
+    lines = remove_deprecated_functions(lines, ['DEPRECATED'])
+    lines = remove_header_guard(lines, ['SECP256K1'])
+    lines = remove_function_attributes(
+        lines,
+        {
+            'SECP256K1_API': 'extern',
+            'SECP256K1_WARN_UNUSED_RESULT': '',
+            'SECP256K1_DEPRECATED': '',
+            'SECP256K1_ARG_NONNULL': '',
+        },
+    )
+    lines = remove_special_defines(
+        lines,
+        [
+            # Deprecated flags
+            'SECP256K1_CONTEXT_VERIFY',
+            'SECP256K1_CONTEXT_SIGN',
+            # Testing flags
+            'SECP256K1_CONTEXT_DECLASSIFY',
+            # Not for direct use - That may not mean to remove them!
+            'SECP256K1_FLAGS_TYPE_MASK',
+            'SECP256K1_FLAGS_TYPE_CONTEXT',
+            'SECP256K1_FLAGS_TYPE_COMPRESSION',
+            'SECP256K1_FLAGS_BIT_CONTEXT_VERIFY',
+            'SECP256K1_FLAGS_BIT_CONTEXT_SIGN',
+            'SECP256K1_FLAGS_BIT_CONTEXT_DECLASSIFY',
+            'SECP256K1_FLAGS_BIT_COMPRESSION',
+            # Not supported
+            'SECP256K1_SCHNORRSIG_EXTRAPARAMS_MAGIC',
+            'SECP256K1_SCHNORRSIG_EXTRAPARAMS',
+        ],
+    )
+    lines = apply_cffi_defines_syntax(lines)
 
-        output_filename = os.path.join(cffi_dir, cffi_header)
-        with open(output_filename, 'w') as f_out:
-            f_out.write('\n'.join(lines))
-    else:
-        logging.warning(f'Warning: {src_header} not found.')
+    logging.info(f'   Writting: {src_header} in {cffi_dir}')
+    output_filename = os.path.join(cffi_dir, src_header)
+    with open(output_filename, 'w') as f_out:
+        f_out.write('\n'.join(lines))
 
 
 if __name__ == '__main__':
     parser = argparse.ArgumentParser(description='Process a header file.')
-    parser.add_argument('src_header', type=str, help='The path to the header file to be processed.')
+    parser.add_argument('src_header_dir', type=str, help='The path to the header file to be processed.')
     parser.add_argument('cffi_header', type=str, help='The path where the compliant header will be written.')
     parser.add_argument('cffi_dir', type=str, help='The path where the compliant header will be written.', default='.')
 
     args = parser.parse_args()
 
-    make_header_cffi_compliant(args.src_header, args.cffi_header, args.cffi_dir)
+    # Verify args are valid
+    if not os.path.isdir(args.src_header_dir):
+        logging.error(f'Error: Directory: {args.src_header_dir} not found.')
+        exit(1)
+
+    if not os.path.isdir(args.cffi_dir):
+        logging.error(f'Error: Directory: {args.cffi_dir} not found.')
+        exit(1)
+
+    if not os.path.isfile(os.path.join(args.src_header_dir, args.cffi_header)):
+        logging.error(f'Error: {args.cffi_header} not found in {args.src_header_dir}.')
+        exit(1)
+
+    make_header_cffi_compliant(args.src_header_dir, args.cffi_header, args.cffi_dir)

@@ -7,7 +7,7 @@ else()
     target_compile_definitions(${CFFI_OUTPUT_LIBRARY} PRIVATE Py_LIMITED_API)
 endif()
 
-set_source_files_properties("${CFFI_C_CODE_DIR}${CFFI_C_CODE}" PROPERTIES GENERATED 1)
+set_source_files_properties("${CFFI_C_CODE_DIR}/${CFFI_C_CODE}" PROPERTIES GENERATED 1)
 
 # Detect whether the vendored library is a system library or not
 if (PROJECT_IGNORE_SYSTEM_LIB OR NOT VENDORED_AS_SYSTEM_LIB_FOUND)

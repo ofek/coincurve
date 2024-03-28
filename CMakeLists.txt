@@ -48,8 +48,8 @@ elseif (PROJECT_CROSS_COMPILE_TARGET AND CMAKE_SYSTEM_NAME STREQUAL "Windows")
 endif()
 
 # Add the subdirectories. Append CONDA to the PKG_CONFIG_PATH
-list(APPEND ENV{PKG_CONFIG_PATH} "$ENV{CONDA_PREFIX}/lib/pkgconfig")
 find_package(PkgConfig REQUIRED)
+list(APPEND ENV{PKG_CONFIG_PATH} "$ENV{CONDA_PREFIX}/lib/pkgconfig" "$ENV{CONDA_PREFIX}/lib64/pkgconfig" "$ENV{CONDA_PREFIX}/Library//lib/pkgconfig")
 pkg_check_modules(PKGCONFIG_INPUT_LIB IMPORTED_TARGET ${CFFI_INPUT_LIBRARY}>=2)
 
 

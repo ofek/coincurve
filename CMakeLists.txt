@@ -18,7 +18,7 @@ set(CFFI_C_CODE "${CFFI_INPUT_LIBRARY}_cffi_bindings.c")
 set(CFFI_HEADERS_DIR ${PROJECT_BINARY_DIR}/_gen_cffi_headers)
 
 # Shared object that wraps the CFFI binding of the vendored library
-set(CFFI_OUTPUT_LIBRARY "_${CFFI_INPUT_LIBRARY}")
+set(CFFI_OUTPUT_LIBRARY "_${VENDORED_LIBRARY_PKG_CONFIG}")
 
 
 # Setting python for the host system (before change in CMAKE_SYSTEM_PROCESSOR)

@@ -9,3 +9,5 @@
 /coincurve.egg-info
 /build
 /dist
+
+/src/coincurve/_version.py

@@ -60,6 +60,7 @@ cmake.build-type = 'Release'
 # Needed for scikit-build-core to compute the version
 # (do not put the module, it would be overwritten)
 [tool.setuptools_scm]
+write_to = 'src/coincurve/_version.py'
 
 [tool.scikit-build.cmake.define]
 CMAKE_BUILD_TYPE = 'Release'

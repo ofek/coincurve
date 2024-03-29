@@ -22,7 +22,7 @@ set(CFFI_OUTPUT_LIBRARY "_${VENDORED_LIBRARY_PKG_CONFIG}")
 # Setting python for the host system (before change in CMAKE_SYSTEM_PROCESSOR)
 find_package(Python 3 REQUIRED COMPONENTS Interpreter Development.Module Development.SABIModule)
 
-include(SetCrossCompilationGithubActions)
+include(SetCrossCompilerGithubActions)
 SetCrossCompilerGithubActions()
 
 # Add the subdirectories. Append CONDA to the PKG_CONFIG_PATH

@@ -5,11 +5,10 @@ project(${SKBUILD_PROJECT_NAME}
     LANGUAGES C
 )
 
-
 # Path to custom CMake functions
 set(CMAKE_MODULE_PATH "${PROJECT_SOURCE_DIR}/cmake" ${CMAKE_MODULE_PATH})
 
-# Name of the vendored library recognized by pkg-config
+# Name of the vendored library CMake target
 set(CFFI_INPUT_LIBRARY ${VENDORED_LIBRARY_CMAKE_TARGET})
 
 # Set the output directories for the generated C code and headers
@@ -20,32 +19,11 @@ set(CFFI_HEADERS_DIR ${PROJECT_BINARY_DIR}/_gen_cffi_headers)
 # Shared object that wraps the CFFI binding of the vendored library
 set(CFFI_OUTPUT_LIBRARY "_${VENDORED_LIBRARY_PKG_CONFIG}")
 
-
 # Setting python for the host system (before change in CMAKE_SYSTEM_PROCESSOR)
 find_package(Python 3 REQUIRED COMPONENTS Interpreter Development.Module Development.SABIModule)
 
-# Cross-compilation options: This is setup for Github/Actions runners
-# For Linux, we use cibuildwheel to build the wheels, which uses Docker
-if (PROJECT_CROSS_COMPILE_TARGET AND CMAKE_SYSTEM_NAME STREQUAL "Darwin")
-    set(AUTOMATIC_OSX_TARGETS "armv7" "armv7s" "arm64" "arm64e" "x86_64")
-
-    if ("${PROJECT_CROSS_COMPILE_TARGET}" IN_LIST AUTOMATIC_OSX_TARGETS)
-        set(CMAKE_OSX_ARCHITECTURES ${PROJECT_CROSS_COMPILE_TARGET})
-    else()
-        message(FATAL_ERROR "Cross-compilation target not supported: >${PROJECT_CROSS_COMPILE_TARGET}< (${AUTOMATIC_OSX_TARGETS})")
-    endif()
-
-elseif (PROJECT_CROSS_COMPILE_TARGET AND CMAKE_SYSTEM_NAME STREQUAL "Windows")
-    set(AUTOMATIC_WINDOWS_TARGETS "AMD64" "x86" "arm64")
-
-    if ("${PROJECT_CROSS_COMPILE_TARGET}" IN_LIST AUTOMATIC_WINDOWS_TARGETS)
-        # Cross-compilation for Windows host system:
-        set(CMAKE_SYSTEM_PROCESSOR ${PROJECT_CROSS_COMPILE_TARGET})
-        set(CMAKE_LIBRARY_ARCHITECTURE  ${PROJECT_CROSS_COMPILE_TARGET})
-    else()
-        message(FATAL_ERROR "Cross-compilation target not supported: >${PROJECT_CROSS_COMPILE_TARGET}< (${AUTOMATIC_WINDOWS_TARGETS})")
-    endif()
-endif()
+include(SetCrossCompilationGithubActions)
+SetCrossCompilerGithubActions()
 
 # Add the subdirectories. Append CONDA to the PKG_CONFIG_PATH
 if (CMAKE_SYSTEM_NAME STREQUAL "Windows")
@@ -53,28 +31,11 @@ if (CMAKE_SYSTEM_NAME STREQUAL "Windows")
 endif()
 find_package(PkgConfig REQUIRED)
 
-# Set PKG_CONFIG_PATH for CONDA (How about other environment?)
-set(_paths "$ENV{PKG_CONFIG_PATH}" "$ENV{CONDA_PREFIX}/Library/lib/pkgconfig" "$ENV{CONDA_PREFIX}/lib/pkgconfig")
-cmake_path(CONVERT "${_paths}" TO_NATIVE_PATH_LIST _paths)
-set(ENV{PKG_CONFIG_PATH} ${_paths})
+# Set VENDORED_AS_SYSTEM_LIB to true if the vendored library is installed as a system library
+include(SetSystemLibIfExists)
+SetSystemLibIfExists()
 
-pkg_check_modules(VENDORED_AS_SYSTEM_LIB IMPORTED_TARGET GLOBAL ${VENDORED_LIBRARY_PKG_CONFIG}>=0.4.1)
-
-if (PROJECT_IGNORE_SYSTEM_LIB OR NOT VENDORED_AS_SYSTEM_LIB_FOUND)
-    add_subdirectory(cm_vendored_library)
-    if (NOT VENDORED_HEADERS_DIR)
-        message(FATAL_ERROR "Vendored library headers not found")
-    endif()
-    message(STATUS "The vendored library include located at: ${VENDORED_HEADERS_DIR}")
-else()
-    include(UnsetVendoredLibraryOptions)
-    UnsetVendoredLibraryOptions("VENDORED_OPTION")
-    unset(VENDORED_LIBRARY_OPTION_PREFIX)
-    unset(VENDORED_LIBRARY_STATIC_BUILD)
-    unset(VENDORED_UPSTREAM_URL)
-    unset(VENDORED_UPSTREAM_REF)
-    unset(VENDORED_UPSTREAM_SHA)
-endif()
+add_subdirectory(cm_vendored_library)
 add_subdirectory(cm_library_cffi_headers)
 add_subdirectory(cm_library_c_binding)
 add_subdirectory(cm_python_module)

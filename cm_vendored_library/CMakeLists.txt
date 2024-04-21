@@ -29,7 +29,7 @@ if (PROJECT_IGNORE_SYSTEM_LIB OR NOT VENDORED_AS_SYSTEM_LIB_FOUND)
     endif()
 
     include(UpdateVendoredLibraryOptions)
-    UpdateVendoredLibraryOptions("VENDORED_OPTION" ${VENDORED_LIBRARY_OPTION_PREFIX})
+    UpdateVendoredLibraryOptions("VENDORED_OPTION" "${VENDORED_LIBRARY_OPTION_PREFIX}")
 
 
     FetchContent_Declare(

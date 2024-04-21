@@ -9,6 +9,9 @@ project(${SKBUILD_PROJECT_NAME}
 set(CMAKE_MODULE_PATH "${PROJECT_SOURCE_DIR}/cmake" ${CMAKE_MODULE_PATH})
 
 # Name of the vendored library CMake target
+include(SetDefaultVendoredLibrary)
+SetDefaultVendoredLibrary()
+
 set(CFFI_INPUT_LIBRARY ${VENDORED_LIBRARY_CMAKE_TARGET})
 
 # Set the output directories for the generated C code and headers

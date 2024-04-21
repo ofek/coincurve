@@ -2,7 +2,6 @@
 requires = [
     'scikit-build-core>=0.9.0',
     'hatchling',
-    'setuptools>=42.0.0',
     'cffi>=1.3.0 ; python_version < "3.12"',
     'cffi>=1.16 ; python_version >= "3.12"',
 ]
@@ -93,6 +92,7 @@ exclude = [
 experimental = true
 cmake.verbose = true
 cmake.build-type = 'Release'
+wheel.py-api = ''
 
 [tool.scikit-build.cmake.define]
 CMAKE_BUILD_TYPE = 'Release'

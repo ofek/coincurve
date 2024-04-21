@@ -1,6 +1,6 @@
 [build-system]
-requires = ['scikit-build-core', 'cffi>=1.3.0']
-build-backend = 'scikit_build_core.build'
+requires = ['scikit-build-core>=0.9.0', 'hatchling', 'cffi>=1.3.0']
+build-backend = 'hatchling.build'
 
 [project]
 name = 'coincurve'
@@ -49,18 +49,43 @@ Documentation = 'https://ofek.dev/coincurve/'
 Repository = 'https://github.com/ofek/coincurve'
 'Bug Tracker' = 'https://github.com/ofek/coincurve/issues'
 
+# --- hatch ---
+[tool.hatch.version]
+path = 'src/coincurve/__about__.py'
+
+[tool.hatch.build.targets.sdist]
+ignore-vcs = true
+include = [
+    'src',
+    'tests',
+    'README.md',
+    'LICENSE',
+    'CHANGELOG.md',
+    'CMakeLists.txt',
+    'pyproject.toml',
+    'setup.cfg',
+    'setup.py',
+    'MANIFEST.in',
+    'cmake',
+    "cm_*",
+]
+exclude = [
+    '/.benchmarks',
+    '/.conda',
+    '/.github',
+    '/.git*',
+    '/.idea',
+    '/.tox',
+    '/.eggs',
+]
+
+[tool.hatch.build.targets.wheel.hooks.scikit-build]
+
 # --- scikit-build-core ---
 [tool.scikit-build]
-metadata.version.provider = "scikit_build_core.metadata.setuptools_scm"
+experimental = true
 cmake.verbose = true
-logging.level = 'INFO'
-wheel.packages = ['src/coincurve']
 cmake.build-type = 'Release'
-
-# Needed for scikit-build-core to compute the version
-# (do not put the module, it would be overwritten)
-[tool.setuptools_scm]
-write_to = 'src/coincurve/_version.py'
 
 [tool.scikit-build.cmake.define]
 CMAKE_BUILD_TYPE = 'Release'

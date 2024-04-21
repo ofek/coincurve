@@ -1,4 +1,4 @@
 coverage
 pytest
 pytest-benchmark
-scikit-build-core
+scikit-build-core>=0.9.0

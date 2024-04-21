@@ -7,4 +7,4 @@
 #
 # if not RELEASE:
 #     __version__ += '.dev0'
-__version__ = '19.0.1.dev'
+__version__ = '19.0.2'

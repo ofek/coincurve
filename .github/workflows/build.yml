@@ -69,7 +69,7 @@ jobs:
       run: tox -e lint,typing
 
     - name: Run tests
-      run: tox -e ${PYTHON_VERSION}
+      run: tox -e ${PYTHON_VERSION} -vvv
 
     - name: Run benchmarks
       run: tox -e bench

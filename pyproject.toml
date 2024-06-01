@@ -1,11 +1,12 @@
 [build-system]
+build-backend = "hatchling.build"
 requires = [
-    "hatchling",
+    "hatchling>=1.24.2",
     "cffi",
+    "setuptools",
     "scikit-build-core>=0.9.0",
     "pypkgconf; sys_platform == 'win32'",
 ]
-build-backend = "hatchling.build"
 
 [project]
 name = "coincurve"

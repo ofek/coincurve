@@ -35,9 +35,7 @@ define_static_lib = """
 """
 
 
-def mk_ffi(sources: List[Source],
-           static_lib: bool = False,
-           name: str = '_libsecp256k1') -> FFI:
+def mk_ffi(directory: str, sources: List[Source], static_lib: bool = False, name: str = '_libsecp256k1') -> FFI:
     """
     Create an FFI object.
 
@@ -51,9 +49,9 @@ def mk_ffi(sources: List[Source],
 
     logging.info(f'   Static {static_lib}...')
     for source in sources:
-        with open(os.path.join(here, source.h)) as h:
+        with open(os.path.join(directory, source.h)) as h:
             logging.info(f'   Including {source.h}...')
-            c_header = h.read().replace('SECP256K1_API', '')
+            c_header = h.read()
             _ffi.cdef(c_header)
 
         code.append(source.include)
@@ -67,11 +65,12 @@ def mk_ffi(sources: List[Source],
 if __name__ == '__main__':
     logging.info('Starting CFFI build process...')
     parser = argparse.ArgumentParser(description='Generate C code using CFFI.')
-    parser.add_argument('c_file', help='Generated C code filename.')
-    parser.add_argument('static_lib', help='Generate static lib in Windows.', default='0', type=str)
+    parser.add_argument('headers_dir', help='Path to the header files.', type=str)
+    parser.add_argument('c_file', help='Generated C code filename.', type=str)
+    parser.add_argument('static_lib', help='Generate static lib in Windows.', default='0N', type=str)
     args = parser.parse_args()
 
-    modules = gather_sources_from_directory(here)
-    ffi = mk_ffi(modules, args.static_lib == '1')
+    modules = gather_sources_from_directory(args.headers_dir)
+    ffi = mk_ffi(args.headers_dir, modules, args.static_lib == 'ON')
     ffi.emit_c_code(args.c_file)
     logging.info(f'   Generated C code: {args.c_file}')

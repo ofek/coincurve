@@ -16,13 +16,14 @@ concurrency:
 
 env:
   COINCURVE_UPSTREAM_REF: __no_upstream__
-  COINCURVE_IGNORE_SYSTEM_LIB: '0'
-  # conda-forge only has SHARED libsecp256k1
-  COINCURVE_SECP256K1_BUILD: 'SHARED'
+  COINCURVE_IGNORE_SYSTEM_LIB: 'OFF'
+  COINCURVE_SECP256K1_STATIC: 'OFF'
+  COINCURVE_CROSS_HOST: ''
   CIBW_ENVIRONMENT_PASS_LINUX: >
     COINCURVE_UPSTREAM_REF
     COINCURVE_IGNORE_SYSTEM_LIB
-    COINCURVE_SECP256K1_BUILD
+    COINCURVE_SECP256K1_STATIC
+    COINCURVE_CROSS_HOST
   CIBW_PROJECT_REQUIRES_PYTHON: '>=3.8'
   CIBW_BEFORE_ALL_MACOS: ./.github/scripts/install-macos-build-deps.sh
   CIBW_TEST_REQUIRES: pytest pytest-benchmark
@@ -34,7 +35,6 @@ env:
     assert a.ecdh(b.public_key.format())==b.ecdh(a.public_key.format())
     " &&
     python -m pytest {project}
-  CIBW_TEST_SKIP: "*-macosx_arm64"
   CIBW_SKIP: >
       pp*
 
@@ -63,7 +63,7 @@ jobs:
       run: tox -e lint,typing
 
     - name: Run tests
-      run: LD_LIBRARY_PATH=$CONDA_PREFIX/lib tox -e ${PYTHON_VERSION}
+      run: LD_LIBRARY_PATH=$CONDA_PREFIX/lib tox -e ${PYTHON_VERSION} -vvv
 
     - name: Run benchmarks
       run: LD_LIBRARY_PATH=$CONDA_PREFIX/lib tox -e bench

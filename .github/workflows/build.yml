@@ -158,32 +158,6 @@ jobs:
         path: wheelhouse/*.whl
         if-no-files-found: error
 
-  windows-wheels-x86:
-    name: Build Windows wheels x86
-    needs:
-    - test
-    runs-on: windows-latest
-
-    steps:
-    - uses: actions/checkout@v4
-
-    - uses: actions/setup-python@v5
-      with:
-        python-version: '3.12'
-
-    - name: Build wheels
-      uses: pypa/cibuildwheel@v2.17
-      env:
-        COINCURVE_CROSS_HOST: 'x86'
-        CIBW_ARCHS_WINDOWS: 'x86'
-        CIBW_BEFORE_ALL: choco install -y --no-progress --no-color cmake>=3.28
-
-    - uses: actions/upload-artifact@v4
-      with:
-        name: artifact-windows-wheels-x86
-        path: wheelhouse/*.whl
-        if-no-files-found: error
-
   windows-wheels-arm:
     name: Build Windows wheels for ARM64
     needs:
@@ -263,7 +237,6 @@ jobs:
     - macos-wheels-x86_64
     - macos-wheels-arm
     - windows-wheels-x86_64
-    - windows-wheels-x86
     - windows-wheels-arm
     - sdist
     - linux-wheels-arm

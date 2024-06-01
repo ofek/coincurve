@@ -1,9 +1,7 @@
 [build-system]
 requires = [
-    "scikit-build-core>=0.9.0",
     "hatchling",
-    "setuptools>=42.0.0",
-    "cffi>=1.3.0",
+    "scikit-build-core>=0.9.0",
     "pypkgconf; sys_platform == 'win32'",
 ]
 build-backend = "hatchling.build"
@@ -29,7 +27,6 @@ classifiers = [
     "Natural Language :: English",
     "Operating System :: OS Independent",
     "Programming Language :: Python :: 3",
-    "Programming Language :: Python :: 3.7",
     "Programming Language :: Python :: 3.8",
     "Programming Language :: Python :: 3.9",
     "Programming Language :: Python :: 3.10",
@@ -59,32 +56,6 @@ Repository = "https://github.com/ofek/coincurve"
 [tool.hatch.version]
 path = "src/coincurve/__about__.py"
 
-[tool.hatch.build.targets.sdist]
-ignore-vcs = true
-include = [
-    "src",
-    "tests",
-    "README.md",
-    "LICENSE",
-    "CHANGELOG.md",
-    "CMakeLists.txt",
-    "pyproject.toml",
-    "setup.cfg",
-    "setup.py",
-    "MANIFEST.in",
-    "cmake",
-    "cm_*",
-]
-exclude = [
-    "/.benchmarks",
-    "/.conda",
-    "/.github",
-    "/.git*",
-    "/.idea",
-    "/.tox",
-    "/.eggs",
-]
-
 [tool.hatch.build.targets.wheel.hooks.scikit-build]
 experimental = true
 cmake.verbose = true
@@ -92,7 +63,6 @@ cmake.build-type = "Release"
 cmake.source-dir = "."
 wheel.py-api = ""
 wheel.packages = []
-# wheel.install-dir = "hatchling_example"
 
 # --- scikit-build-core ---
 [tool.scikit-build.cmake.define]

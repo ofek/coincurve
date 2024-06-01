@@ -16,6 +16,7 @@ authors = [
 description = "Cross-platform Python CFFI bindings for libsecp256k1"
 keywords = ["secp256k1", "crypto", "elliptic curves", "bitcoin", "ethereum", "cryptocurrency"]
 readme = "README.md"
+license = "MIT OR Apache-2.0"
 requires-python = ">=3.8"
 dependencies = [
     "asn1crypto",

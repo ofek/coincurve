@@ -148,4 +148,4 @@ jobs:
       env:
         COINCURVE_CROSS_HOST: 'arm64'
         CIBW_ARCHS_WINDOWS: 'ARM64'
-        CIBW_BEFORE_ALL: choco install -y --no-progress --no-color cmake>=3.28 pkgconfiglite
+        CIBW_BEFORE_ALL: choco install -y --no-progress --no-color cmake>=3.28

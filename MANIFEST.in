@@ -1,7 +1,0 @@
-include src/coincurve/py.typed
-include CMakeLists.txt
-recursive-include cmake *
-recursive-include cm_library_c_binding *
-recursive-include cm_library_cffi_headers *
-recursive-include cm_vendored_library *
-recursive-include cm_python_bindings *

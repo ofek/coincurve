@@ -1,6 +1,7 @@
 [build-system]
 requires = [
     "hatchling",
+    "cffi",
     "scikit-build-core>=0.9.0",
     "pypkgconf; sys_platform == 'win32'",
 ]

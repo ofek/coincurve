@@ -206,10 +206,7 @@ jobs:
     needs:
     - test
     runs-on: ubuntu-latest
-    if: >
-      github.event_name == 'push'
-      &&
-      (github.ref == 'refs/heads/master' || startsWith(github.event.ref, 'refs/tags'))
+    if: github.event_name == 'push' && (github.ref == 'refs/heads/master' || startsWith(github.event.ref, 'refs/tags'))
 
     steps:
     - uses: actions/checkout@v4
@@ -241,8 +238,7 @@ jobs:
     - sdist
     - linux-wheels-arm
     runs-on: ubuntu-latest
-    if: >
-      github.event_name == 'push' && startsWith(github.event.ref, 'refs/tags')
+    if: github.event_name == 'push' && startsWith(github.event.ref, 'refs/tags')
 
     steps:
     - uses: actions/download-artifact@v4
@@ -254,8 +250,8 @@ jobs:
     - run: ls -l dist
 
     - name: Push build artifacts to PyPI
-      uses: pypa/gh-action-pypi-publish@v1.8.11
+      uses: pypa/gh-action-pypi-publish@release/v1
       with:
-        skip_existing: true
+        skip-existing: true
         user: __token__
         password: ${{ secrets.PYPI_API_TOKEN }}

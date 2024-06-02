@@ -4,9 +4,13 @@
 
 Important changes are emphasized.
 
-## master
-
 ## Unreleased
+
+## 20.0.0
+
+- **Breaking:** CMake is now a build dependency; this is only a breaking change for redistributors as building with standard Python packaging tools will automatically use the CMake that is available on PyPI
+- **Breaking:** Stop building wheels for Windows 32-bit
+- Build wheels for Windows ARM64
 
 ## 19.0.1
 

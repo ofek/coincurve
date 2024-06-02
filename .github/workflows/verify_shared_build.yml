@@ -1,0 +1,151 @@
+name: shared_build
+
+on:
+  push:
+    tags:
+    - v*
+    branches:
+    - master
+  pull_request:
+    branches:
+    - master
+
+concurrency:
+  group: build_shared-${{ github.head_ref }}
+  cancel-in-progress: true
+
+env:
+  COINCURVE_UPSTREAM_REF: 1ad5185cd42c0636104129fcc9f6a4bf9c67cc40
+  COINCURVE_IGNORE_SYSTEM_LIB: '1'
+  # Only 'SHARED' is recognized, any other string means 'not SHARED'
+  COINCURVE_SECP256K1_BUILD: 'SHARED'
+  CIBW_ENVIRONMENT_PASS_LINUX: >
+    COINCURVE_UPSTREAM_REF
+    COINCURVE_IGNORE_SYSTEM_LIB
+    COINCURVE_SECP256K1_BUILD
+  CIBW_PROJECT_REQUIRES_PYTHON: '>=3.8'
+  CIBW_BEFORE_ALL_MACOS: ./.github/scripts/install-macos-build-deps.sh
+  CIBW_TEST_REQUIRES: pytest pytest-benchmark
+  CIBW_TEST_COMMAND: >
+    python -c
+    "from coincurve import PrivateKey;
+    a=PrivateKey();
+    b=PrivateKey();
+    assert a.ecdh(b.public_key.format())==b.ecdh(a.public_key.format())
+    " &&
+    python -m pytest {project}
+  CIBW_TEST_SKIP: "*-macosx_arm64"
+  CIBW_SKIP: >
+      pp*
+
+jobs:
+  test:
+    name: Test latest Python
+    runs-on: ubuntu-latest
+
+    env:
+      PYTHON_VERSION: '3.12'
+
+    steps:
+    - uses: actions/checkout@v4
+
+    - name: Set up Python ${{ env.PYTHON_VERSION }}
+      uses: actions/setup-python@v5
+      with:
+        python-version: ${{ env.PYTHON_VERSION }}
+
+    - name: Upgrade Python packaging tools
+      run: pip install --upgrade pip setuptools wheel
+
+    - name: Show runner information
+      run: |
+        python --version
+        pip --version
+
+    - name: Install dependencies
+      run: ./.github/scripts/install-test-deps.sh
+
+    - name: Check style and typing
+      run: tox -e lint,typing
+
+    - name: Run tests
+      run: tox -e ${PYTHON_VERSION}
+
+    - name: Run benchmarks
+      run: tox -e bench
+
+    - name: Upload coverage
+      run: codecov -X gcov
+
+  linux-wheels-standard:
+    name: Build Linux wheels
+    needs:
+    - test
+    runs-on: ubuntu-latest
+
+    steps:
+    - uses: actions/checkout@v4
+
+    - name: Build wheels
+      uses: pypa/cibuildwheel@v2.17
+
+  macos-wheels-x86_64:
+    name: Build macOS wheels
+    needs:
+    - test
+    runs-on: macos-latest
+
+    steps:
+    - uses: actions/checkout@v4
+
+    - name: Build wheels
+      uses: pypa/cibuildwheel@v2.17
+      env:
+        CIBW_ARCHS_MACOS: x86_64
+
+  macos-wheels-arm:
+    name: Build macOS wheels for ARM (Native)
+    needs:
+    - test
+    runs-on: macos-14
+
+    steps:
+    - uses: actions/checkout@v4
+
+    - name: Build wheels
+      uses: pypa/cibuildwheel@v2.17
+
+  windows-wheels-x86_64:
+    name: Build Windows wheels AMD64
+    needs:
+    - test
+    runs-on: windows-latest
+
+    steps:
+    - uses: actions/checkout@v4
+
+    - uses: actions/setup-python@v5
+      with:
+        python-version: '3.12'
+
+    - name: Build wheels
+      uses: pypa/cibuildwheel@v2.17
+      env:
+        CIBW_ARCHS_WINDOWS: 'AMD64'
+        CIBW_BEFORE_ALL: choco install -y --no-progress --no-color cmake>=3.28
+
+  windows-wheels-arm:
+    name: Build Windows wheels for ARM64
+    needs:
+    - test
+    runs-on: windows-latest
+
+    steps:
+    - uses: actions/checkout@v4
+
+    - name: Build wheels
+      uses: pypa/cibuildwheel@v2.17
+      env:
+        COINCURVE_CROSS_HOST: 'arm64'
+        CIBW_ARCHS_WINDOWS: 'ARM64'
+        CIBW_BEFORE_ALL: choco install -y --no-progress --no-color cmake>=3.28

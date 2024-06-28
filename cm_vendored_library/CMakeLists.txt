@@ -12,10 +12,12 @@ if (PROJECT_IGNORE_SYSTEM_LIB OR NOT VENDORED_AS_SYSTEM_LIB_FOUND)
     endif()
 
     if (NOT VENDORED_UPSTREAM_REF)
-        set(VENDORED_UPSTREAM_REF "1ad5185cd42c0636104129fcc9f6a4bf9c67cc40")
+       message(STATUS "VENDORED_UPSTREAM_REF not set, using default value.")
+       set(VENDORED_UPSTREAM_REF "1ad5185cd42c0636104129fcc9f6a4bf9c67cc40")
     endif()
 
     if (NOT VENDORED_UPSTREAM_SHA)
+        message(STATUS "VENDORED_UPSTREAM_SHA not set, using default value.")
         set(VENDORED_UPSTREAM_SHA "ba34be4319f505c5766aa80b99cfa696cbb2993bfecf7d7eb8696106c493cb8c")
     endif()
 

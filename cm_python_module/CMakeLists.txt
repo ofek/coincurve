@@ -24,8 +24,15 @@ if (PROJECT_IGNORE_SYSTEM_LIB OR NOT VENDORED_AS_SYSTEM_LIB_FOUND)
     target_link_libraries(${CFFI_OUTPUT_LIBRARY} PRIVATE ${CFFI_INPUT_LIBRARY})
 elseif(VENDORED_AS_SYSTEM_LIB_FOUND)
     message(STATUS "Vendored system library found: ${VENDORED_AS_SYSTEM_LIB_LINK_LIBRARIES}")
-    target_include_directories(${CFFI_OUTPUT_LIBRARY} PRIVATE ${VENDORED_AS_SYSTEM_LIB_INCLUDE_DIRS})
-    target_link_libraries(${CFFI_OUTPUT_LIBRARY} PRIVATE ${VENDORED_AS_SYSTEM_LIB_LDFLAGS})
+    target_include_directories(${CFFI_OUTPUT_LIBRARY} PRIVATE ${VENDORED_AS_SYSTEM_LIB_LIBRARIES})
+    add_dependencies(${CFFI_OUTPUT_LIBRARY} cffi-c-binding)
+    # On windows, using the LDFLAGS field creates /libpath... secp256k1.lib (correct), but at a later stage
+    # /libpath is converted to \libpath and fails to be interpreted as a flag by the linker
+    # This may be an issue with libsecp256k1.pc, i.e. wrong slash used that triggers the slash conversion
+    target_link_libraries(${CFFI_OUTPUT_LIBRARY} PRIVATE ${VENDORED_AS_SYSTEM_LIB_LIBRARIES})
+    string(REPLACE "/libpath:" "" VENDORED_AS_SYSTEM_LIB_LIBRARY_DIRS ${VENDORED_AS_SYSTEM_LIB_LIBRARY_DIRS})
+    string(REPLACE "/LIBPATH:" "" VENDORED_AS_SYSTEM_LIB_LIBRARY_DIRS ${VENDORED_AS_SYSTEM_LIB_LIBRARY_DIRS})
+    target_link_directories(${CFFI_OUTPUT_LIBRARY} PRIVATE ${VENDORED_AS_SYSTEM_LIB_LIBRARY_DIRS})
 else()
     message(FATAL_ERROR "Vendored library not found.")
 endif()

@@ -35,3 +35,4 @@ add_custom_command(
 )
 
 add_custom_target(cffi-c-binding ALL DEPENDS ${CFFI_C_CODE_DIR}/${CFFI_C_CODE})
+add_dependencies(cffi-c-binding headers-for-cffi)

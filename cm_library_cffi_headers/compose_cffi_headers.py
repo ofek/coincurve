@@ -18,11 +18,7 @@ def remove_c_includes(lines):
 
 
 def remove_special_defines(lines, defines):
-    return [
-        line
-        for line in lines
-        if all(f'#define {define}' not in line for define in defines)
-    ]
+    return [line for line in lines if not any(f'#define {define}' in line for define in defines)]
 
 def apply_cffi_defines_syntax(lines):
     return [re.sub(r'#\s*define\s+(\w+).*', r'#define \1 ...', line) for line in lines]

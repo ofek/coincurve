@@ -14,11 +14,18 @@ def remove_c_comments_emptylines(text):
 
 
 def remove_c_includes(lines):
-    return [line for line in lines if not line.startswith('#include ')]
+    return [line for line in lines if not re.match(r'^\s*#include\s', line)]
 
 
 def remove_special_defines(lines, defines):
-    return [line for line in lines if not any(f'#define {define}' in line for define in defines)]
+    return [
+        line
+        for line in lines
+        if all(
+            re.search(f'^\s*#define\s+{define}', line) is None
+            for define in defines
+        )
+    ]
 
 
 def apply_cffi_defines_syntax(lines):

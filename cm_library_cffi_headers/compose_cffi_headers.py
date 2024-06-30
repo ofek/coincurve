@@ -14,7 +14,7 @@ def remove_c_comments_emptylines(text):
 
 
 def remove_c_includes(lines):
-    return [line for line in lines if not line.startswith('#include ')]
+    return [line for line in lines if not re.match(r'^\s*#include\s', line)]
 
 
 def remove_special_defines(lines, defines):

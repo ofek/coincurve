@@ -35,5 +35,5 @@ add_custom_command(
 )
 
 add_custom_target(cffi-c-binding ALL DEPENDS ${CFFI_C_CODE_DIR}/${CFFI_C_CODE})
-target_include_directories(${CFFI_OUTPUT_LIBRARY} PUBLIC ${VENDORED_HEADERS_DIR})
+target_include_directories(cffi-c-binding PUBLIC ${VENDORED_HEADERS_DIR})
 add_dependencies(cffi-c-binding headers-for-cffi)

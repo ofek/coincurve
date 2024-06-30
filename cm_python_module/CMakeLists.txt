@@ -23,8 +23,8 @@ if (PROJECT_IGNORE_SYSTEM_LIB OR NOT VENDORED_AS_SYSTEM_LIB_FOUND)
     # https://docs.python.org/3/c-api/stable.html#limited-c-api
     target_link_libraries(${CFFI_OUTPUT_LIBRARY} PRIVATE ${CFFI_INPUT_LIBRARY})
 elseif(VENDORED_AS_SYSTEM_LIB_FOUND)
-    message(STATUS "Vendored system library found: ${VENDORED_AS_SYSTEM_LIB_LINK_LIBRARIES}")
-    target_include_directories(${CFFI_OUTPUT_LIBRARY} PRIVATE ${VENDORED_AS_SYSTEM_LIB_LIBRARIES})
+    message(STATUS "Vendored system library found: ${VENDORED_AS_SYSTEM_LIB_LIBRARIES}")
+    target_include_directories(${CFFI_OUTPUT_LIBRARY} PRIVATE ${VENDORED_AS_SYSTEM_LIB_INCLUDE_DIRS})
     add_dependencies(${CFFI_OUTPUT_LIBRARY} cffi-c-binding)
     # On windows, using the LDFLAGS field creates /libpath... secp256k1.lib (correct), but at a later stage
     # /libpath is converted to \libpath and fails to be interpreted as a flag by the linker

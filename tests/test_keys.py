@@ -5,7 +5,7 @@ import pytest
 
 from coincurve.ecdsa import deserialize_recoverable, recover
 from coincurve.keys import PrivateKey, PublicKey, PublicKeyXOnly
-from coincurve.utils import bytes_to_int, int_to_bytes_padded, verify_signature
+from coincurve.utils import GROUP_ORDER_INT, bytes_to_int, int_to_bytes_padded, verify_signature
 
 G = PublicKey(
     b'\x04y\xbef~\xf9\xdc\xbb\xacU\xa0b\x95\xce\x87\x0b\x07\x02\x9b'
@@ -39,7 +39,7 @@ class TestPrivateKey:
         assert PrivateKey(samples['PRIVATE_KEY_BYTES']).sign(samples['MESSAGE']) == samples['SIGNATURE']
 
     def test_signature_invalid_hasher(self, samples):
-        with pytest.raises(ValueError):
+        with pytest.raises(ValueError, match=r'Message hash must be 32 bytes long\.'):
             PrivateKey().sign(samples['MESSAGE'], lambda x: sha512(x).digest())
 
     def test_signature_recoverable(self, samples):
@@ -59,7 +59,7 @@ class TestPrivateKey:
         message = urandom(32)
 
         # Message must be 32 bytes
-        with pytest.raises(ValueError):
+        with pytest.raises(ValueError, match=r'Message must be 32 bytes long\.'):
             private_key.sign_schnorr(message + b'\x01')
 
         # We can provide supplementary randomness
@@ -171,11 +171,11 @@ class TestPublicKey:
 class TestXonlyPubKey:
     def test_parse_invalid(self, samples):
         # Must be 32 bytes
-        with pytest.raises(ValueError):
+        with pytest.raises(ValueError, match=f'Secret scalar must be greater than 0 and less than {GROUP_ORDER_INT}'):
             PublicKeyXOnly.from_secret(bytes(33))
 
         # Must be an x coordinate for a valid point
-        with pytest.raises(ValueError):
+        with pytest.raises(ValueError, match=r'The public key could not be parsed or is invalid\.'):
             PublicKeyXOnly(samples['X_ONLY_PUBKEY_INVALID'])
 
     def test_roundtrip(self, samples):

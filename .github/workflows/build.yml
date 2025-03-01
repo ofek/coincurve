@@ -37,42 +37,73 @@ env:
 
 jobs:
   test:
-    name: Test latest Python
-    runs-on: ubuntu-latest
-
-    env:
-      PYTHON_VERSION: '3.12'
+    name: Test Python ${{ matrix.python-version }} on ${{ startsWith(matrix.os, 'macos-') && 'macOS' || startsWith(matrix.os, 'windows-') && 'Windows' || 'Linux' }}
+    runs-on: ${{ matrix.os }}
+    strategy:
+      fail-fast: false
+      matrix:
+        os: [ubuntu-latest, windows-latest, macos-latest]
+        python-version: ["3.9", "3.10", "3.11", "3.12", "3.13"]
 
     steps:
-    - uses: actions/checkout@v4
+    - name: Checkout code
+      uses: actions/checkout@v4
 
-    - name: Set up Python ${{ env.PYTHON_VERSION }}
+    - name: Set up Python ${{ matrix.python-version }}
       uses: actions/setup-python@v5
       with:
-        python-version: ${{ env.PYTHON_VERSION }}
+        python-version: ${{ matrix.python-version }}
 
-    - name: Upgrade Python packaging tools
-      run: pip install --upgrade pip setuptools wheel
+    - name: Install system dependencies
+      if: runner.os == 'macOS'
+      run: ./.github/scripts/install-macos-build-deps.sh
 
-    - name: Show runner information
-      run: |
-        python --version
-        pip --version
+    - name: Install Hatch
+      uses: pypa/hatch@install
 
-    - name: Install dependencies
-      run: ./.github/scripts/install-test-deps.sh
+    - name: Run static analysis
+      run: hatch fmt --check
 
-    - name: Check style and typing
-      run: tox -e lint,typing
+    - name: Check types
+      run: hatch run types:check
 
     - name: Run tests
-      run: tox -e ${PYTHON_VERSION} -vvv
+      run: hatch test --python ${{ matrix.python-version }} --cover-quiet --randomize
+
+    - name: Create coverage report
+      run: hatch run hatch-test.py${{ matrix.python-version }}:coverage xml
+
+    - name: Upload coverage data
+      uses: actions/upload-artifact@v4
+      with:
+        name: coverage-${{ matrix.os }}-${{ matrix.python-version }}
+        path: coverage.xml
 
     - name: Run benchmarks
-      run: tox -e bench
+      run: hatch run hatch-test.py${{ matrix.python-version }}:bench
 
-    - name: Upload coverage
-      run: codecov -X gcov
+  coverage:
+    name: Upload coverage
+    needs:
+    - test
+    runs-on: ubuntu-latest
+
+    permissions:
+      contents: read
+      id-token: write
+
+    steps:
+    - name: Download coverage data
+      uses: actions/download-artifact@v4
+      with:
+        pattern: coverage-*
+        path: coverage_data
+
+    - name: Upload coverage to Codecov
+      uses: codecov/codecov-action@v5
+      with:
+        directory: coverage_data
+        use_oidc: true
 
   linux-wheels-standard:
     name: Build Linux wheels
@@ -96,7 +127,7 @@ jobs:
     name: Build macOS wheels
     needs:
     - test
-    runs-on: macos-latest
+    runs-on: macos-13
 
     steps:
     - uses: actions/checkout@v4
@@ -246,8 +277,6 @@ jobs:
     - run: ls -l dist
 
     - name: Push build artifacts to PyPI
-      uses: pypa/gh-action-pypi-publish@release/v1
+      uses: pypa/gh-action-pypi-publish@v1.12.4
       with:
         skip-existing: true
-        user: __token__
-        password: ${{ secrets.PYPI_API_TOKEN }}

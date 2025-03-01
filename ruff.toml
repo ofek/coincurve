@@ -1,0 +1,17 @@
+extend = "ruff_defaults.toml"
+
+[format]
+preview = true
+quote-style = "single"
+
+[lint]
+preview = true
+
+[lint.extend-per-file-ignores]
+# Percent formatting
+"src/coincurve/ecdsa.py" = ["UP031"]
+# Shadowing standard library module name
+"src/coincurve/types.py" = ["A005"]
+# Implicit namespace packages
+"cm_library_c_binding/build.py" = ["INP001"]
+"cm_library_cffi_headers/compose_cffi_headers.py" = ["INP001"]

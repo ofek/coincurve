@@ -1,0 +1,6 @@
+This package is dual-licensed under MIT or Apache-2.0.
+
+The final distribution includes the following compiled artifacts:
+
+* `_cffi_backend` shared library from the CFFI project (https://github.com/python-cffi/cffi) which is licensed under the MIT license. See `coincurve-X.Y.Z.dist-info/licenses/LICENSE-cffi` for the license text.
+* Code from the libsecp256k1 project (https://github.com/bitcoin-core/secp256k1) which is licensed under the MIT license.

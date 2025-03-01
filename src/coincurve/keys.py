@@ -1,12 +1,14 @@
+from __future__ import annotations
+
 import os
-from typing import Optional, Tuple
+from typing import TYPE_CHECKING
 
 from asn1crypto.keys import ECDomainParameters, ECPointBitString, ECPrivateKey, PrivateKeyAlgorithm, PrivateKeyInfo
 
+from coincurve._libsecp256k1 import ffi, lib
 from coincurve.context import GLOBAL_CONTEXT, Context
 from coincurve.ecdsa import cdata_to_der, der_to_cdata, deserialize_recoverable, recover, serialize_recoverable
 from coincurve.flags import EC_COMPRESSED, EC_UNCOMPRESSED
-from coincurve.types import Hasher, Nonce
 from coincurve.utils import (
     DEFAULT_NONCE,
     bytes_to_int,
@@ -20,11 +22,12 @@ from coincurve.utils import (
     validate_secret,
 )
 
-from ._libsecp256k1 import ffi, lib
+if TYPE_CHECKING:
+    from coincurve.types import Hasher, Nonce
 
 
 class PrivateKey:
-    def __init__(self, secret: Optional[bytes] = None, context: Context = GLOBAL_CONTEXT):
+    def __init__(self, secret: bytes | None = None, context: Context = GLOBAL_CONTEXT):
         """
         :param secret: The secret used to initialize the private key.
                        If not provided or `None`, a new key will be generated.
@@ -48,8 +51,9 @@ class PrivateKey:
                             function failed, or the private key was invalid.
         """
         msg_hash = hasher(message) if hasher is not None else message
-        if len(msg_hash) != 32:
-            raise ValueError('Message hash must be 32 bytes long.')
+        if len(msg_hash) != 32:  # noqa: PLR2004
+            msg = 'Message hash must be 32 bytes long.'
+            raise ValueError(msg)
 
         signature = ffi.new('secp256k1_ecdsa_signature *')
         nonce_fn, nonce_data = custom_nonce
@@ -57,7 +61,8 @@ class PrivateKey:
         signed = lib.secp256k1_ecdsa_sign(self.context.ctx, signature, msg_hash, self.secret, nonce_fn, nonce_data)
 
         if not signed:
-            raise ValueError('The nonce generation function failed, or the private key was invalid.')
+            msg = 'The nonce generation function failed, or the private key was invalid.'
+            raise ValueError(msg)
 
         return cdata_to_der(signature, self.context)
 
@@ -71,30 +76,35 @@ class PrivateKey:
         :raises ValueError: If the message was not 32 bytes long, the optional auxiliary random data was not
                             32 bytes long, signing failed, or the signature was invalid.
         """
-        if len(message) != 32:
-            raise ValueError('Message must be 32 bytes long.')
-        elif aux_randomness == b'':
+        if len(message) != 32:  # noqa: PLR2004
+            msg = 'Message must be 32 bytes long.'
+            raise ValueError(msg)
+        if aux_randomness == b'':
             aux_randomness = os.urandom(32)
         elif aux_randomness is None:
             aux_randomness = ffi.NULL
-        elif len(aux_randomness) != 32:
-            raise ValueError('Auxiliary random data must be 32 bytes long.')
+        elif len(aux_randomness) != 32:  # noqa: PLR2004
+            msg = 'Auxiliary random data must be 32 bytes long.'
+            raise ValueError(msg)
 
         keypair = ffi.new('secp256k1_keypair *')
         res = lib.secp256k1_keypair_create(self.context.ctx, keypair, self.secret)
         if not res:
-            raise ValueError('Secret was invalid')
+            msg = 'Secret was invalid'
+            raise ValueError(msg)
 
         signature = ffi.new('unsigned char[64]')
         res = lib.secp256k1_schnorrsig_sign32(self.context.ctx, signature, message, keypair, aux_randomness)
         if not res:
-            raise ValueError('Signing failed')
+            msg = 'Signing failed'
+            raise ValueError(msg)
 
         res = lib.secp256k1_schnorrsig_verify(
             self.context.ctx, signature, message, len(message), self.public_key_xonly.public_key
         )
         if not res:
-            raise ValueError('Invalid signature')
+            msg = 'Invalid signature'
+            raise ValueError(msg)
 
         return bytes(ffi.buffer(signature))
 
@@ -112,8 +122,9 @@ class PrivateKey:
                             function failed, or the private key was invalid.
         """
         msg_hash = hasher(message) if hasher is not None else message
-        if len(msg_hash) != 32:
-            raise ValueError('Message hash must be 32 bytes long.')
+        if len(msg_hash) != 32:  # noqa: PLR2004
+            msg = 'Message hash must be 32 bytes long.'
+            raise ValueError(msg)
 
         signature = ffi.new('secp256k1_ecdsa_recoverable_signature *')
         nonce_fn, nonce_data = custom_nonce
@@ -123,7 +134,8 @@ class PrivateKey:
         )
 
         if not signed:
-            raise ValueError('The nonce generation function failed, or the private key was invalid.')
+            msg = 'The nonce generation function failed, or the private key was invalid.'
+            raise ValueError(msg)
 
         return serialize_recoverable(signature, self.context)
 
@@ -145,7 +157,7 @@ class PrivateKey:
 
         return bytes(ffi.buffer(secret, 32))
 
-    def add(self, scalar: bytes, update: bool = False):
+    def add(self, scalar: bytes, update: bool = False):  # noqa: FBT001, FBT002
         """
         Add a scalar to the private key.
 
@@ -162,7 +174,8 @@ class PrivateKey:
         success = lib.secp256k1_ec_seckey_tweak_add(self.context.ctx, secret, scalar)
 
         if not success:
-            raise ValueError('The tweak was out of range, or the resulting private key is invalid.')
+            msg = 'The tweak was out of range, or the resulting private key is invalid.'
+            raise ValueError(msg)
 
         secret = bytes(ffi.buffer(secret, 32))
 
@@ -173,7 +186,7 @@ class PrivateKey:
 
         return PrivateKey(secret, self.context)
 
-    def multiply(self, scalar: bytes, update: bool = False):
+    def multiply(self, scalar: bytes, update: bool = False):  # noqa: FBT001, FBT002
         """
         Multiply the private key by a scalar.
 
@@ -219,26 +232,20 @@ class PrivateKey:
         """
         :return: The private key encoded in DER format.
         """
-        pk = ECPrivateKey(
-            {
-                'version': 'ecPrivkeyVer1',
-                'private_key': self.to_int(),
-                'public_key': ECPointBitString(self.public_key.format(compressed=False)),
-            }
-        )
+        pk = ECPrivateKey({
+            'version': 'ecPrivkeyVer1',
+            'private_key': self.to_int(),
+            'public_key': ECPointBitString(self.public_key.format(compressed=False)),
+        })
 
-        return PrivateKeyInfo(
-            {
-                'version': 0,
-                'private_key_algorithm': PrivateKeyAlgorithm(
-                    {
-                        'algorithm': 'ec',
-                        'parameters': ECDomainParameters(name='named', value='1.3.132.0.10'),
-                    }
-                ),
-                'private_key': pk,
-            }
-        ).dump()
+        return PrivateKeyInfo({
+            'version': 0,
+            'private_key_algorithm': PrivateKeyAlgorithm({
+                'algorithm': 'ec',
+                'parameters': ECDomainParameters(name='named', value='1.3.132.0.10'),
+            }),
+            'private_key': pk,
+        }).dump()
 
     @classmethod
     def from_hex(cls, hexed: str, context: Context = GLOBAL_CONTEXT):
@@ -286,10 +293,14 @@ class PrivateKey:
         created = lib.secp256k1_ec_pubkey_create(self.context.ctx, self.public_key.public_key, self.secret)
 
         if not created:
-            raise ValueError('Invalid secret.')
+            msg = 'Invalid secret.'
+            raise ValueError(msg)
 
     def __eq__(self, other) -> bool:
         return self.secret == other.secret
+
+    def __hash__(self) -> int:
+        return hash(self.secret)
 
 
 class PublicKey:
@@ -311,7 +322,8 @@ class PublicKey:
             parsed = lib.secp256k1_ec_pubkey_parse(context.ctx, public_key, data, len(data))
 
             if not parsed:
-                raise ValueError('The public key could not be parsed or is invalid.')
+                msg = 'The public key could not be parsed or is invalid.'
+                raise ValueError(msg)
 
             self.public_key = public_key
 
@@ -332,11 +344,12 @@ class PublicKey:
         created = lib.secp256k1_ec_pubkey_create(context.ctx, public_key, validate_secret(secret))
 
         if not created:  # no cov
-            raise ValueError(
+            msg = (
                 'Somehow an invalid secret was used. Please '
                 'submit this as an issue here: '
                 'https://github.com/ofek/coincurve/issues/new'
             )
+            raise ValueError(msg)
 
         return PublicKey(public_key, context)
 
@@ -347,7 +360,8 @@ class PublicKey:
         created = lib.secp256k1_ec_pubkey_create(context.ctx, public_key, secret)
 
         if not created:
-            raise ValueError('Invalid secret.')
+            msg = 'Invalid secret.'
+            raise ValueError(msg)
 
         return PublicKey(public_key, context)
 
@@ -403,11 +417,12 @@ class PublicKey:
         )
 
         if not combined:
-            raise ValueError('The sum of the public keys is invalid.')
+            msg = 'The sum of the public keys is invalid.'
+            raise ValueError(msg)
 
         return PublicKey(public_key, context)
 
-    def format(self, compressed: bool = True) -> bytes:
+    def format(self, compressed: bool = True) -> bytes:  # noqa: FBT001, FBT002
         """
         Format the public key.
 
@@ -424,7 +439,7 @@ class PublicKey:
 
         return bytes(ffi.buffer(serialized, length))
 
-    def point(self) -> Tuple[int, int]:
+    def point(self) -> tuple[int, int]:
         """
         :return: The public key as a coordinate point.
         """
@@ -441,15 +456,16 @@ class PublicKey:
         :raises ValueError: If the message hash was not 32 bytes long or the DER-encoded signature could not be parsed.
         """
         msg_hash = hasher(message) if hasher is not None else message
-        if len(msg_hash) != 32:
-            raise ValueError('Message hash must be 32 bytes long.')
+        if len(msg_hash) != 32:  # noqa: PLR2004
+            msg = 'Message hash must be 32 bytes long.'
+            raise ValueError(msg)
 
         verified = lib.secp256k1_ecdsa_verify(self.context.ctx, der_to_cdata(signature), msg_hash, self.public_key)
 
         # A performance hack to avoid global bool() lookup.
-        return not not verified
+        return bool(verified)
 
-    def add(self, scalar: bytes, update: bool = False):
+    def add(self, scalar: bytes, update: bool = False):  # noqa: FBT001, FBT002
         """
         Add a scalar to the public key.
 
@@ -466,7 +482,8 @@ class PublicKey:
         success = lib.secp256k1_ec_pubkey_tweak_add(self.context.ctx, new_key, scalar)
 
         if not success:
-            raise ValueError('The tweak was out of range, or the resulting public key is invalid.')
+            msg = 'The tweak was out of range, or the resulting public key is invalid.'
+            raise ValueError(msg)
 
         if update:
             self.public_key = new_key
@@ -474,7 +491,7 @@ class PublicKey:
 
         return PublicKey(new_key, self.context)
 
-    def multiply(self, scalar: bytes, update: bool = False):
+    def multiply(self, scalar: bytes, update: bool = False):  # noqa: FBT001, FBT002
         """
         Multiply the public key by a scalar.
 
@@ -495,7 +512,7 @@ class PublicKey:
 
         return PublicKey(new_key, self.context)
 
-    def combine(self, public_keys, update: bool = False):
+    def combine(self, public_keys, update: bool = False):  # noqa: FBT001, FBT002
         """
         Add a number of public keys together.
 
@@ -513,7 +530,8 @@ class PublicKey:
         )
 
         if not combined:
-            raise ValueError('The sum of the public keys is invalid.')
+            msg = 'The sum of the public keys is invalid.'
+            raise ValueError(msg)
 
         if update:
             self.public_key = new_key
@@ -524,9 +542,12 @@ class PublicKey:
     def __eq__(self, other) -> bool:
         return self.format(compressed=False) == other.format(compressed=False)
 
+    def __hash__(self) -> int:
+        return hash(self.format(compressed=False))
+
 
 class PublicKeyXOnly:
-    def __init__(self, data, parity: bool = False, context: Context = GLOBAL_CONTEXT):
+    def __init__(self, data, parity: bool = False, context: Context = GLOBAL_CONTEXT):  # noqa: FBT001, FBT002
         """A BIP340 `x-only` public key.
 
         :param data: The formatted public key.
@@ -540,7 +561,8 @@ class PublicKeyXOnly:
             public_key = ffi.new('secp256k1_xonly_pubkey *')
             parsed = lib.secp256k1_xonly_pubkey_parse(context.ctx, public_key, data)
             if not parsed:
-                raise ValueError('The public key could not be parsed or is invalid.')
+                msg = 'The public key could not be parsed or is invalid.'
+                raise ValueError(msg)
 
             self.public_key = public_key
 
@@ -558,26 +580,28 @@ class PublicKeyXOnly:
         keypair = ffi.new('secp256k1_keypair *')
         res = lib.secp256k1_keypair_create(context.ctx, keypair, validate_secret(secret))
         if not res:
-            raise ValueError('Secret was invalid')
+            msg = 'Secret was invalid'
+            raise ValueError(msg)
 
         xonly_pubkey = ffi.new('secp256k1_xonly_pubkey *')
         pk_parity = ffi.new('int *')
         res = lib.secp256k1_keypair_xonly_pub(context.ctx, xonly_pubkey, pk_parity, keypair)
 
-        return cls(xonly_pubkey, parity=not not pk_parity[0], context=context)
+        return cls(xonly_pubkey, parity=bool(pk_parity[0]), context=context)
 
     @classmethod
     def from_valid_secret(cls, secret: bytes, context: Context = GLOBAL_CONTEXT):
         keypair = ffi.new('secp256k1_keypair *')
         res = lib.secp256k1_keypair_create(context.ctx, keypair, secret)
         if not res:
-            raise ValueError('Secret was invalid')
+            msg = 'Secret was invalid'
+            raise ValueError(msg)
 
         xonly_pubkey = ffi.new('secp256k1_xonly_pubkey *')
         pk_parity = ffi.new('int *')
         res = lib.secp256k1_keypair_xonly_pub(context.ctx, xonly_pubkey, pk_parity, keypair)
 
-        return cls(xonly_pubkey, parity=not not pk_parity[0], context=context)
+        return cls(xonly_pubkey, parity=bool(pk_parity[0]), context=context)
 
     def format(self) -> bytes:
         """Serialize the public key.
@@ -588,7 +612,8 @@ class PublicKeyXOnly:
 
         res = lib.secp256k1_xonly_pubkey_serialize(self.context.ctx, output32, self.public_key)
         if not res:
-            raise ValueError('Public key in self.public_key must be valid')
+            msg = 'Public key in self.public_key must be valid'
+            raise ValueError(msg)
 
         return bytes(ffi.buffer(output32, 32))
 
@@ -599,11 +624,12 @@ class PublicKeyXOnly:
         :param message: The message to be verified.
         :return: A boolean indicating whether or not the signature is correct.
         """
-        if len(signature) != 64:
-            raise ValueError('Signature must be 32 bytes long.')
+        if len(signature) != 64:  # noqa: PLR2004
+            msg = 'Signature must be 64 bytes long.'
+            raise ValueError(msg)
 
-        return not not lib.secp256k1_schnorrsig_verify(
-            self.context.ctx, signature, message, len(message), self.public_key
+        return bool(
+            lib.secp256k1_schnorrsig_verify(self.context.ctx, signature, message, len(message), self.public_key)
         )
 
     def tweak_add(self, scalar: bytes):
@@ -619,12 +645,16 @@ class PublicKeyXOnly:
         out_pubkey = ffi.new('secp256k1_pubkey *')
         res = lib.secp256k1_xonly_pubkey_tweak_add(self.context.ctx, out_pubkey, self.public_key, scalar)
         if not res:
-            raise ValueError('The tweak was out of range, or the resulting public key would be invalid')
+            msg = 'The tweak was out of range, or the resulting public key would be invalid'
+            raise ValueError(msg)
 
         pk_parity = ffi.new('int *')
         lib.secp256k1_xonly_pubkey_from_pubkey(self.context.ctx, self.public_key, pk_parity, out_pubkey)
-        self.parity = not not pk_parity[0]
+        self.parity = bool(pk_parity[0])
 
     def __eq__(self, other) -> bool:
         res = lib.secp256k1_xonly_pubkey_cmp(self.context.ctx, self.public_key, other.public_key)
         return res == 0
+
+    def __hash__(self) -> int:
+        return hash(self.format())

@@ -58,14 +58,20 @@ jobs:
         python-version: ${{ env.PYTHON_VERSION }}
         auto-activate-base: false
 
-    - name: Check style and typing
-      run: tox -e lint,typing
+    - name: Install Hatch
+      uses: pypa/hatch@install
+
+    - name: Run static analysis
+      run: hatch fmt --check
+
+    - name: Check types
+      run: hatch run types:check
 
     - name: Run tests
-      run: LD_LIBRARY_PATH=$CONDA_PREFIX/lib tox -e ${PYTHON_VERSION} -vvv
+      run: LD_LIBRARY_PATH=$CONDA_PREFIX/lib hatch test
 
     - name: Run benchmarks
-      run: LD_LIBRARY_PATH=$CONDA_PREFIX/lib tox -e bench
+      run: hatch run hatch-test.py${{ env.PYTHON_VERSION }}:bench
 
   linux-wheels-standard:
     name: Build Linux wheels

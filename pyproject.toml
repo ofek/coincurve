@@ -5,7 +5,7 @@ requires = [
     "cffi",
     "setuptools",
     "scikit-build-core>=0.9.0",
-    "pypkgconf; sys_platform == 'win32'",
+    "pkgconf; sys_platform == 'win32'",
 ]
 
 [project]
@@ -13,14 +13,22 @@ name = "coincurve"
 authors = [
     { name = "Ofek Lev", email = "oss@ofek.dev" },
 ]
-description = "Cross-platform Python CFFI bindings for libsecp256k1"
-keywords = ["secp256k1", "crypto", "elliptic curves", "bitcoin", "ethereum", "cryptocurrency"]
+description = "Cross-platform Python bindings for libsecp256k1"
+keywords = [
+    "bitcoin",
+    "crypto",
+    "cryptocurrency",
+    "ecdsa",
+    "elliptic curves",
+    "ethereum",
+    "secp256k1",
+    "schnorr",
+]
 readme = "README.md"
 license = "MIT OR Apache-2.0"
 requires-python = ">=3.9"
 dependencies = [
     "asn1crypto",
-    "cffi>=1.3.0",
 ]
 classifiers = [
     "Development Status :: 5 - Production/Stable",
@@ -42,26 +50,22 @@ classifiers = [
 ]
 dynamic = ["version"]
 
-[project.optional-dependencies]
-dev = [
-    "coverage",
-    "pytest",
-    "pytest-benchmark"
-]
-
 [project.urls]
-Homepage = "https://github.com/ofek/coincurve"
-Documentation = "https://ofek.dev/coincurve/"
-Repository = "https://github.com/ofek/coincurve"
-"Bug Tracker" = "https://github.com/ofek/coincurve/issues"
+Homepage = "https://ofek.dev/coincurve/"
+Sponsor = "https://github.com/sponsors/ofek"
+Changelog = "https://ofek.dev/coincurve/changelog/"
+Tracker = "https://github.com/ofek/coincurve/issues"
+Source = "https://github.com/ofek/coincurve"
 
 # --- hatch ---
 [tool.hatch.version]
 path = "src/coincurve/__about__.py"
 
+[tool.hatch.build.targets.wheel.hooks.custom]
+
 [tool.hatch.build.targets.wheel.hooks.scikit-build]
 experimental = true
-cmake.verbose = true
+build.verbose = true
 cmake.build-type = "Release"
 cmake.source-dir = "."
 wheel.py-api = ""
@@ -101,20 +105,17 @@ VENDORED_LIBRARY_STATIC_BUILD = { env = "COINCURVE_SECP256K1_STATIC", default = 
 
 # --- Coverage ---
 [tool.coverage.run]
+source_pkgs = ["coincurve", "tests"]
 branch = true
-source = [
-    "src/coincurve",
-    "tests",
-]
+parallel = true
 omit = [
-    "*/_version.py",
-    "*/test_bench.py",
+    "src/coincurve/__about__.py",
+    "tests/test_bench.py",
 ]
 
 [tool.coverage.report]
 exclude_lines =[
     "no cov",
-    "no qa",
 
     # Ignore missing debug-only code
     "def __repr__",
@@ -125,73 +126,14 @@ exclude_lines =[
 ]
 
 [tool.coverage.paths]
-source = [
-   "src/coincurve",
-   ".tox/*/lib/python*/site-packages/coincurve",
-   ".tox/pypy*/site-packages/coincurve",
-]
+coincurve = ["src/coincurve", "*/coincurve/src/coincurve"]
+tests = ["tests", "*/coincurve/tests"]
 
 # --- Pytest ---
 [tool.pytest.ini_options]
 addopts = [
     "--import-mode=importlib",
 ]
-
-# --- Black ---
-[tool.black]
-target-version = ["py38"]
-line-length = 120
-skip-string-normalization = true
-exclude = '''
-/(
-    \.eggs
-  | \.git
-  | \.hg
-  | \.mypy_cache
-  | \.tox
-  | \.venv
-  | build
-  | dist
-)/
-'''
-
-# --- Ruff ---
-[tool.ruff]
-target-version = "py38"
-line-length = 120
-lint.select = ["A", "B", "C", "E", "F", "I", "M", "N", "Q", "RUF", "S", "T", "U", "W", "YTT"]
-lint.ignore = [
-  # Allow non-abstract empty methods in abstract base classes
-  "B027",
-  # Ignore McCabe complexity
-  "C901",
-  # Allow boolean positional values in function calls, like `dict.get(... True)`
-  "FBT003",
-  # Ignore checks for possible passwords
-  "S105", "S106", "S107",
-]
-lint.unfixable = [
-  # Don't touch unused imports
-  "F401",
-]
-extend-exclude = [
-    "tests/conftest.py",
-]
-
-[tool.ruff.lint.isort]
-known-first-party = ["coincurve"]
-
-[tool.ruff.lint.flake8-quotes]
-inline-quotes = "single"
-
-[tool.ruff.lint.per-file-ignores]
-# Tests can use assertions
-"tests/*" = ["S101"]
-"tests/**/*" = ["S101"]
-# Percent formatting
-"src/coincurve/ecdsa.py" = ["UP031"]
-# Shadowing standard library module name
-"src/coincurve/types.py" = ["A005"]
 
 # --- Mypy ---
 [tool.mypy]

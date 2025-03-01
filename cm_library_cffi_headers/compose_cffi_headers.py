@@ -2,6 +2,7 @@ import argparse
 import logging
 import os
 import re
+import sys
 
 logging.basicConfig(level=logging.ERROR)
 
@@ -9,8 +10,7 @@ logging.basicConfig(level=logging.ERROR)
 def remove_c_comments_emptylines(text):
     text = re.sub(r'/\*.*?\*/', '', text, flags=re.DOTALL)  # Remove multi-line comments
     text = re.sub(r'//.*', '', text)  # Remove single-line comments
-    text = re.sub(r'\n\s*\n+', '\n', text)  # Remove empty lines
-    return text
+    return re.sub(r'\n\s*\n+', '\n', text)  # Remove empty lines
 
 
 def remove_c_includes(lines):
@@ -32,7 +32,6 @@ def remove_c_ifdef(lines):
     ifdef_count = -1
 
     for line in lines:
-
         stripped_line = line.rstrip()
 
         if re.match(r'^#\s*(if|el|endif)', stripped_line):
@@ -43,7 +42,8 @@ def remove_c_ifdef(lines):
         if ifdef_count == 0:
             processed_lines.append(stripped_line)
         elif ifdef_count < 0 and line != lines[-1]:
-            raise ValueError('Unbalanced #if/#endif preprocessor directives.')
+            msg = 'Unbalanced #if/#endif preprocessor directives.'
+            raise ValueError(msg)
 
     return processed_lines
 
@@ -86,7 +86,7 @@ def remove_deprecated_functions(lines, deprecation):
         stripped_line = line.rstrip()
 
         if re.match(r'#\s*define', stripped_line) or in_define:
-            in_define = True if stripped_line.endswith('\\') else False
+            in_define = bool(stripped_line.endswith('\\'))
             processed_lines.append(stripped_line)
             continue
 
@@ -173,7 +173,7 @@ def concatenate_c_struct(lines):
 
 
 def make_header_cffi_compliant(src_header_dir, src_header, cffi_dir):
-    with open(os.path.join(src_header_dir, src_header)) as f:
+    with open(os.path.join(src_header_dir, src_header), encoding='utf-8') as f:
         text = remove_c_comments_emptylines(f.read())
     lines = text.split('\n')
 
@@ -214,9 +214,9 @@ def make_header_cffi_compliant(src_header_dir, src_header, cffi_dir):
     )
     lines = apply_cffi_defines_syntax(lines)
 
-    logging.info(f'   Writting: {src_header} in {cffi_dir}')
+    logging.info('   Writting: %s in %s', src_header, cffi_dir)
     output_filename = os.path.join(cffi_dir, src_header)
-    with open(output_filename, 'w') as f_out:
+    with open(output_filename, 'w', encoding='utf-8') as f_out:
         f_out.write('\n'.join(lines))
 
 
@@ -230,15 +230,15 @@ if __name__ == '__main__':
 
     # Verify args are valid
     if not os.path.isdir(args.src_header_dir):
-        logging.error(f'Error: Directory: {args.src_header_dir} not found.')
-        exit(1)
+        logging.error('Error: Directory: %s not found.', args.src_header_dir)
+        sys.exit(1)
 
     if not os.path.isdir(args.cffi_dir):
-        logging.error(f'Error: Directory: {args.cffi_dir} not found.')
-        exit(1)
+        logging.error('Error: Directory: %s not found.', args.cffi_dir)
+        sys.exit(1)
 
     if not os.path.isfile(os.path.join(args.src_header_dir, args.cffi_header)):
-        logging.error(f'Error: {args.cffi_header} not found in {args.src_header_dir}.')
-        exit(1)
+        logging.error('Error: %s not found in %s.', args.cffi_header, args.src_header_dir)
+        sys.exit(1)
 
     make_header_cffi_compliant(args.src_header_dir, args.cffi_header, args.cffi_dir)

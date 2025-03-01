@@ -8,6 +8,7 @@ Important changes are emphasized.
 
 - **Breaking:** Drop support for Python 3.8
 - Add support for Python 3.13
+- Remove `cffi` as a runtime dependency
 
 ## 20.0.0
 

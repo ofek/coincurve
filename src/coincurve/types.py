@@ -1,7 +1,8 @@
-import sys
-from typing import Optional, Tuple
+from __future__ import annotations
 
-from ._libsecp256k1 import ffi
+import sys
+
+from coincurve._libsecp256k1 import ffi
 
 # https://bugs.python.org/issue42965
 if sys.version_info >= (3, 9, 2):
@@ -9,5 +10,5 @@ if sys.version_info >= (3, 9, 2):
 else:
     from typing import Callable
 
-Hasher = Optional[Callable[[bytes], bytes]]
-Nonce = Tuple[ffi.CData, ffi.CData]
+Hasher = Callable[[bytes], bytes] | None
+Nonce = tuple[ffi.CData, ffi.CData]

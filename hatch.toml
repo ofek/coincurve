@@ -2,6 +2,18 @@
 installer = "uv"
 dev-mode = false
 
+[envs.hatch-static-analysis]
+config-path = "ruff_defaults.toml"
+dependencies = ["ruff==0.9.9"]
+
+[envs.types]
+extra-dependencies = [
+  "mypy",
+  "pytest",
+]
+[envs.types.scripts]
+check = "mypy --install-types --non-interactive {args:src/coincurve tests}"
+
 [envs.docs]
 dependencies = [
   "mkdocs~=1.6.1",

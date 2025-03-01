@@ -1,8 +1,13 @@
+from __future__ import annotations
+
+from typing import TYPE_CHECKING
+
+from coincurve._libsecp256k1 import ffi, lib
 from coincurve.context import GLOBAL_CONTEXT, Context
-from coincurve.types import Hasher
 from coincurve.utils import bytes_to_int, int_to_bytes, sha256
 
-from ._libsecp256k1 import ffi, lib
+if TYPE_CHECKING:
+    from coincurve.types import Hasher
 
 MAX_SIG_LENGTH = 72
 CDATA_SIG_LENGTH = 64
@@ -22,21 +27,24 @@ def der_to_cdata(der: bytes, context: Context = GLOBAL_CONTEXT):
     parsed = lib.secp256k1_ecdsa_signature_parse_der(context.ctx, cdata, der, len(der))
 
     if not parsed:
-        raise ValueError('The DER-encoded signature could not be parsed.')
+        msg = 'The DER-encoded signature could not be parsed.'
+        raise ValueError(msg)
 
     return cdata
 
 
 def recover(message: bytes, recover_sig, hasher: Hasher = sha256, context: Context = GLOBAL_CONTEXT):
     msg_hash = hasher(message) if hasher is not None else message
-    if len(msg_hash) != 32:
-        raise ValueError('Message hash must be 32 bytes long.')
+    if len(msg_hash) != 32:  # noqa: PLR2004
+        msg = 'Message hash must be 32 bytes long.'
+        raise ValueError(msg)
     pubkey = ffi.new('secp256k1_pubkey *')
 
     recovered = lib.secp256k1_ecdsa_recover(context.ctx, pubkey, recover_sig, msg_hash)
     if recovered:
         return pubkey
-    raise ValueError('failed to recover ECDSA public key')
+    msg = 'failed to recover ECDSA public key'
+    raise ValueError(msg)
 
 
 def serialize_recoverable(recover_sig, context: Context = GLOBAL_CONTEXT) -> bytes:
@@ -49,19 +57,22 @@ def serialize_recoverable(recover_sig, context: Context = GLOBAL_CONTEXT) -> byt
 
 
 def deserialize_recoverable(serialized: bytes, context: Context = GLOBAL_CONTEXT):
-    if len(serialized) != 65:
-        raise ValueError('Serialized signature must be 65 bytes long.')
+    if len(serialized) != 65:  # noqa: PLR2004
+        msg = 'Serialized signature must be 65 bytes long.'
+        raise ValueError(msg)
 
     ser_sig, rec_id = serialized[:64], bytes_to_int(serialized[64:])
 
-    if not 0 <= rec_id <= 3:
-        raise ValueError('Invalid recovery id.')
+    if not 0 <= rec_id <= 3:  # noqa: PLR2004
+        msg = 'Invalid recovery id.'
+        raise ValueError(msg)
 
     recover_sig = ffi.new('secp256k1_ecdsa_recoverable_signature *')
 
     parsed = lib.secp256k1_ecdsa_recoverable_signature_parse_compact(context.ctx, recover_sig, ser_sig, rec_id)
     if not parsed:
-        raise ValueError('Failed to parse recoverable signature.')
+        msg = 'Failed to parse recoverable signature.'
+        raise ValueError(msg)
 
     return recover_sig
 
@@ -77,19 +88,22 @@ def serialize_compact(raw_sig, context: Context = GLOBAL_CONTEXT):  # no cov
 
     res = lib.secp256k1_ecdsa_signature_serialize_compact(context.ctx, output, raw_sig)
     if not res:
-        raise ValueError('secp256k1_ecdsa_signature_serialize_compact')
+        msg = 'secp256k1_ecdsa_signature_serialize_compact'
+        raise ValueError(msg)
 
     return bytes(ffi.buffer(output, CDATA_SIG_LENGTH))
 
 
 def deserialize_compact(ser_sig: bytes, context: Context = GLOBAL_CONTEXT):  # no cov
-    if len(ser_sig) != 64:
-        raise Exception('invalid signature length')
+    if len(ser_sig) != 64:  # noqa: PLR2004
+        msg = 'invalid signature length'
+        raise ValueError(msg)
 
     raw_sig = ffi.new('secp256k1_ecdsa_signature *')
     res = lib.secp256k1_ecdsa_signature_parse_compact(context.ctx, raw_sig, ser_sig)
     if not res:
-        raise ValueError('secp256k1_ecdsa_signature_parse_compact')
+        msg = 'secp256k1_ecdsa_signature_parse_compact'
+        raise ValueError(msg)
 
     return raw_sig
 
@@ -106,7 +120,7 @@ def signature_normalize(raw_sig, context: Context = GLOBAL_CONTEXT):  # no cov
 
     res = lib.secp256k1_ecdsa_signature_normalize(context.ctx, sigout, raw_sig)
 
-    return not not res, sigout
+    return bool(res), sigout
 
 
 def recoverable_convert(recover_sig, context: Context = GLOBAL_CONTEXT):  # no cov

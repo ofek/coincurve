@@ -62,8 +62,14 @@ jobs:
     - name: Install dependencies
       run: ./.github/scripts/install-test-deps.sh
 
-    - name: Check style and typing
-      run: tox -e lint,typing
+    - name: Install Hatch
+      uses: pypa/hatch@install
+
+    - name: Run static analysis
+      run: hatch fmt --check
+
+    - name: Check types
+      run: hatch run types:check
 
     - name: Run tests
       run: tox -e ${PYTHON_VERSION}
@@ -90,7 +96,7 @@ jobs:
     name: Build macOS wheels
     needs:
     - test
-    runs-on: macos-latest
+    runs-on: macos-13
 
     steps:
     - uses: actions/checkout@v4

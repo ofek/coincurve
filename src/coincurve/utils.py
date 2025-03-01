@@ -1,19 +1,24 @@
+from __future__ import annotations
+
 from base64 import b64decode, b64encode
 from hashlib import sha256 as _sha256
 from os import environ, urandom
-from typing import Generator
+from typing import TYPE_CHECKING
 
+from coincurve._libsecp256k1 import ffi, lib
 from coincurve.context import GLOBAL_CONTEXT, Context
-from coincurve.types import Hasher
 
-from ._libsecp256k1 import ffi, lib
+if TYPE_CHECKING:
+    from collections.abc import Generator
+
+    from coincurve.types import Hasher
 
 GROUP_ORDER = (
-    b'\xff\xff\xff\xff\xff\xff\xff\xff\xff\xff\xff\xff\xff\xff\xff'
-    b'\xfe\xba\xae\xdc\xe6\xafH\xa0;\xbf\xd2^\x8c\xd06AA'
+    b'\xff\xff\xff\xff\xff\xff\xff\xff\xff\xff\xff\xff\xff\xff\xff\xfe\xba\xae\xdc\xe6\xafH\xa0;\xbf\xd2^\x8c\xd06AA'
 )
 GROUP_ORDER_INT = 0xFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFEBAAEDCE6AF48A03BBFD25E8CD0364141
 KEY_SIZE = 32
+MSG_HASH_SIZE = 32
 ZERO = b'\x00'
 PEM_HEADER = b'-----BEGIN PRIVATE KEY-----\n'
 PEM_FOOTER = b'-----END PRIVATE KEY-----\n'
@@ -27,15 +32,15 @@ if environ.get('COINCURVE_BUILDING_DOCS') != 'true':
 
 else:  # no cov
 
-    class __Nonce(tuple):
-        def __repr__(self):
+    class __Nonce(tuple):  # noqa: SLOT001
+        def __repr__(self) -> str:
             return '(ffi.NULL, ffi.NULL)'
 
     class __HasherSHA256:
         def __call__(self, bytestr: bytes) -> bytes:
             return _sha256(bytestr).digest()
 
-        def __repr__(self):
+        def __repr__(self) -> str:
             return 'sha256'
 
     DEFAULT_NONCE = __Nonce((ffi.NULL, ffi.NULL))
@@ -88,7 +93,8 @@ def pad_scalar(scalar: bytes) -> bytes:
 
 def validate_secret(secret: bytes) -> bytes:
     if not 0 < bytes_to_int(secret) < GROUP_ORDER_INT:
-        raise ValueError(f'Secret scalar must be greater than 0 and less than {GROUP_ORDER_INT}.')
+        msg = f'Secret scalar must be greater than 0 and less than {GROUP_ORDER_INT}.'
+        raise ValueError(msg)
     return pad_scalar(secret)
 
 
@@ -111,20 +117,23 @@ def verify_signature(
     pubkey_parsed = lib.secp256k1_ec_pubkey_parse(context.ctx, pubkey, public_key, len(public_key))
 
     if not pubkey_parsed:
-        raise ValueError('The public key could not be parsed or is invalid.')
+        msg = 'The public key could not be parsed or is invalid.'
+        raise ValueError(msg)
 
     msg_hash = hasher(message) if hasher is not None else message
-    if len(msg_hash) != 32:
-        raise ValueError('Message hash must be 32 bytes long.')
+    if len(msg_hash) != MSG_HASH_SIZE:
+        msg = 'Message hash must be 32 bytes long.'
+        raise ValueError(msg)
 
     sig = ffi.new('secp256k1_ecdsa_signature *')
 
     sig_parsed = lib.secp256k1_ecdsa_signature_parse_der(context.ctx, sig, signature, len(signature))
 
     if not sig_parsed:
-        raise ValueError('The DER-encoded signature could not be parsed.')
+        msg = 'The DER-encoded signature could not be parsed.'
+        raise ValueError(msg)
 
     verified = lib.secp256k1_ecdsa_verify(context.ctx, sig, msg_hash, pubkey)
 
     # A performance hack to avoid global bool() lookup.
-    return not not verified
+    return bool(verified)

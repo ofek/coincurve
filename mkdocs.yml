@@ -12,8 +12,13 @@ site_dir: site
 theme:
   name: material
   language: en
-  features:
-    - navigation.instant
+  font:
+    text: Roboto
+    code: Roboto Mono
+  icon:
+    logo: material/circle-multiple
+    repo: fontawesome/brands/github-alt
+  favicon: assets/images/favicon.ico
   palette:
     - media: "(prefers-color-scheme: dark)"
       scheme: slate
@@ -29,13 +34,15 @@ theme:
       toggle:
         icon: material/weather-sunny
         name: Switch to dark mode
-  font:
-    text: Roboto
-    code: Roboto Mono
-  icon:
-    logo: material/circle-multiple
-    repo: fontawesome/brands/github-alt
-  favicon: assets/images/favicon.ico
+  features:
+    - content.action.edit
+    - content.code.copy
+    - content.tabs.link
+    - content.tooltips
+    - navigation.expand
+    - navigation.footer
+    - navigation.instant
+    - navigation.sections
 
 nav:
   - About: index.md
@@ -46,33 +53,43 @@ nav:
 
 plugins:
   # Built-in
-  - search:
+  search: {}
   # Extra
-  - minify:
-      minify_html: true
-  - git-revision-date-localized:
-      type: date
-  - mkdocstrings:
-      default_handler: python
-      handlers:
-        python:
-          rendering:
-            show_if_no_docstring: true
-            show_root_heading: true
-            show_source: true
+  glightbox: {}
+  minify:
+    minify_html: true
+  git-revision-date-localized:
+    type: date
+    strict: false
+  mkdocstrings:
+    default_handler: python
+    handlers:
+      python:
+        paths:
+          - src
+        options:
+          # Headings
+          show_root_heading: true
+          show_root_full_path: false
+          # Docstrings
+          show_if_no_docstring: true
+          # Signatures/annotations
+          show_signature_annotations: true
+          # Other
+          show_bases: false
 
 markdown_extensions:
   # Built-in
   - markdown.extensions.abbr:
   - markdown.extensions.admonition:
+  - markdown.extensions.attr_list:
   - markdown.extensions.footnotes:
+  - markdown.extensions.md_in_html:
   - markdown.extensions.meta:
   - markdown.extensions.tables:
   - markdown.extensions.toc:
       permalink: true
   # Extra
-  - mkpatcher:
-      location: docs/.scripts
   - pymdownx.arithmatex:
   - pymdownx.betterem:
       smart_enable: all
@@ -82,8 +99,8 @@ markdown_extensions:
   - pymdownx.emoji:
       # https://github.com/twitter/twemoji
       # https://raw.githubusercontent.com/facelessuser/pymdown-extensions/master/pymdownx/twemoji_db.py
-      emoji_index: !!python/name:materialx.emoji.twemoji
-      emoji_generator: !!python/name:materialx.emoji.to_svg
+      emoji_index: !!python/name:material.extensions.emoji.twemoji
+      emoji_generator: !!python/name:material.extensions.emoji.to_svg
   - pymdownx.highlight:
       guess_lang: false
       linenums_style: pymdownx-inline
@@ -93,17 +110,29 @@ markdown_extensions:
   - pymdownx.magiclink:
       repo_url_shortener: true
       repo_url_shorthand: true
+      social_url_shortener: true
       social_url_shorthand: true
+      normalize_issue_symbols: true
       provider: github
       user: ofek
       repo: coincurve
   - pymdownx.mark:
   - pymdownx.progressbar:
+  - pymdownx.saneheaders:
   - pymdownx.smartsymbols:
   - pymdownx.snippets:
-      base_path: docs/.snippets
+      check_paths: true
+      base_path:
+        - docs/.snippets
+      auto_append:
+        - links.txt
+        - abbrs.txt
   - pymdownx.superfences:
   - pymdownx.tabbed:
+      alternate_style: true
+      slugify: !!python/object/apply:pymdownx.slugs.slugify
+        kwds:
+          case: lower
   - pymdownx.tasklist:
       custom_checkbox: true
   - pymdownx.tilde:

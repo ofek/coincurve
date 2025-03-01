@@ -24,7 +24,6 @@ env:
     COINCURVE_IGNORE_SYSTEM_LIB
     COINCURVE_SECP256K1_STATIC
     COINCURVE_CROSS_HOST
-  CIBW_PROJECT_REQUIRES_PYTHON: '>=3.8'
   CIBW_BEFORE_ALL_MACOS: ./.github/scripts/install-macos-build-deps.sh
   CIBW_TEST_REQUIRES: pytest pytest-benchmark
   CIBW_TEST_COMMAND: >
@@ -76,6 +75,8 @@ jobs:
     defaults:
       run:
         shell: bash -el {0}
+    env:
+      PYTHON_VERSION: '3.12'
 
     steps:
     - uses: actions/checkout@v4
@@ -98,4 +99,3 @@ jobs:
         conda install pip
         pip install conda_dist/*.whl
         python -m pytest tests
-        

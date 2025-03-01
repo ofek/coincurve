@@ -6,6 +6,9 @@ Important changes are emphasized.
 
 ## Unreleased
 
+- **Breaking:** Drop support for Python 3.8
+- Add support for Python 3.13
+
 ## 20.0.0
 
 - **Breaking:** CMake is now a build dependency; this is only a breaking change for redistributors as building with standard Python packaging tools will automatically use the CMake that is available on PyPI

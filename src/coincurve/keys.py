@@ -415,7 +415,7 @@ class PublicKey:
         :return: The 33 byte formatted public key, or the 65 byte formatted public key if `compressed` is `False`.
         """
         length = 33 if compressed else 65
-        serialized = ffi.new('unsigned char [%d]' % length)
+        serialized = ffi.new('unsigned char [%d]' % length)  # noqa: UP031
         output_len = ffi.new('size_t *', length)
 
         lib.secp256k1_ec_pubkey_serialize(

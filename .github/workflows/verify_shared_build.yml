@@ -21,7 +21,6 @@ env:
   CIBW_ENVIRONMENT_PASS_LINUX: >
     COINCURVE_IGNORE_SYSTEM_LIB
     COINCURVE_SECP256K1_BUILD
-  CIBW_PROJECT_REQUIRES_PYTHON: '>=3.8'
   CIBW_BEFORE_ALL_MACOS: ./.github/scripts/install-macos-build-deps.sh
   CIBW_TEST_REQUIRES: pytest pytest-benchmark
   CIBW_TEST_COMMAND: >
@@ -85,7 +84,7 @@ jobs:
     - uses: actions/checkout@v4
 
     - name: Build wheels
-      uses: pypa/cibuildwheel@v2.17
+      uses: pypa/cibuildwheel@v2.23
 
   macos-wheels-x86_64:
     name: Build macOS wheels
@@ -97,7 +96,7 @@ jobs:
     - uses: actions/checkout@v4
 
     - name: Build wheels
-      uses: pypa/cibuildwheel@v2.17
+      uses: pypa/cibuildwheel@v2.23
       env:
         CIBW_ARCHS_MACOS: x86_64
 
@@ -111,7 +110,7 @@ jobs:
     - uses: actions/checkout@v4
 
     - name: Build wheels
-      uses: pypa/cibuildwheel@v2.17
+      uses: pypa/cibuildwheel@v2.23
 
   windows-wheels-x86_64:
     name: Build Windows wheels AMD64
@@ -127,7 +126,7 @@ jobs:
         python-version: '3.12'
 
     - name: Build wheels
-      uses: pypa/cibuildwheel@v2.17
+      uses: pypa/cibuildwheel@v2.23
       env:
         CIBW_ARCHS_WINDOWS: 'AMD64'
         CIBW_BEFORE_ALL: choco install -y --no-progress --no-color cmake>=3.28
@@ -142,7 +141,7 @@ jobs:
     - uses: actions/checkout@v4
 
     - name: Build wheels
-      uses: pypa/cibuildwheel@v2.17
+      uses: pypa/cibuildwheel@v2.23
       env:
         COINCURVE_CROSS_HOST: 'arm64'
         CIBW_ARCHS_WINDOWS: 'ARM64'

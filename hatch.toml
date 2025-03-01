@@ -1,0 +1,35 @@
+[envs.default]
+installer = "uv"
+dev-mode = false
+
+[envs.docs]
+dependencies = [
+  "mkdocs~=1.6.1",
+  "mkdocs-material~=9.5.40",
+  # Plugins
+  "mkdocs-minify-plugin~=0.8.0",
+  "mkdocs-git-revision-date-localized-plugin~=1.2.9",
+  "mkdocs-glightbox~=0.4.0",
+  "mkdocs-redirects~=1.2.1",
+  "mkdocstrings-python~=1.10.3",
+  "mike~=2.1.3",
+  # Extensions
+  "pymdown-extensions~=10.11.2",
+  # Necessary for syntax highlighting in code blocks
+  "pygments~=2.18.0",
+  # Validation
+  "linkchecker~=10.5.0",
+]
+[envs.docs.env-vars]
+SOURCE_DATE_EPOCH = "1580601600"
+PYTHONUNBUFFERED = "1"
+[envs.docs.scripts]
+build = "mkdocs build --clean --strict {args}"
+serve = "mkdocs serve --dev-addr localhost:8000 {args}"
+ci-build = "mike deploy --update-aliases {args}"
+validate = "linkchecker --config .linkcheckerrc site"
+# https://github.com/linkchecker/linkchecker/issues/678
+build-check = [
+  "build --no-directory-urls",
+  "validate",
+]

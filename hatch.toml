@@ -19,7 +19,7 @@ cov-report = "coverage report"
 bench = "pytest{env:HATCH_TEST_ARGS:} --benchmark-only --benchmark-sort=name --benchmark-cprofile=tottime {args}"
 
 [envs.types]
-extra-dependencies = [
+dependencies = [
   "mypy",
   "pytest",
 ]

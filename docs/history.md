@@ -9,6 +9,8 @@ Important changes are emphasized.
 - **Breaking:** Drop support for Python 3.8
 - Add support for Python 3.13
 - Remove `cffi` as a runtime dependency
+- Add `COINCURVE_VENDOR_CFFI` environment variable to control vendoring of the `_cffi_backend` module
+- Minor performance improvement by removing use of formatted string constants
 
 ## 20.0.0
 

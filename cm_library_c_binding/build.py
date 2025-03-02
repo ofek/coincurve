@@ -83,16 +83,18 @@ if __name__ == '__main__':
     ffi = mk_ffi(args.headers_dir, modules, args.static_lib == 'ON')
     ffi.emit_c_code(args.c_file)
 
-    with open(args.c_file, encoding='utf-8') as f:
-        source = f.read()
+    vendor_cffi = os.environ.get('COINCURVE_VENDOR_CFFI', '1') == '1'
+    if vendor_cffi:
+        with open(args.c_file, encoding='utf-8') as f:
+            source = f.read()
 
-    expected_text = 'PyImport_ImportModule("_cffi_backend")'
-    if expected_text not in source:
-        msg = f'{expected_text} not found in {args.c_file}'
-        raise ValueError(msg)
+        expected_text = 'PyImport_ImportModule("_cffi_backend")'
+        if expected_text not in source:
+            msg = f'{expected_text} not found in {args.c_file}'
+            raise ValueError(msg)
 
-    new_source = source.replace(expected_text, 'PyImport_ImportModule("coincurve._cffi_backend")')
-    with open(args.c_file, 'w', encoding='utf-8') as f:
-        f.write(new_source)
+        new_source = source.replace(expected_text, 'PyImport_ImportModule("coincurve._cffi_backend")')
+        with open(args.c_file, 'w', encoding='utf-8') as f:
+            f.write(new_source)
 
     logging.info('   Generated C code: %s', args.c_file)

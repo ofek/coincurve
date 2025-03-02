@@ -1,8 +1,9 @@
+from __future__ import annotations
+
 import argparse
 import logging
 import os
-from collections import namedtuple
-from typing import List
+from typing import NamedTuple
 
 from cffi import FFI
 
@@ -10,10 +11,13 @@ logging.basicConfig(level=logging.INFO)
 
 here = os.path.dirname(os.path.abspath(__file__))
 
-Source = namedtuple('Source', ('h', 'include'))
+
+class Source(NamedTuple):
+    h: str
+    include: str
 
 
-def gather_sources_from_directory(directory: str) -> List[Source]:
+def gather_sources_from_directory(directory: str) -> list[Source]:
     """
     Gather source files from a given directory.
 
@@ -35,7 +39,12 @@ define_static_lib = """
 """
 
 
-def mk_ffi(directory: str, sources: List[Source], static_lib: bool = False, name: str = '_libsecp256k1') -> FFI:
+def mk_ffi(
+    directory: str,
+    sources: list[Source],
+    static_lib: bool = False,  # noqa: FBT001, FBT002
+    name: str = '_libsecp256k1',
+) -> FFI:
     """
     Create an FFI object.
 
@@ -47,10 +56,10 @@ def mk_ffi(directory: str, sources: List[Source], static_lib: bool = False, name
     _ffi = FFI()
     code = [define_static_lib] if static_lib else []
 
-    logging.info(f'   Static {static_lib}...')
+    logging.info('   Static %s...', static_lib)
     for source in sources:
-        with open(os.path.join(directory, source.h)) as h:
-            logging.info(f'   Including {source.h}...')
+        with open(os.path.join(directory, source.h), encoding='utf-8') as h:
+            logging.info('   Including %s...', source.h)
             c_header = h.read()
             _ffi.cdef(c_header)
 
@@ -73,4 +82,17 @@ if __name__ == '__main__':
     modules = gather_sources_from_directory(args.headers_dir)
     ffi = mk_ffi(args.headers_dir, modules, args.static_lib == 'ON')
     ffi.emit_c_code(args.c_file)
-    logging.info(f'   Generated C code: {args.c_file}')
+
+    with open(args.c_file, encoding='utf-8') as f:
+        source = f.read()
+
+    expected_text = 'PyImport_ImportModule("_cffi_backend")'
+    if expected_text not in source:
+        msg = f'{expected_text} not found in {args.c_file}'
+        raise ValueError(msg)
+
+    new_source = source.replace(expected_text, 'PyImport_ImportModule("coincurve._cffi_backend")')
+    with open(args.c_file, 'w', encoding='utf-8') as f:
+        f.write(new_source)
+
+    logging.info('   Generated C code: %s', args.c_file)

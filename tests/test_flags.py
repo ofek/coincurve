@@ -10,7 +10,7 @@ def test_context_flags():
     expected_flags = {
         CONTEXT_NONE,
     }
-    assert CONTEXT_FLAGS == expected_flags
+    assert expected_flags == CONTEXT_FLAGS
 
 
 def test_context_none():

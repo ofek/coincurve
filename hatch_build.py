@@ -16,7 +16,7 @@ class CustomBuildHook(BuildHookInterface):
     the `cffi` package is not required as a runtime dependency.
     """
 
-    LICENSE_NAME = 'LICENSE-cffi'
+    LICENSE_NAME = "LICENSE-cffi"
 
     @cached_property
     def local_cffi_license(self) -> str:
@@ -24,13 +24,13 @@ class CustomBuildHook(BuildHookInterface):
 
     def initialize(self, version: str, build_data: dict[str, Any]) -> None:  # noqa: ARG002
         cffi_shared_lib = _cffi_backend.__file__
-        relative_path = f'coincurve/{os.path.basename(cffi_shared_lib)}'
-        build_data['force_include'][cffi_shared_lib] = relative_path
+        relative_path = f"coincurve/{os.path.basename(cffi_shared_lib)}"
+        build_data["force_include"][cffi_shared_lib] = relative_path
 
-        dist = distribution('cffi')
-        license_files = [f for f in dist.files if f.name == 'LICENSE' and f.parent.name.endswith('.dist-info')]
+        dist = distribution("cffi")
+        license_files = [f for f in dist.files if f.name == "LICENSE" and f.parent.name.endswith(".dist-info")]
         if len(license_files) != 1:
-            message = f'Expected exactly one LICENSE file in cffi distribution, got {len(license_files)}'
+            message = f"Expected exactly one LICENSE file in cffi distribution, got {len(license_files)}"
             raise RuntimeError(message)
 
         license_file = license_files[0]

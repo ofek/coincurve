@@ -14,8 +14,8 @@ CDATA_SIG_LENGTH = 64
 
 
 def cdata_to_der(cdata, context: Context = GLOBAL_CONTEXT) -> bytes:
-    der = ffi.new('unsigned char[72]')
-    der_length = ffi.new('size_t *', MAX_SIG_LENGTH)
+    der = ffi.new("unsigned char[72]")
+    der_length = ffi.new("size_t *", MAX_SIG_LENGTH)
 
     lib.secp256k1_ecdsa_signature_serialize_der(context.ctx, der, der_length, cdata)
 
@@ -23,11 +23,11 @@ def cdata_to_der(cdata, context: Context = GLOBAL_CONTEXT) -> bytes:
 
 
 def der_to_cdata(der: bytes, context: Context = GLOBAL_CONTEXT):
-    cdata = ffi.new('secp256k1_ecdsa_signature *')
+    cdata = ffi.new("secp256k1_ecdsa_signature *")
     parsed = lib.secp256k1_ecdsa_signature_parse_der(context.ctx, cdata, der, len(der))
 
     if not parsed:
-        msg = 'The DER-encoded signature could not be parsed.'
+        msg = "The DER-encoded signature could not be parsed."
         raise ValueError(msg)
 
     return cdata
@@ -36,20 +36,20 @@ def der_to_cdata(der: bytes, context: Context = GLOBAL_CONTEXT):
 def recover(message: bytes, recover_sig, hasher: Hasher = sha256, context: Context = GLOBAL_CONTEXT):
     msg_hash = hasher(message) if hasher is not None else message
     if len(msg_hash) != 32:  # noqa: PLR2004
-        msg = 'Message hash must be 32 bytes long.'
+        msg = "Message hash must be 32 bytes long."
         raise ValueError(msg)
-    pubkey = ffi.new('secp256k1_pubkey *')
+    pubkey = ffi.new("secp256k1_pubkey *")
 
     recovered = lib.secp256k1_ecdsa_recover(context.ctx, pubkey, recover_sig, msg_hash)
     if recovered:
         return pubkey
-    msg = 'failed to recover ECDSA public key'
+    msg = "failed to recover ECDSA public key"
     raise ValueError(msg)
 
 
 def serialize_recoverable(recover_sig, context: Context = GLOBAL_CONTEXT) -> bytes:
-    output = ffi.new('unsigned char[64]')
-    recid = ffi.new('int *')
+    output = ffi.new("unsigned char[64]")
+    recid = ffi.new("int *")
 
     lib.secp256k1_ecdsa_recoverable_signature_serialize_compact(context.ctx, output, recid, recover_sig)
 
@@ -58,20 +58,20 @@ def serialize_recoverable(recover_sig, context: Context = GLOBAL_CONTEXT) -> byt
 
 def deserialize_recoverable(serialized: bytes, context: Context = GLOBAL_CONTEXT):
     if len(serialized) != 65:  # noqa: PLR2004
-        msg = 'Serialized signature must be 65 bytes long.'
+        msg = "Serialized signature must be 65 bytes long."
         raise ValueError(msg)
 
     ser_sig, rec_id = serialized[:64], bytes_to_int(serialized[64:])
 
     if not 0 <= rec_id <= 3:  # noqa: PLR2004
-        msg = 'Invalid recovery id.'
+        msg = "Invalid recovery id."
         raise ValueError(msg)
 
-    recover_sig = ffi.new('secp256k1_ecdsa_recoverable_signature *')
+    recover_sig = ffi.new("secp256k1_ecdsa_recoverable_signature *")
 
     parsed = lib.secp256k1_ecdsa_recoverable_signature_parse_compact(context.ctx, recover_sig, ser_sig, rec_id)
     if not parsed:
-        msg = 'Failed to parse recoverable signature.'
+        msg = "Failed to parse recoverable signature."
         raise ValueError(msg)
 
     return recover_sig
@@ -84,11 +84,11 @@ Warning:
 
 
 def serialize_compact(raw_sig, context: Context = GLOBAL_CONTEXT):  # no cov
-    output = ffi.new('unsigned char[64]')
+    output = ffi.new("unsigned char[64]")
 
     res = lib.secp256k1_ecdsa_signature_serialize_compact(context.ctx, output, raw_sig)
     if not res:
-        msg = 'secp256k1_ecdsa_signature_serialize_compact'
+        msg = "secp256k1_ecdsa_signature_serialize_compact"
         raise ValueError(msg)
 
     return bytes(ffi.buffer(output, CDATA_SIG_LENGTH))
@@ -96,13 +96,13 @@ def serialize_compact(raw_sig, context: Context = GLOBAL_CONTEXT):  # no cov
 
 def deserialize_compact(ser_sig: bytes, context: Context = GLOBAL_CONTEXT):  # no cov
     if len(ser_sig) != 64:  # noqa: PLR2004
-        msg = 'invalid signature length'
+        msg = "invalid signature length"
         raise ValueError(msg)
 
-    raw_sig = ffi.new('secp256k1_ecdsa_signature *')
+    raw_sig = ffi.new("secp256k1_ecdsa_signature *")
     res = lib.secp256k1_ecdsa_signature_parse_compact(context.ctx, raw_sig, ser_sig)
     if not res:
-        msg = 'secp256k1_ecdsa_signature_parse_compact'
+        msg = "secp256k1_ecdsa_signature_parse_compact"
         raise ValueError(msg)
 
     return raw_sig
@@ -116,15 +116,15 @@ def signature_normalize(raw_sig, context: Context = GLOBAL_CONTEXT):  # no cov
     not previously normalized or False if signature was already
     normalized), and the normalized signature.
     """
-    sigout = ffi.new('secp256k1_ecdsa_signature *')
+    sigout = ffi.new("secp256k1_ecdsa_signature *")
 
     res = lib.secp256k1_ecdsa_signature_normalize(context.ctx, sigout, raw_sig)
 
-    return bool(res), sigout
+    return not not res, sigout  # noqa: SIM208
 
 
 def recoverable_convert(recover_sig, context: Context = GLOBAL_CONTEXT):  # no cov
-    normal_sig = ffi.new('secp256k1_ecdsa_signature *')
+    normal_sig = ffi.new("secp256k1_ecdsa_signature *")
 
     lib.secp256k1_ecdsa_recoverable_signature_convert(context.ctx, normal_sig, recover_sig)
 

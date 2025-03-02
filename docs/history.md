@@ -11,12 +11,14 @@ Important changes are emphasized.
 - Remove `cffi` as a runtime dependency
 - Add `COINCURVE_VENDOR_CFFI` environment variable to control vendoring of the `_cffi_backend` module
 - Minor performance improvement by removing use of formatted string constants
+- Upgrade [libsecp256k1][] to version 0.6.0
 
 ## 20.0.0
 
 - **Breaking:** CMake is now a build dependency; this is only a breaking change for redistributors as building with standard Python packaging tools will automatically use the CMake that is available on PyPI
 - **Breaking:** Stop building wheels for Windows 32-bit
 - Build wheels for Windows ARM64
+- Upgrade [libsecp256k1][] to version 0.5.0
 
 ## 19.0.1
 

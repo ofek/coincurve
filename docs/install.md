@@ -29,6 +29,7 @@ A few environment variables influence the build:
 
 - `COINCURVE_UPSTREAM_REF` - This is the Git reference of [libsecp256k1][] to use rather than the (frequently updated) default.
 - `COINCURVE_IGNORE_SYSTEM_LIB` - The presence of this will force fetching of [libsecp256k1][] even if it's already detected at the system level.
+- `COINCURVE_VENDOR_CFFI` - Setting this to anything other than `1` (the default) prevents vendoring of the `_cffi_backend` module. Re-distributors should make sure to require `cffi` as a runtime dependency when disabling this.
 
 !!! tip
     To avoid installing the binary wheels on compatible distributions, use the `--no-binary` option.

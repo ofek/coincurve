@@ -4,6 +4,7 @@ import pytest
 
 from coincurve.utils import (
     GROUP_ORDER,
+    GROUP_ORDER_INT,
     ZERO,
     bytes_to_int,
     chunk_data,
@@ -32,29 +33,31 @@ class TestPadScalar:
 
 def test_get_valid_secret():
     secret = get_valid_secret()
-    assert len(secret) == 32 and ZERO < secret < GROUP_ORDER
+    assert len(secret) == 32
+    assert ZERO < secret < GROUP_ORDER
 
 
 class TestValidateSecret:
     def test_valid(self):
         secret = validate_secret(b'\x01')
-        assert len(secret) == 32 and ZERO < secret < GROUP_ORDER
+        assert len(secret) == 32
+        assert ZERO < secret < GROUP_ORDER
 
     def test_bytes_greater_than_group_order(self):
         secret = (
-            b'\xff\xff\xff\xff\xff\xff\xff\xff\xff\xff\xff\xff\xff'
-            b'\xff\xff\xfe\xba\xae\xdc\xe6\xafH\xa0;\xbf\xd2^\x8d'
+            b'\xff\xff\xff\xff\xff\xff\xff\xff\xff\xff\xff\xff\xff\xff\xff\xfe\xba\xae\xdc\xe6\xafH\xa0;\xbf\xd2^\x8d'
         )
         assert secret > GROUP_ORDER
 
         secret = validate_secret(secret)
-        assert len(secret) == 32 and ZERO < secret < GROUP_ORDER
+        assert len(secret) == 32
+        assert ZERO < secret < GROUP_ORDER
 
     def test_out_of_range(self):
-        with pytest.raises(ValueError):
+        with pytest.raises(ValueError, match=f'Secret scalar must be greater than 0 and less than {GROUP_ORDER_INT}'):
             validate_secret(ZERO)
 
-        with pytest.raises(ValueError):
+        with pytest.raises(ValueError, match=f'Secret scalar must be greater than 0 and less than {GROUP_ORDER_INT}'):
             validate_secret(GROUP_ORDER)
 
 

@@ -51,28 +51,24 @@ jobs:
       with:
         python-version: ${{ env.PYTHON_VERSION }}
 
-    - name: Upgrade Python packaging tools
-      run: pip install --upgrade pip setuptools wheel
+    - name: Install system dependencies
+      if: runner.os == 'macOS'
+      run: ./.github/scripts/install-macos-build-deps.sh
 
-    - name: Show runner information
-      run: |
-        python --version
-        pip --version
+    - name: Install Hatch
+      uses: pypa/hatch@install
 
-    - name: Install dependencies
-      run: ./.github/scripts/install-test-deps.sh
+    - name: Run static analysis
+      run: hatch fmt --check
 
-    - name: Check style and typing
-      run: tox -e lint,typing
+    - name: Check types
+      run: hatch run types:check
 
     - name: Run tests
-      run: tox -e ${PYTHON_VERSION}
+      run: hatch test
 
     - name: Run benchmarks
-      run: tox -e bench
-
-    - name: Upload coverage
-      run: codecov -X gcov
+      run: hatch run hatch-test.py${{ env.PYTHON_VERSION }}:bench
 
   linux-wheels-standard:
     name: Build Linux wheels
@@ -90,7 +86,7 @@ jobs:
     name: Build macOS wheels
     needs:
     - test
-    runs-on: macos-latest
+    runs-on: macos-13
 
     steps:
     - uses: actions/checkout@v4

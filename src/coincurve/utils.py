@@ -102,15 +102,23 @@ def verify_signature(
     signature: bytes, message: bytes, public_key: bytes, hasher: Hasher = sha256, context: Context = GLOBAL_CONTEXT
 ) -> bool:
     """
-    :param signature: The ECDSA signature.
-    :param message: The message that was supposedly signed.
-    :param public_key: The formatted public key.
-    :param hasher: The hash function to use, which must return 32 bytes. By default,
-                   the `sha256` algorithm is used. If `None`, no hashing occurs.
-    :param context:
-    :return: A boolean indicating whether or not the signature is correct.
-    :raises ValueError: If the public key could not be parsed or was invalid, the message hash was
-                        not 32 bytes long, or the DER-encoded signature could not be parsed.
+    Verify an ECDSA signature.
+
+    Parameters:
+        signature: The ECDSA signature.
+        message: The message that was supposedly signed.
+        public_key: The formatted public key.
+        hasher (collections.abc.Callable[[bytes], bytes] | None): The hash function to use, which must return 32 bytes.
+            By default, the `sha256` algorithm is used. If `None`, no hashing occurs.
+        context: The secp256k1 context.
+
+    Returns:
+        A boolean indicating whether or not the signature is correct.
+
+    Raises:
+        ValueError: If the public key could not be parsed or was invalid, the
+            message hash was not 32 bytes long, or the DER-encoded signature
+            could not be parsed.
     """
     pubkey = ffi.new("secp256k1_pubkey *")
 

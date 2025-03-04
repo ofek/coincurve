@@ -53,7 +53,7 @@ dynamic = ["version"]
 [project.urls]
 Homepage = "https://ofek.dev/coincurve/"
 Sponsor = "https://github.com/sponsors/ofek"
-Changelog = "https://ofek.dev/coincurve/changelog/"
+History = "https://ofek.dev/coincurve/history/"
 Tracker = "https://github.com/ofek/coincurve/issues"
 Source = "https://github.com/ofek/coincurve"
 

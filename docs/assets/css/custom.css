@@ -1,61 +1,45 @@
+/* Brighter links for dark mode */
+[data-md-color-scheme=slate] {
+  /* https://github.com/squidfunk/mkdocs-material/blob/9.1.2/src/assets/stylesheets/main/_colors.scss#L91-L92 */
+  --md-typeset-a-color: var(--md-primary-fg-color--light);
+}
+
+/* FiraCode https://github.com/tonsky/FiraCode */
+code { font-family: 'Fira Code', monospace; }
+@supports (font-variation-settings: normal) {
+  code { font-family: 'Fira Code VF', monospace; }
+}
+
 /* https://github.com/squidfunk/mkdocs-material/issues/1522 */
 .md-typeset h5 {
   color: var(--md-default-fg-color);
   text-transform: none;
 }
 
-/* https://facelessuser.github.io/pymdown-extensions/extensions/tabbed/ */
-.md-typeset .tabbed-set {
-  border: 1px solid #eee;
-}
-.md-typeset .tabbed-content {
-  padding: 0.5em 1em;
-}
-
-/* Brighter links for dark mode */
-[data-md-color-scheme=slate] {
-  --md-text-link-color: var(--md-primary-fg-color--light);
-}
-
-/* FiraCode https://github.com/tonsky/FiraCode */
-code { font-family: 'Fira Code', monospace; }
-
-@supports (font-variation-settings: normal) {
-  code { font-family: 'Fira Code VF', monospace; }
-}
-
-/* Everything below is from https://pawamoy.github.io/mkdocstrings/handlers/python/#recommended-style-material */
-
 /* Indentation. */
 div.doc-contents:not(.first) {
   padding-left: 25px;
-  border-left: 4px solid rgba(230, 230, 230);
-  margin-bottom: 80px;
+  border-left: .05rem solid var(--md-typeset-table-color);
 }
 
-/* Don't capitalize names. */
-h5.doc-heading {
-  text-transform: none !important;
+/* Mark external links as such. */
+a.external::after,
+a.autorefs-external::after {
+  /* https://primer.style/octicons/arrow-up-right-24 */
+  mask-image: url('data:image/svg+xml,<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24"><path d="M18.25 15.5a.75.75 0 00.75-.75v-9a.75.75 0 00-.75-.75h-9a.75.75 0 000 1.5h7.19L6.22 16.72a.75.75 0 101.06 1.06L17.5 7.56v7.19c0 .414.336.75.75.75z"></path></svg>');
+  -webkit-mask-image: url('data:image/svg+xml,<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24"><path d="M18.25 15.5a.75.75 0 00.75-.75v-9a.75.75 0 00-.75-.75h-9a.75.75 0 000 1.5h7.19L6.22 16.72a.75.75 0 101.06 1.06L17.5 7.56v7.19c0 .414.336.75.75.75z"></path></svg>');
+  content: ' ';
+
+  display: inline-block;
+  vertical-align: middle;
+  position: relative;
+
+  height: 1em;
+  width: 1em;
+  background-color: currentColor;
 }
 
-/* Don't use vertical space on hidden ToC entries. */
-.hidden-toc::before {
-  margin-top: 0 !important;
-  padding-top: 0 !important;
-}
-
-/* Don't show permalink of hidden ToC entries. */
-.hidden-toc a.headerlink {
-  display: none;
-}
-
-/* Avoid breaking parameters name, etc. in table cells. */
-td code {
-  word-break: normal !important;
-}
-
-/* For pieces of Markdown rendered in table cells. */
-td p {
-  margin-top: 0 !important;
-  margin-bottom: 0 !important;
+a.external:hover::after,
+a.autorefs-external:hover::after {
+  background-color: var(--md-accent-fg-color);
 }

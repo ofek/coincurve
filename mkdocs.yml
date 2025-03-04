@@ -48,8 +48,9 @@ nav:
   - About: index.md
   - Install: install.md
   - API Reference: api.md
-  - Users: users.md
-  - History: history.md
+  - Meta:
+    - Users: users.md
+    - History: history.md
 
 plugins:
   # Built-in
@@ -68,15 +69,21 @@ plugins:
         paths:
           - src
         options:
+          # Rendering
+          show_root_full_path: false
           # Headings
           show_root_heading: true
-          show_root_full_path: false
+          show_source: false
+          show_symbol_type_toc: true
           # Docstrings
           show_if_no_docstring: true
           # Signatures/annotations
           show_signature_annotations: true
+          signature_crossrefs: true
           # Other
           show_bases: false
+        import:
+          - https://docs.python.org/3/objects.inv
 
 markdown_extensions:
   # Built-in
@@ -143,10 +150,10 @@ extra:
       link: https://github.com/ofek
     - icon: fontawesome/solid/blog
       link: https://ofek.dev/words/
-    - icon: fontawesome/brands/twitter
-      link: https://twitter.com/Ofekmeister
+    - icon: fontawesome/brands/x-twitter
+      link: https://x.com/Ofekmeister
     - icon: fontawesome/brands/linkedin
       link: https://www.linkedin.com/in/ofeklev/
 extra_css:
   - assets/css/custom.css
-  - https://cdn.jsdelivr.net/gh/tonsky/FiraCode@5.2/distr/fira_code.css
+  - https://cdn.jsdelivr.net/npm/firacode@6.2.0/distr/fira_code.css

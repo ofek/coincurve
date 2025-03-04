@@ -29,8 +29,12 @@ if TYPE_CHECKING:
 class PrivateKey:
     def __init__(self, secret: bytes | None = None, context: Context = GLOBAL_CONTEXT):
         """
-        :param secret: The secret used to initialize the private key.
-                       If not provided or `None`, a new key will be generated.
+        Initializes a private key.
+
+        Parameters:
+            secret: The secret used to initialize the private key.
+                    If not provided, a new key will be generated.
+            context: The context to use.
         """
         self.secret: bytes = validate_secret(secret) if secret is not None else get_valid_secret()
         self.context = context
@@ -39,16 +43,22 @@ class PrivateKey:
 
     def sign(self, message: bytes, hasher: Hasher = sha256, custom_nonce: Nonce = DEFAULT_NONCE) -> bytes:
         """
-        Create an ECDSA signature.
+        Creates an ECDSA signature.
 
-        :param message: The message to sign.
-        :param hasher: The hash function to use, which must return 32 bytes. By default,
-                       the `sha256` algorithm is used. If `None`, no hashing occurs.
-        :param custom_nonce: Custom nonce data in the form `(nonce_function, input_data)`. Refer to
-                             [secp256k1.h](https://github.com/bitcoin-core/secp256k1/blob/f8c0b57e6ba202b1ce7c5357688de97c9c067697/include/secp256k1.h#L546-L547).
-        :return: The ECDSA signature.
-        :raises ValueError: If the message hash was not 32 bytes long, the nonce generation
-                            function failed, or the private key was invalid.
+        Parameters:
+            message: The message to sign.
+            hasher (collections.abc.Callable[[bytes], bytes] | None): The hash function to use, which must
+                return 32 bytes. By default, the `sha256` algorithm is used. If `None`, no hashing occurs.
+            custom_nonce (tuple[ffi.CData, ffi.CData]): Custom nonce data in the form `(nonce_function, input_data)`.
+                For more information, refer to the `libsecp256k1` documentation
+                [here](https://github.com/bitcoin-core/secp256k1/blob/v0.6.0/include/secp256k1.h#L637-L642).
+
+        Returns:
+            The ECDSA signature.
+
+        Raises:
+            ValueError: If the message hash was not 32 bytes long, the nonce generation
+                        function failed, or the private key was invalid.
         """
         msg_hash = hasher(message) if hasher is not None else message
         if len(msg_hash) != 32:  # noqa: PLR2004
@@ -67,14 +77,20 @@ class PrivateKey:
         return cdata_to_der(signature, self.context)
 
     def sign_schnorr(self, message: bytes, aux_randomness: bytes = b"") -> bytes:
-        """Create a Schnorr signature.
+        """
+        Creates a Schnorr signature.
 
-        :param message: The message to sign.
-        :param aux_randomness: An optional 32 bytes of fresh randomness. By default (empty bytestring), this
-                               will be generated automatically. Set to `None` to disable this behavior.
-        :return: The Schnorr signature.
-        :raises ValueError: If the message was not 32 bytes long, the optional auxiliary random data was not
-                            32 bytes long, signing failed, or the signature was invalid.
+        Parameters:
+            message: The message to sign.
+            aux_randomness: 32 bytes of fresh randomness, empty bytestring (auto-generated),
+                or None (no randomness).
+
+        Returns:
+            The Schnorr signature.
+
+        Raises:
+            ValueError: If the message was not 32 bytes long, the optional auxiliary
+                random data was not 32 bytes long, signing failed, or the signature was invalid.
         """
         if len(message) != 32:  # noqa: PLR2004
             msg = "Message must be 32 bytes long."
@@ -110,16 +126,22 @@ class PrivateKey:
 
     def sign_recoverable(self, message: bytes, hasher: Hasher = sha256, custom_nonce: Nonce = DEFAULT_NONCE) -> bytes:
         """
-        Create a recoverable ECDSA signature.
+        Creates a recoverable ECDSA signature.
 
-        :param message: The message to sign.
-        :param hasher: The hash function to use, which must return 32 bytes. By default,
-                       the `sha256` algorithm is used. If `None`, no hashing occurs.
-        :param custom_nonce: Custom nonce data in the form `(nonce_function, input_data)`. Refer to
-                             [secp256k1_recovery.h](https://github.com/bitcoin-core/secp256k1/blob/f8c0b57e6ba202b1ce7c5357688de97c9c067697/include/secp256k1_recovery.h#L78-L79).
-        :return: The recoverable ECDSA signature.
-        :raises ValueError: If the message hash was not 32 bytes long, the nonce generation
-                            function failed, or the private key was invalid.
+        Parameters:
+            message: The message to sign.
+            hasher (collections.abc.Callable[[bytes], bytes] | None): The hash function to use, which must
+                return 32 bytes. By default, the `sha256` algorithm is used. If `None`, no hashing occurs.
+            custom_nonce (tuple[ffi.CData, ffi.CData]): Custom nonce data in the form `(nonce_function, input_data)`.
+                For more information, refer to the `libsecp256k1` documentation
+                [here](https://github.com/bitcoin-core/secp256k1/blob/v0.6.0/include/secp256k1.h#L637-L642).
+
+        Returns:
+            The recoverable ECDSA signature.
+
+        Raises:
+            ValueError: If the message hash was not 32 bytes long, the nonce generation
+                function failed, or the private key was invalid.
         """
         msg_hash = hasher(message) if hasher is not None else message
         if len(msg_hash) != 32:  # noqa: PLR2004
@@ -141,15 +163,20 @@ class PrivateKey:
 
     def ecdh(self, public_key: bytes) -> bytes:
         """
-        Compute an EC Diffie-Hellman secret in constant time.
+        Computes an EC Diffie-Hellman secret in constant time.
 
         !!! note
             This prevents malleability by returning `sha256(compressed_public_key)` instead of the `x` coordinate
-            directly. See #9.
+            directly.
 
-        :param public_key: The formatted public key.
-        :return: The 32 byte shared secret.
-        :raises ValueError: If the public key could not be parsed or was invalid.
+        Parameters:
+            public_key: The formatted public key.
+
+        Returns:
+            The 32-byte shared secret.
+
+        Raises:
+            ValueError: If the public key could not be parsed or was invalid.
         """
         secret = ffi.new("unsigned char [32]")
 
@@ -157,15 +184,19 @@ class PrivateKey:
 
         return bytes(ffi.buffer(secret, 32))
 
-    def add(self, scalar: bytes, update: bool = False):  # noqa: FBT001, FBT002
+    def add(self, scalar: bytes, update: bool = False) -> PrivateKey:  # noqa: FBT001, FBT002
         """
-        Add a scalar to the private key.
+        Adds a scalar to the private key.
 
-        :param scalar: The scalar with which to add.
-        :param update: Whether or not to update and return the private key in-place.
-        :return: The new private key, or the modified private key if `update` is `True`.
-        :rtype: PrivateKey
-        :raises ValueError: If the tweak was out of range or the resulting private key was invalid.
+        Parameters:
+            scalar: The scalar with which to add.
+            update: Whether to update the private key in-place.
+
+        Returns:
+            The new private key, or the modified private key if `update` is `True`.
+
+        Raises:
+            ValueError: If the tweak was out of range or the resulting private key was invalid.
         """
         scalar = pad_scalar(scalar)
 
@@ -186,14 +217,16 @@ class PrivateKey:
 
         return PrivateKey(secret, self.context)
 
-    def multiply(self, scalar: bytes, update: bool = False):  # noqa: FBT001, FBT002
+    def multiply(self, scalar: bytes, update: bool = False) -> PrivateKey:  # noqa: FBT001, FBT002
         """
-        Multiply the private key by a scalar.
+        Multiplies the private key by a scalar.
 
-        :param scalar: The scalar with which to multiply.
-        :param update: Whether or not to update and return the private key in-place.
-        :return: The new private key, or the modified private key if `update` is `True`.
-        :rtype: PrivateKey
+        Parameters:
+            scalar: The scalar with which to multiply.
+            update: Whether to update the private key in-place.
+
+        Returns:
+            The new private key, or the modified private key if `update` is `True`.
         """
         scalar = validate_secret(scalar)
 
@@ -212,25 +245,25 @@ class PrivateKey:
 
     def to_hex(self) -> str:
         """
-        :return: The private key encoded as a hex string.
+        Returns the private key encoded as a hex string.
         """
         return self.secret.hex()
 
     def to_int(self) -> int:
         """
-        :return: The private key as an integer.
+        Returns the private key as an integer.
         """
         return bytes_to_int(self.secret)
 
     def to_pem(self) -> bytes:
         """
-        :return: The private key encoded in PEM format.
+        Returns the private key encoded in PEM format.
         """
         return der_to_pem(self.to_der())
 
     def to_der(self) -> bytes:
         """
-        :return: The private key encoded in DER format.
+        Returns the private key encoded in DER format.
         """
         pk = ECPrivateKey({
             "version": "ecPrivkeyVer1",
@@ -248,44 +281,60 @@ class PrivateKey:
         }).dump()
 
     @classmethod
-    def from_hex(cls, hexed: str, context: Context = GLOBAL_CONTEXT):
+    def from_hex(cls, hexed: str, context: Context = GLOBAL_CONTEXT) -> PrivateKey:
         """
-        :param hexed: The private key encoded as a hex string.
-        :param context:
-        :return: The private key.
-        :rtype: PrivateKey
+        Creates a private key from a hex string.
+
+        Parameters:
+            hexed: The private key encoded as a hex string.
+            context: The context to use.
+
+        Returns:
+            The private key.
         """
         return PrivateKey(hex_to_bytes(hexed), context)
 
     @classmethod
-    def from_int(cls, num: int, context: Context = GLOBAL_CONTEXT):
+    def from_int(cls, num: int, context: Context = GLOBAL_CONTEXT) -> PrivateKey:
         """
-        :param num: The private key as an integer.
-        :param context:
-        :return: The private key.
-        :rtype: PrivateKey
+        Creates a private key from an integer.
+
+        Parameters:
+            num: The private key as an integer.
+            context: The context to use.
+
+        Returns:
+            The private key.
         """
         return PrivateKey(int_to_bytes_padded(num), context)
 
     @classmethod
-    def from_pem(cls, pem: bytes, context: Context = GLOBAL_CONTEXT):
+    def from_pem(cls, pem: bytes, context: Context = GLOBAL_CONTEXT) -> PrivateKey:
         """
-        :param pem: The private key encoded in PEM format.
-        :param context:
-        :return: The private key.
-        :rtype: PrivateKey
+        Creates a private key from PEM format.
+
+        Parameters:
+            pem: The private key encoded in PEM format.
+            context: The context to use.
+
+        Returns:
+            The private key.
         """
         return PrivateKey(
             int_to_bytes_padded(PrivateKeyInfo.load(pem_to_der(pem)).native["private_key"]["private_key"]), context
         )
 
     @classmethod
-    def from_der(cls, der: bytes, context: Context = GLOBAL_CONTEXT):
+    def from_der(cls, der: bytes, context: Context = GLOBAL_CONTEXT) -> PrivateKey:
         """
-        :param der: The private key encoded in DER format.
-        :param context:
-        :return: The private key.
-        :rtype: PrivateKey
+        Creates a private key from DER format.
+
+        Parameters:
+            der: The private key encoded in DER format.
+            context: The context to use.
+
+        Returns:
+            The private key.
         """
         return PrivateKey(int_to_bytes_padded(PrivateKeyInfo.load(der).native["private_key"]["private_key"]), context)
 
@@ -304,15 +353,19 @@ class PrivateKey:
 
 
 class PublicKey:
-    def __init__(self, data, context: Context = GLOBAL_CONTEXT):
+    def __init__(self, data: bytes | ffi.CData, context: Context = GLOBAL_CONTEXT):
         """
-        :param data: The formatted public key. This class supports parsing
-                     compressed (33 bytes, header byte `0x02` or `0x03`),
-                     uncompressed (65 bytes, header byte `0x04`), or
-                     hybrid (65 bytes, header byte `0x06` or `0x07`) format public keys.
-        :type data: bytes
-        :param context:
-        :raises ValueError: If the public key could not be parsed or was invalid.
+        Initializes a public key.
+
+        Parameters:
+            data (bytes): The formatted public key. This class supports parsing
+                compressed (33 bytes, header byte `0x02` or `0x03`),
+                uncompressed (65 bytes, header byte `0x04`), or
+                hybrid (65 bytes, header byte `0x06` or `0x07`) format public keys.
+            context: The context to use.
+
+        Raises:
+            ValueError: If the public key could not be parsed or was invalid.
         """
         if not isinstance(data, bytes):
             self.public_key = data
@@ -330,14 +383,19 @@ class PublicKey:
         self.context = context
 
     @classmethod
-    def from_secret(cls, secret: bytes, context: Context = GLOBAL_CONTEXT):
+    def from_secret(cls, secret: bytes, context: Context = GLOBAL_CONTEXT) -> PublicKey:
         """
-        Derive a public key from a private key secret.
+        Derives a public key from a private key secret.
 
-        :param secret: The private key secret.
-        :param context:
-        :return: The public key.
-        :rtype: PublicKey
+        Parameters:
+            secret: The private key secret.
+            context: The context to use.
+
+        Returns:
+            The public key.
+
+        Raises:
+            ValueError: If an invalid secret was used.
         """
         public_key = ffi.new("secp256k1_pubkey *")
 
@@ -354,7 +412,20 @@ class PublicKey:
         return PublicKey(public_key, context)
 
     @classmethod
-    def from_valid_secret(cls, secret: bytes, context: Context = GLOBAL_CONTEXT):
+    def from_valid_secret(cls, secret: bytes, context: Context = GLOBAL_CONTEXT) -> PublicKey:
+        """
+        Derives a public key from a valid private key secret, avoiding input checks.
+
+        Parameters:
+            secret: The private key secret.
+            context: The context to use.
+
+        Returns:
+            The public key.
+
+        Raises:
+            ValueError: If the secret was invalid.
+        """
         public_key = ffi.new("secp256k1_pubkey *")
 
         created = lib.secp256k1_ec_pubkey_create(context.ctx, public_key, secret)
@@ -366,49 +437,59 @@ class PublicKey:
         return PublicKey(public_key, context)
 
     @classmethod
-    def from_point(cls, x: int, y: int, context: Context = GLOBAL_CONTEXT):
+    def from_point(cls, x: int, y: int, context: Context = GLOBAL_CONTEXT) -> PublicKey:
         """
-        Derive a public key from a coordinate point in the form `(x, y)`.
+        Derives a public key from a coordinate point.
 
-        :param x:
-        :param y:
-        :param context:
-        :return: The public key.
-        :rtype: PublicKey
+        Parameters:
+            x: The x coordinate.
+            y: The y coordinate.
+            context: The context to use.
+
+        Returns:
+            The public key.
         """
         return PublicKey(b"\x04" + int_to_bytes_padded(x) + int_to_bytes_padded(y), context)
 
     @classmethod
     def from_signature_and_message(
         cls, signature: bytes, message: bytes, hasher: Hasher = sha256, context: Context = GLOBAL_CONTEXT
-    ):
+    ) -> PublicKey:
         """
-        Recover an ECDSA public key from a recoverable signature.
+        Recovers an ECDSA public key from a recoverable signature.
 
-        :param signature: The recoverable ECDSA signature.
-        :param message: The message that was supposedly signed.
-        :param hasher: The hash function to use, which must return 32 bytes. By default,
-                       the `sha256` algorithm is used. If `None`, no hashing occurs.
-        :param context:
-        :return: The public key that signed the message.
-        :rtype: PublicKey
-        :raises ValueError: If the message hash was not 32 bytes long or recovery of the ECDSA public key failed.
+        Parameters:
+            signature: The recoverable ECDSA signature.
+            message: The message that was supposedly signed.
+            hasher (collections.abc.Callable[[bytes], bytes] | None): The hash function to use, which must
+                return 32 bytes. By default, the `sha256` algorithm is used. If `None`, no hashing occurs.
+            context: The context to use.
+
+        Returns:
+            The public key that signed the message.
+
+        Raises:
+            ValueError: If the message hash was not 32 bytes long or recovery of the
+                ECDSA public key failed.
         """
         return PublicKey(
             recover(message, deserialize_recoverable(signature, context=context), hasher=hasher, context=context)
         )
 
     @classmethod
-    def combine_keys(cls, public_keys, context: Context = GLOBAL_CONTEXT):
+    def combine_keys(cls, public_keys: list[PublicKey], context: Context = GLOBAL_CONTEXT) -> PublicKey:
         """
-        Add a number of public keys together.
+        Adds a number of public keys together.
 
-        :param public_keys: A sequence of public keys.
-        :type public_keys: List[PublicKey]
-        :param context:
-        :return: The combined public key.
-        :rtype: PublicKey
-        :raises ValueError: If the sum of the public keys was invalid.
+        Parameters:
+            public_keys: A sequence of public keys.
+            context: The context to use.
+
+        Returns:
+            The combined public key.
+
+        Raises:
+            ValueError: If the sum of the public keys was invalid.
         """
         public_key = ffi.new("secp256k1_pubkey *")
 
@@ -424,10 +505,14 @@ class PublicKey:
 
     def format(self, compressed: bool = True) -> bytes:  # noqa: FBT001, FBT002
         """
-        Format the public key.
+        Formats the public key.
 
-        :param compressed: Whether or to use the compressed format.
-        :return: The 33 byte formatted public key, or the 65 byte formatted public key if `compressed` is `False`.
+        Parameters:
+            compressed: Whether to use the compressed format.
+
+        Returns:
+            The 33 byte formatted public key, or the 65 byte formatted public key
+            if `compressed` is `False`.
         """
         length = 33 if compressed else 65
         serialized = ffi.new("unsigned char [%d]" % length)  # noqa: UP031
@@ -441,19 +526,27 @@ class PublicKey:
 
     def point(self) -> tuple[int, int]:
         """
-        :return: The public key as a coordinate point.
+        Returns the public key as a coordinate point.
         """
         public_key = self.format(compressed=False)
         return bytes_to_int(public_key[1:33]), bytes_to_int(public_key[33:])
 
     def verify(self, signature: bytes, message: bytes, hasher: Hasher = sha256) -> bool:
         """
-        :param signature: The ECDSA signature.
-        :param message: The message that was supposedly signed.
-        :param hasher: The hash function to use, which must return 32 bytes. By default,
-                       the `sha256` algorithm is used. If `None`, no hashing occurs.
-        :return: A boolean indicating whether or not the signature is correct.
-        :raises ValueError: If the message hash was not 32 bytes long or the DER-encoded signature could not be parsed.
+        Verifies an ECDSA signature.
+
+        Parameters:
+            signature: The ECDSA signature.
+            message: The message that was supposedly signed.
+            hasher (collections.abc.Callable[[bytes], bytes] | None): The hash function to use, which must
+                return 32 bytes. By default, the `sha256` algorithm is used. If `None`, no hashing occurs.
+
+        Returns:
+            A boolean indicating whether the signature is correct.
+
+        Raises:
+            ValueError: If the message hash was not 32 bytes long or the
+                DER-encoded signature could not be parsed.
         """
         msg_hash = hasher(message) if hasher is not None else message
         if len(msg_hash) != 32:  # noqa: PLR2004
@@ -465,15 +558,19 @@ class PublicKey:
         # A performance hack to avoid global bool() lookup.
         return not not verified  # noqa: SIM208
 
-    def add(self, scalar: bytes, update: bool = False):  # noqa: FBT001, FBT002
+    def add(self, scalar: bytes, update: bool = False) -> PublicKey:  # noqa: FBT001, FBT002
         """
-        Add a scalar to the public key.
+        Adds a scalar to the public key.
 
-        :param scalar: The scalar with which to add.
-        :param update: Whether or not to update and return the public key in-place.
-        :return: The new public key, or the modified public key if `update` is `True`.
-        :rtype: PublicKey
-        :raises ValueError: If the tweak was out of range or the resulting public key was invalid.
+        Parameters:
+            scalar: The scalar with which to add.
+            update: Whether to update the public key in-place.
+
+        Returns:
+            The new public key, or the modified public key if `update` is `True`.
+
+        Raises:
+            ValueError: If the tweak was out of range or the resulting public key was invalid.
         """
         scalar = pad_scalar(scalar)
 
@@ -491,14 +588,16 @@ class PublicKey:
 
         return PublicKey(new_key, self.context)
 
-    def multiply(self, scalar: bytes, update: bool = False):  # noqa: FBT001, FBT002
+    def multiply(self, scalar: bytes, update: bool = False) -> PublicKey:  # noqa: FBT001, FBT002
         """
-        Multiply the public key by a scalar.
+        Multiplies the public key by a scalar.
 
-        :param scalar: The scalar with which to multiply.
-        :param update: Whether or not to update and return the public key in-place.
-        :return: The new public key, or the modified public key if `update` is `True`.
-        :rtype: PublicKey
+        Parameters:
+            scalar: The scalar with which to multiply.
+            update: Whether to update the public key in-place.
+
+        Returns:
+            The new public key, or the modified public key if `update` is `True`.
         """
         scalar = validate_secret(scalar)
 
@@ -512,16 +611,19 @@ class PublicKey:
 
         return PublicKey(new_key, self.context)
 
-    def combine(self, public_keys, update: bool = False):  # noqa: FBT001, FBT002
+    def combine(self, public_keys: list[PublicKey], update: bool = False) -> PublicKey:  # noqa: FBT001, FBT002
         """
-        Add a number of public keys together.
+        Adds a number of public keys together.
 
-        :param public_keys: A sequence of public keys.
-        :type public_keys: List[PublicKey]
-        :param update: Whether or not to update and return the public key in-place.
-        :return: The combined public key, or the modified public key if `update` is `True`.
-        :rtype: PublicKey
-        :raises ValueError: If the sum of the public keys was invalid.
+        Parameters:
+            public_keys: A sequence of public keys.
+            update: Whether to update the public key in-place.
+
+        Returns:
+            The combined public key, or the modified public key if `update` is `True`.
+
+        Raises:
+            ValueError: If the sum of the public keys was invalid.
         """
         new_key = ffi.new("secp256k1_pubkey *")
 
@@ -547,13 +649,17 @@ class PublicKey:
 
 
 class PublicKeyXOnly:
-    def __init__(self, data, parity: bool = False, context: Context = GLOBAL_CONTEXT):  # noqa: FBT001, FBT002
-        """A BIP340 `x-only` public key.
+    def __init__(self, data: bytes | ffi.CData, parity: bool = False, context: Context = GLOBAL_CONTEXT):  # noqa: FBT001, FBT002
+        """
+        Initializes a BIP340 `x-only` public key.
 
-        :param data: The formatted public key.
-        :type data: bytes
-        :param parity: Whether the encoded point is the negation of the public key.
-        :param context:
+        Parameters:
+            data (bytes): The formatted public key.
+            parity: Whether the encoded point is the negation of the public key.
+            context: The context to use.
+
+        Raises:
+            ValueError: If the public key could not be parsed or is invalid.
         """
         if not isinstance(data, bytes):
             self.public_key = data
@@ -570,12 +676,19 @@ class PublicKeyXOnly:
         self.context = context
 
     @classmethod
-    def from_secret(cls, secret: bytes, context: Context = GLOBAL_CONTEXT):
-        """Derive an x-only public key from a private key secret.
+    def from_secret(cls, secret: bytes, context: Context = GLOBAL_CONTEXT) -> PublicKeyXOnly:
+        """
+        Derives an x-only public key from a private key secret.
 
-        :param secret: The private key secret.
-        :param context:
-        :return: The x-only public key.
+        Parameters:
+            secret: The private key secret.
+            context: The context to use.
+
+        Returns:
+            The x-only public key.
+
+        Raises:
+            ValueError: If the secret was invalid.
         """
         keypair = ffi.new("secp256k1_keypair *")
         res = lib.secp256k1_keypair_create(context.ctx, keypair, validate_secret(secret))
@@ -590,7 +703,20 @@ class PublicKeyXOnly:
         return cls(xonly_pubkey, parity=not not pk_parity[0], context=context)  # noqa: SIM208
 
     @classmethod
-    def from_valid_secret(cls, secret: bytes, context: Context = GLOBAL_CONTEXT):
+    def from_valid_secret(cls, secret: bytes, context: Context = GLOBAL_CONTEXT) -> PublicKeyXOnly:
+        """
+        Derives an x-only public key from a valid private key secret, avoiding input checks.
+
+        Parameters:
+            secret: The private key secret.
+            context: The context to use.
+
+        Returns:
+            The x-only public key.
+
+        Raises:
+            ValueError: If the secret was invalid.
+        """
         keypair = ffi.new("secp256k1_keypair *")
         res = lib.secp256k1_keypair_create(context.ctx, keypair, secret)
         if not res:
@@ -604,9 +730,14 @@ class PublicKeyXOnly:
         return cls(xonly_pubkey, parity=not not pk_parity[0], context=context)  # noqa: SIM208
 
     def format(self) -> bytes:
-        """Serialize the public key.
+        """
+        Serializes the public key.
 
-        :return: The public key serialized as 32 bytes.
+        Returns:
+            The public key serialized as 32 bytes.
+
+        Raises:
+            ValueError: If the public key in `self.public_key` is invalid.
         """
         output32 = ffi.new("unsigned char [32]")
 
@@ -618,11 +749,18 @@ class PublicKeyXOnly:
         return bytes(ffi.buffer(output32, 32))
 
     def verify(self, signature: bytes, message: bytes) -> bool:
-        """Verify a Schnorr signature over a given message.
+        """
+        Verifies a Schnorr signature over a given message.
 
-        :param signature: The 64-byte Schnorr signature to verify.
-        :param message: The message to be verified.
-        :return: A boolean indicating whether or not the signature is correct.
+        Parameters:
+            signature: The 64-byte Schnorr signature to verify.
+            message: The message to be verified.
+
+        Returns:
+            A boolean indicating whether the signature is correct.
+
+        Raises:
+            ValueError: If the signature is not 64 bytes long.
         """
         if len(signature) != 64:  # noqa: PLR2004
             msg = "Signature must be 64 bytes long."
@@ -632,13 +770,18 @@ class PublicKeyXOnly:
             self.context.ctx, signature, message, len(message), self.public_key
         )
 
-    def tweak_add(self, scalar: bytes):
-        """Add a scalar to the public key.
+    def tweak_add(self, scalar: bytes) -> None:
+        """
+        Adds a scalar to the public key.
 
-        :param scalar: The scalar with which to add.
-        :return: The modified public key.
-        :rtype: PublicKeyXOnly
-        :raises ValueError: If the tweak was out of range or the resulting public key was invalid.
+        Parameters:
+            scalar: The scalar with which to add.
+
+        Returns:
+            The modified public key.
+
+        Raises:
+            ValueError: If the tweak was out of range or the resulting public key would be invalid.
         """
         scalar = pad_scalar(scalar)
 

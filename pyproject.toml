@@ -27,9 +27,6 @@ keywords = [
 readme = "README.md"
 license = "MIT OR Apache-2.0"
 requires-python = ">=3.9"
-dependencies = [
-    "asn1crypto",
-]
 classifiers = [
     "Development Status :: 5 - Production/Stable",
     "Intended Audience :: Developers",

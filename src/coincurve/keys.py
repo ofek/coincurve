@@ -3,10 +3,9 @@ from __future__ import annotations
 import os
 from typing import TYPE_CHECKING
 
-from asn1crypto.keys import ECDomainParameters, ECPointBitString, ECPrivateKey, PrivateKeyAlgorithm, PrivateKeyInfo
-
 from coincurve._libsecp256k1 import ffi, lib
 from coincurve.context import GLOBAL_CONTEXT, Context
+from coincurve.der import decode_der, encode_der
 from coincurve.ecdsa import cdata_to_der, der_to_cdata, deserialize_recoverable, recover, serialize_recoverable
 from coincurve.flags import EC_COMPRESSED, EC_UNCOMPRESSED
 from coincurve.utils import (
@@ -265,20 +264,7 @@ class PrivateKey:
         """
         Returns the private key encoded in DER format.
         """
-        pk = ECPrivateKey({
-            "version": "ecPrivkeyVer1",
-            "private_key": self.to_int(),
-            "public_key": ECPointBitString(self.public_key.format(compressed=False)),
-        })
-
-        return PrivateKeyInfo({
-            "version": 0,
-            "private_key_algorithm": PrivateKeyAlgorithm({
-                "algorithm": "ec",
-                "parameters": ECDomainParameters(name="named", value="1.3.132.0.10"),
-            }),
-            "private_key": pk,
-        }).dump()
+        return encode_der(self.secret, self.public_key.format(compressed=False))
 
     @classmethod
     def from_hex(cls, hexed: str, context: Context = GLOBAL_CONTEXT) -> PrivateKey:
@@ -320,9 +306,7 @@ class PrivateKey:
         Returns:
             The private key.
         """
-        return PrivateKey(
-            int_to_bytes_padded(PrivateKeyInfo.load(pem_to_der(pem)).native["private_key"]["private_key"]), context
-        )
+        return PrivateKey(decode_der(pem_to_der(pem)), context)
 
     @classmethod
     def from_der(cls, der: bytes, context: Context = GLOBAL_CONTEXT) -> PrivateKey:
@@ -336,7 +320,7 @@ class PrivateKey:
         Returns:
             The private key.
         """
-        return PrivateKey(int_to_bytes_padded(PrivateKeyInfo.load(der).native["private_key"]["private_key"]), context)
+        return PrivateKey(decode_der(der), context)
 
     def _update_public_key(self):
         created = lib.secp256k1_ec_pubkey_create(self.context.ctx, self.public_key.public_key, self.secret)

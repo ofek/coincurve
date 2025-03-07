@@ -13,14 +13,16 @@ name = "coincurve"
 authors = [
     { name = "Ofek Lev", email = "oss@ofek.dev" },
 ]
-description = "Cross-platform Python bindings for libsecp256k1"
+description = "Safest and fastest Python library for secp256k1 elliptic curve operations"
 keywords = [
     "bitcoin",
     "crypto",
     "cryptocurrency",
+    "ecdh",
     "ecdsa",
     "elliptic curves",
     "ethereum",
+    "libsecp256k1",
     "secp256k1",
     "schnorr",
 ]

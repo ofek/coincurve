@@ -15,6 +15,7 @@ concurrency:
   cancel-in-progress: true
 
 env:
+  PYTHON_VERSION: '3.13'
   COINCURVE_IGNORE_SYSTEM_LIB: 'ON'
   COINCURVE_SECP256K1_STATIC: 'ON'
   COINCURVE_CROSS_HOST: ''
@@ -23,7 +24,7 @@ env:
     COINCURVE_SECP256K1_STATIC
     COINCURVE_CROSS_HOST
   CIBW_BEFORE_ALL_MACOS: ./.github/scripts/install-macos-build-deps.sh
-  CIBW_TEST_REQUIRES: pytest pytest-benchmark
+  CIBW_TEST_REQUIRES: pytest
   CIBW_TEST_COMMAND: >
     python -c
     "from coincurve import PrivateKey;
@@ -79,8 +80,11 @@ jobs:
         name: coverage-${{ matrix.os }}-${{ matrix.python-version }}
         path: coverage.xml
 
-    - name: Run benchmarks
-      run: hatch run hatch-test.py${{ matrix.python-version }}:bench
+    - name: Install uv
+      uses: astral-sh/setup-uv@v5
+
+    - name: Benchmark
+      run: uv run --python-preference system scripts/bench.py
 
   coverage:
     name: Upload coverage
@@ -172,7 +176,7 @@ jobs:
 
     - uses: actions/setup-python@v5
       with:
-        python-version: '3.12'
+        python-version: ${{ env.PYTHON_VERSION }}
 
     - name: Build wheels
       uses: pypa/cibuildwheel@v2.23

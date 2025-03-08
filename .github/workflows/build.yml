@@ -272,6 +272,9 @@ jobs:
     runs-on: ubuntu-latest
     if: github.event_name == 'push' && startsWith(github.event.ref, 'refs/tags')
 
+    permissions:
+      id-token: write
+
     steps:
     - uses: actions/download-artifact@v4
       with:

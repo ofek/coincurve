@@ -6,6 +6,8 @@ Important changes are emphasized.
 
 ## Unreleased
 
+## 21.0.0
+
 - **Breaking:** Drop support for Python 3.8
 - Add support for Python 3.13
 - Remove all runtime dependencies (`cffi` & `asn1crypto`)

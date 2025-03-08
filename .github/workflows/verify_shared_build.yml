@@ -15,6 +15,7 @@ concurrency:
   cancel-in-progress: true
 
 env:
+  PYTHON_VERSION: '3.12'
   COINCURVE_IGNORE_SYSTEM_LIB: '1'
   # Only 'SHARED' is recognized, any other string means 'not SHARED'
   COINCURVE_SECP256K1_BUILD: 'SHARED'
@@ -22,7 +23,7 @@ env:
     COINCURVE_IGNORE_SYSTEM_LIB
     COINCURVE_SECP256K1_BUILD
   CIBW_BEFORE_ALL_MACOS: ./.github/scripts/install-macos-build-deps.sh
-  CIBW_TEST_REQUIRES: pytest pytest-benchmark
+  CIBW_TEST_REQUIRES: pytest
   CIBW_TEST_COMMAND: >
     python -c
     "from coincurve import PrivateKey;
@@ -39,9 +40,6 @@ jobs:
   test:
     name: Test latest Python
     runs-on: ubuntu-latest
-
-    env:
-      PYTHON_VERSION: '3.12'
 
     steps:
     - uses: actions/checkout@v4
@@ -67,8 +65,11 @@ jobs:
     - name: Run tests
       run: hatch test
 
-    - name: Run benchmarks
-      run: hatch run hatch-test.py${{ env.PYTHON_VERSION }}:bench
+    - name: Install uv
+      uses: astral-sh/setup-uv@v5
+
+    - name: Benchmark
+      run: uv run --python-preference system scripts/bench.py
 
   linux-wheels-standard:
     name: Build Linux wheels
@@ -119,7 +120,7 @@ jobs:
 
     - uses: actions/setup-python@v5
       with:
-        python-version: '3.12'
+        python-version: ${{ env.PYTHON_VERSION }}
 
     - name: Build wheels
       uses: pypa/cibuildwheel@v2.23

@@ -8,15 +8,6 @@ dependencies = ["ruff==0.9.9"]
 
 [envs.hatch-test]
 dev-mode = false
-extra-dependencies = [
-  "pytest-benchmark",
-]
-[envs.hatch-test.scripts]
-run = "pytest{env:HATCH_TEST_ARGS:} --benchmark-skip {args}"
-run-cov = "coverage run -m pytest{env:HATCH_TEST_ARGS:} --benchmark-skip {args}"
-cov-combine = "coverage combine"
-cov-report = "coverage report"
-bench = "pytest{env:HATCH_TEST_ARGS:} --benchmark-only --benchmark-sort=name --benchmark-cprofile=tottime {args}"
 
 [envs.types]
 dependencies = [

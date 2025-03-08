@@ -58,7 +58,7 @@ Source = "https://github.com/ofek/coincurve"
 
 # --- hatch ---
 [tool.hatch.version]
-path = "src/coincurve/__about__.py"
+path = "src/coincurve/__init__.py"
 
 [tool.hatch.build.targets.wheel.hooks.custom]
 
@@ -108,7 +108,7 @@ source_pkgs = ["coincurve", "tests"]
 branch = true
 parallel = true
 omit = [
-    "src/coincurve/__about__.py",
+    "src/coincurve/__init__.py",
     "tests/test_bench.py",
 ]
 

@@ -94,13 +94,14 @@ class CoincurveBenchmark(Benchmark):
     def verify() -> BenchmarkSpec:
         return BenchmarkSpec(
             f"""
-            from coincurve import PrivateKey
+            from coincurve import PrivateKey, verify_signature
             message = {MESSAGE!r}.encode()
             private_key = PrivateKey()
             signature = private_key.sign(message)
+            public_key = private_key.public_key.format(compressed=False)
             """,
             """
-            assert private_key.public_key.verify(signature, message)
+            assert verify_signature(signature, message, public_key)
             """,
         )
 

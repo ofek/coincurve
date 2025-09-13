@@ -214,7 +214,7 @@ def make_header_cffi_compliant(src_header_dir, src_header, cffi_dir):
     )
     lines = apply_cffi_defines_syntax(lines)
 
-    logging.info("   Writting: %s in %s", src_header, cffi_dir)
+    logging.info("   Writing: %s in %s", src_header, cffi_dir)
     output_filename = os.path.join(cffi_dir, src_header)
     with open(output_filename, "w", encoding="utf-8") as f_out:
         f_out.write("\n".join(lines))

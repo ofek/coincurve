@@ -22,7 +22,8 @@ class CustomBuildHook(BuildHookInterface):
     def local_cffi_license(self) -> str:
         return os.path.join(self.root, self.LICENSE_NAME)
 
-    def get_cffi_distribution_license_files(self) -> list[PackagePath]:
+    @staticmethod
+    def get_cffi_distribution_license_files() -> list[PackagePath]:
         license_files = []
 
         dist_files = distribution("cffi").files or []

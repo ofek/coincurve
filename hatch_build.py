@@ -31,14 +31,14 @@ class CustomBuildHook(BuildHookInterface):
             if f.name != "LICENSE":
                 continue
 
-            orig_f = f
+            current = f.parent
+            while current and not current.name.endswith(".dist-info"):
+                current = current.parent
+                if current is None or len(current.parts) == 0:
+                    break
 
-            # `cffi-1.17.1.dist-info/licenses/LICENSE`
-            if f.parent.name == "licenses":
-                f = f.parent
-
-            if f.parent.name.endswith(".dist-info"):
-                license_files.append(orig_f)
+            if current and current.name.endswith(".dist-info"):
+                license_files.append(f)
 
         return license_files
 

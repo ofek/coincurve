@@ -110,7 +110,7 @@ jobs:
         use_oidc: true
 
   linux-wheels-standard:
-    name: Build Linux wheels
+    name: Build Linux wheels for x86-64
     needs:
     - test
     runs-on: ubuntu-latest
@@ -128,7 +128,7 @@ jobs:
         if-no-files-found: error
 
   macos-wheels-x86_64:
-    name: Build macOS wheels
+    name: Build macOS wheels for x86-64
     needs:
     - test
     runs-on: macos-14
@@ -148,7 +148,7 @@ jobs:
         if-no-files-found: error
 
   macos-wheels-arm:
-    name: Build macOS wheels for ARM (Native)
+    name: Build macOS wheels for ARM64
     needs:
     - test
     runs-on: macos-14
@@ -166,7 +166,7 @@ jobs:
         if-no-files-found: error
 
   windows-wheels-x86_64:
-    name: Build Windows wheels AMD64
+    name: Build Windows wheels for x86-64
     needs:
     - test
     runs-on: windows-latest
@@ -234,7 +234,7 @@ jobs:
         if-no-files-found: error
 
   linux-wheels-arm:
-    name: Build Linux wheels for ARM
+    name: Build Linux wheels for ARM64
     needs:
     - test
     runs-on: ubuntu-latest

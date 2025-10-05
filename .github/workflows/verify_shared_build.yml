@@ -87,7 +87,7 @@ jobs:
     name: Build macOS wheels
     needs:
     - test
-    runs-on: macos-14
+    runs-on: macos-13
 
     steps:
     - uses: actions/checkout@v4
@@ -96,6 +96,7 @@ jobs:
       uses: pypa/cibuildwheel@v2.23
       env:
         CIBW_ARCHS_MACOS: x86_64
+        MACOSX_DEPLOYEMENT_TARGET: 10.13
 
   macos-wheels-arm:
     name: Build macOS wheels for ARM (Native)

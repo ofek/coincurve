@@ -72,7 +72,7 @@ jobs:
       run: uv run --python-preference system scripts/bench.py
 
   linux-wheels-standard:
-    name: Build Linux wheels
+    name: Build Linux wheels for x86-64
     needs:
     - test
     runs-on: ubuntu-latest
@@ -84,7 +84,7 @@ jobs:
       uses: pypa/cibuildwheel@v2.23
 
   macos-wheels-x86_64:
-    name: Build macOS wheels
+    name: Build macOS wheels for x86-64
     needs:
     - test
     runs-on: macos-13
@@ -99,7 +99,7 @@ jobs:
         MACOSX_DEPLOYEMENT_TARGET: 10.13
 
   macos-wheels-arm:
-    name: Build macOS wheels for ARM (Native)
+    name: Build macOS wheels for ARM64
     needs:
     - test
     runs-on: macos-14
@@ -111,7 +111,7 @@ jobs:
       uses: pypa/cibuildwheel@v2.23
 
   windows-wheels-x86_64:
-    name: Build Windows wheels AMD64
+    name: Build Windows wheels for x86-64
     needs:
     - test
     runs-on: windows-latest

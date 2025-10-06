@@ -31,6 +31,7 @@ license = "MIT OR Apache-2.0"
 license-files = [
     "LICENSE-APACHE",
     "LICENSE-MIT",
+    "NOTICE",
 ]
 requires-python = ">=3.9"
 classifiers = [

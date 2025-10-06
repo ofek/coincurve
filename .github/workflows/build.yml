@@ -140,6 +140,7 @@ jobs:
       uses: pypa/cibuildwheel@v3.2.0
       env:
         CIBW_ARCHS_MACOS: x86_64
+        CIBW_SKIP: "cp314t-*"
         MACOSX_DEPLOYMENT_TARGET: 10.13
 
     - uses: actions/upload-artifact@v4

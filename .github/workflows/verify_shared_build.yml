@@ -87,7 +87,7 @@ jobs:
     name: Build macOS wheels for x86-64
     needs:
     - test
-    runs-on: macos-13
+    runs-on: macos-15-intel
 
     steps:
     - uses: actions/checkout@v4

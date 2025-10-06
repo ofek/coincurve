@@ -28,7 +28,7 @@ class CustomBuildHook(BuildHookInterface):
 
         dist_files = distribution("cffi").files or []
         for f in dist_files:
-            if f.name == "LICENSE" and parts[0].endswith(".dist-info"):
+            if f.name == "LICENSE" and f.parts[0].endswith(".dist-info"):
                 license_files.append(f)
                 break
 

@@ -87,15 +87,17 @@ jobs:
     name: Build macOS wheels for x86-64
     needs:
     - test
-    runs-on: macos-13
+    runs-on: macos-15-intel
 
     steps:
     - uses: actions/checkout@v4
 
     - name: Build wheels
-      uses: pypa/cibuildwheel@v2.23
+      uses: pypa/cibuildwheel@v3.2.0
       env:
         CIBW_ARCHS_MACOS: x86_64
+        CIBW_SKIP: "cp314t-*"
+        MACOSX_DEPLOYMENT_TARGET: 10.13
 
   macos-wheels-arm:
     name: Build macOS wheels for ARM64

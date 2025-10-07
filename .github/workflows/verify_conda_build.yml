@@ -47,7 +47,7 @@ jobs:
         shell: bash -el {0}
 
     steps:
-    - uses: actions/checkout@v4
+    - uses: actions/checkout@v5
 
     - name: Install Miniconda
       uses: conda-incubator/setup-miniconda@v3
@@ -85,7 +85,7 @@ jobs:
         shell: bash -el {0}
 
     steps:
-    - uses: actions/checkout@v4
+    - uses: actions/checkout@v5
 
     - name: Install Miniconda
       uses: conda-incubator/setup-miniconda@v3

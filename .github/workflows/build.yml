@@ -110,7 +110,7 @@ jobs:
         use_oidc: true
 
   linux-wheels-standard:
-    name: Build Linux wheels
+    name: Build Linux wheels for x86-64
     needs:
     - test
     runs-on: ubuntu-latest
@@ -128,18 +128,20 @@ jobs:
         if-no-files-found: error
 
   macos-wheels-x86_64:
-    name: Build macOS wheels
+    name: Build macOS wheels for x86-64
     needs:
     - test
-    runs-on: macos-13
+    runs-on: macos-15-intel
 
     steps:
     - uses: actions/checkout@v4
 
     - name: Build wheels
-      uses: pypa/cibuildwheel@v2.23
+      uses: pypa/cibuildwheel@v3.2.0
       env:
         CIBW_ARCHS_MACOS: x86_64
+        CIBW_SKIP: "cp314t-*"
+        MACOSX_DEPLOYMENT_TARGET: 10.13
 
     - uses: actions/upload-artifact@v4
       with:
@@ -148,7 +150,7 @@ jobs:
         if-no-files-found: error
 
   macos-wheels-arm:
-    name: Build macOS wheels for ARM (Native)
+    name: Build macOS wheels for ARM64
     needs:
     - test
     runs-on: macos-14
@@ -166,7 +168,7 @@ jobs:
         if-no-files-found: error
 
   windows-wheels-x86_64:
-    name: Build Windows wheels AMD64
+    name: Build Windows wheels for x86-64
     needs:
     - test
     runs-on: windows-latest
@@ -234,7 +236,7 @@ jobs:
         if-no-files-found: error
 
   linux-wheels-arm:
-    name: Build Linux wheels for ARM
+    name: Build Linux wheels for ARM64
     needs:
     - test
     runs-on: ubuntu-latest

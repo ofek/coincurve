@@ -4,7 +4,7 @@ dev-mode = false
 
 [envs.hatch-static-analysis]
 config-path = "ruff_defaults.toml"
-dependencies = ["ruff==0.9.9"]
+dependencies = ["ruff==0.13.0"]
 
 [envs.hatch-test]
 dev-mode = false

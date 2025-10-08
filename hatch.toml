@@ -9,6 +9,9 @@ dependencies = ["ruff==0.13.0"]
 [envs.hatch-test]
 dev-mode = false
 
+[[envs.hatch-test.matrix]]
+python = ["3.14", "3.13", "3.12", "3.11", "3.10", "3.9"]
+
 [envs.types]
 dependencies = [
   "mypy",

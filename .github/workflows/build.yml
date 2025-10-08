@@ -153,7 +153,7 @@ jobs:
     name: Build macOS wheels for ARM64
     needs:
     - test
-    runs-on: macos-14
+    runs-on: macos-latest
 
     steps:
     - uses: actions/checkout@v5

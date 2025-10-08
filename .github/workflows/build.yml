@@ -109,7 +109,7 @@ jobs:
         directory: coverage_data
         use_oidc: true
 
-  linux-wheels-standard:
+  linux-wheels-x86_64:
     name: Build Linux wheels for x86-64
     needs:
     - test
@@ -123,7 +123,7 @@ jobs:
 
     - uses: actions/upload-artifact@v4
       with:
-        name: artifact-linux-wheels-standard
+        name: artifact-linux-wheels-x86_64
         path: wheelhouse/*.whl
         if-no-files-found: error
 
@@ -264,7 +264,7 @@ jobs:
   publish:
     name: Publish release
     needs:
-    - linux-wheels-standard
+    - linux-wheels-x86_64
     - macos-wheels-x86_64
     - macos-wheels-arm
     - windows-wheels-x86_64

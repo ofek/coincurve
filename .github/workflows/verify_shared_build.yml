@@ -71,7 +71,7 @@ jobs:
     - name: Benchmark
       run: uv run --python-preference system scripts/bench.py
 
-  linux-wheels-standard:
+  linux-wheels-x86_64:
     name: Build Linux wheels for x86-64
     needs:
     - test

@@ -99,7 +99,7 @@ jobs:
         CIBW_SKIP: "cp314t-*"
         MACOSX_DEPLOYMENT_TARGET: 10.13
 
-  macos-wheels-arm:
+  macos-wheels-arm64:
     name: Build macOS wheels for ARM64
     needs:
     - test
@@ -130,7 +130,7 @@ jobs:
         CIBW_ARCHS_WINDOWS: 'AMD64'
         CIBW_BEFORE_ALL: choco install -y --no-progress --no-color cmake>=3.28
 
-  windows-wheels-arm:
+  windows-wheels-arm64:
     name: Build Windows wheels for ARM64
     needs:
     - test

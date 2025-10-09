@@ -109,7 +109,7 @@ jobs:
         directory: coverage_data
         use_oidc: true
 
-  linux-wheels-standard:
+  linux-wheels-x86_64:
     name: Build Linux wheels for x86-64
     needs:
     - test
@@ -123,7 +123,7 @@ jobs:
 
     - uses: actions/upload-artifact@v4
       with:
-        name: artifact-linux-wheels-standard
+        name: artifact-linux-wheels-x86_64
         path: wheelhouse/*.whl
         if-no-files-found: error
 
@@ -149,11 +149,11 @@ jobs:
         path: wheelhouse/*.whl
         if-no-files-found: error
 
-  macos-wheels-arm:
+  macos-wheels-arm64:
     name: Build macOS wheels for ARM64
     needs:
     - test
-    runs-on: macos-14
+    runs-on: macos-latest
 
     steps:
     - uses: actions/checkout@v5
@@ -163,7 +163,7 @@ jobs:
 
     - uses: actions/upload-artifact@v4
       with:
-        name: artifact-macos-wheels-arm
+        name: artifact-macos-wheels-arm64
         path: wheelhouse/*.whl
         if-no-files-found: error
 
@@ -192,7 +192,7 @@ jobs:
         path: wheelhouse/*.whl
         if-no-files-found: error
 
-  windows-wheels-arm:
+  windows-wheels-arm64:
     name: Build Windows wheels for ARM64
     needs:
     - test
@@ -210,7 +210,7 @@ jobs:
 
     - uses: actions/upload-artifact@v4
       with:
-        name: artifact-windows-wheels-arm
+        name: artifact-windows-wheels-arm64
         path: wheelhouse/*.whl
         if-no-files-found: error
 
@@ -235,7 +235,7 @@ jobs:
         path: dist/*
         if-no-files-found: error
 
-  linux-wheels-arm:
+  linux-wheels-arm64:
     name: Build Linux wheels for ARM64
     needs:
     - test
@@ -257,20 +257,20 @@ jobs:
 
     - uses: actions/upload-artifact@v4
       with:
-        name: artifact-linux-wheels-arm
+        name: artifact-linux-wheels-arm64
         path: wheelhouse/*.whl
         if-no-files-found: error
 
   publish:
     name: Publish release
     needs:
-    - linux-wheels-standard
+    - linux-wheels-x86_64
     - macos-wheels-x86_64
-    - macos-wheels-arm
+    - macos-wheels-arm64
     - windows-wheels-x86_64
-    - windows-wheels-arm
+    - windows-wheels-arm64
     - sdist
-    - linux-wheels-arm
+    - linux-wheels-arm64
     runs-on: ubuntu-latest
     if: github.event_name == 'push' && startsWith(github.event.ref, 'refs/tags')
 

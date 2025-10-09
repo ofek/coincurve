@@ -71,7 +71,7 @@ jobs:
     - name: Benchmark
       run: uv run --python-preference system scripts/bench.py
 
-  linux-wheels-standard:
+  linux-wheels-x86_64:
     name: Build Linux wheels for x86-64
     needs:
     - test
@@ -99,11 +99,11 @@ jobs:
         CIBW_SKIP: "cp314t-*"
         MACOSX_DEPLOYMENT_TARGET: 10.13
 
-  macos-wheels-arm:
+  macos-wheels-arm64:
     name: Build macOS wheels for ARM64
     needs:
     - test
-    runs-on: macos-14
+    runs-on: macos-latest
 
     steps:
     - uses: actions/checkout@v5
@@ -130,7 +130,7 @@ jobs:
         CIBW_ARCHS_WINDOWS: 'AMD64'
         CIBW_BEFORE_ALL: choco install -y --no-progress --no-color cmake>=3.28
 
-  windows-wheels-arm:
+  windows-wheels-arm64:
     name: Build Windows wheels for ARM64
     needs:
     - test

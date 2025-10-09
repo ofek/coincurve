@@ -10,5 +10,4 @@ dependencies:
   - pytest
   - pytest-benchmark
   - python =3.12
-  - setuptools >=61
   - tox-conda

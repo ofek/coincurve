@@ -3,7 +3,6 @@ build-backend = "hatchling.build"
 requires = [
     "hatchling>=1.27.0",
     "cffi",
-    "setuptools",
     "scikit-build-core>=0.9.0",
     "pkgconf; sys_platform == 'win32'",
 ]

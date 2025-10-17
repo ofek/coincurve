@@ -35,6 +35,12 @@ env:
     python -m pytest {project}
   CIBW_SKIP: >
       pp*
+  # Required to build fastecdsa with Python ≥ 3.14
+  # https://github.com/AntonKueltz/fastecdsa/issues/74#issuecomment-932757298
+  # https://stackoverflow.com/questions/68827486/cannot-link-gmp-library-not-found-for-lgmp
+  LIBRARY_PATH /opt/homebrew/lib
+  INCLUDE_PATH /opt/homebrew/include
+
 
 jobs:
   test:

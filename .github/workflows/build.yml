@@ -85,6 +85,12 @@ jobs:
 
     - name: Benchmark
       run: uv run --python-preference system scripts/bench.py
+      # Required to build fastecdsa on macOS (experienced with Python 3.14 but might affect earlier versions too)
+      # https://github.com/AntonKueltz/fastecdsa/issues/74#issuecomment-932757298
+      # https://stackoverflow.com/questions/68827486/cannot-link-gmp-library-not-found-for-lgmp
+      env:
+        CFLAGS: -I/opt/homebrew/include
+        LDFLAGS: -L/opt/homebrew/lib
 
   coverage:
     name: Upload coverage

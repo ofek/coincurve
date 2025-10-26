@@ -33,8 +33,7 @@ env:
     " &&
     python -m pytest {project}
   CIBW_TEST_SKIP: "*-macosx_arm64"
-  CIBW_SKIP: >
-      pp*
+  SKBUILD_LOGGING_LEVEL: 'DEBUG'
 
 jobs:
   test:
@@ -66,7 +65,7 @@ jobs:
       run: hatch test
 
     - name: Install uv
-      uses: astral-sh/setup-uv@v5
+      uses: astral-sh/setup-uv@v7
 
     - name: Benchmark
       run: uv run --python-preference system scripts/bench.py
@@ -81,7 +80,7 @@ jobs:
     - uses: actions/checkout@v5
 
     - name: Build wheels
-      uses: pypa/cibuildwheel@v2.23
+      uses: pypa/cibuildwheel@v3.2.0
 
   macos-wheels-x86_64:
     name: Build macOS wheels for x86-64
@@ -91,6 +90,9 @@ jobs:
 
     steps:
     - uses: actions/checkout@v5
+
+    - name: Install uv
+      uses: astral-sh/setup-uv@v7
 
     - name: Build wheels
       uses: pypa/cibuildwheel@v3.2.0
@@ -108,8 +110,11 @@ jobs:
     steps:
     - uses: actions/checkout@v5
 
+    - name: Install uv
+      uses: astral-sh/setup-uv@v7
+
     - name: Build wheels
-      uses: pypa/cibuildwheel@v2.23
+      uses: pypa/cibuildwheel@v3.2.0
 
   windows-wheels-x86_64:
     name: Build Windows wheels for x86-64
@@ -124,8 +129,11 @@ jobs:
       with:
         python-version: ${{ env.PYTHON_VERSION }}
 
+    - name: Install uv
+      uses: astral-sh/setup-uv@v7
+
     - name: Build wheels
-      uses: pypa/cibuildwheel@v2.23
+      uses: pypa/cibuildwheel@v3.2.0
       env:
         CIBW_ARCHS_WINDOWS: 'AMD64'
         CIBW_BEFORE_ALL: choco install -y --no-progress --no-color cmake>=3.28
@@ -139,8 +147,11 @@ jobs:
     steps:
     - uses: actions/checkout@v5
 
+    - name: Install uv
+      uses: astral-sh/setup-uv@v7
+
     - name: Build wheels
-      uses: pypa/cibuildwheel@v2.23
+      uses: pypa/cibuildwheel@v3.2.0
       env:
         COINCURVE_CROSS_HOST: 'arm64'
         CIBW_ARCHS_WINDOWS: 'ARM64'

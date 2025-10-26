@@ -139,3 +139,8 @@ pretty = true
 show_column_numbers = true
 warn_no_return = false
 warn_unused_ignores = true
+
+# --- cibuildwheel ---
+[tool.cibuildwheel]
+build-frontend = "build[uv]"
+skip = "cp3??t-*"

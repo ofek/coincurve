@@ -70,7 +70,7 @@ jobs:
       run: LD_LIBRARY_PATH=$CONDA_PREFIX/lib hatch test
 
     - name: Install uv
-      uses: astral-sh/setup-uv@v5
+      uses: astral-sh/setup-uv@v7
 
     - name: Benchmark
       run: LD_LIBRARY_PATH=$CONDA_PREFIX/lib uv run --python-preference system scripts/bench.py

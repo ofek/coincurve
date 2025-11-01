@@ -75,7 +75,7 @@ jobs:
       run: hatch run hatch-test.py${{ matrix.python-version }}:coverage xml
 
     - name: Upload coverage data
-      uses: actions/upload-artifact@v4
+      uses: actions/upload-artifact@v5
       with:
         name: coverage-${{ matrix.os }}-${{ matrix.python-version }}
         path: coverage.xml
@@ -121,7 +121,7 @@ jobs:
     - name: Build wheels
       uses: pypa/cibuildwheel@v2.23
 
-    - uses: actions/upload-artifact@v4
+    - uses: actions/upload-artifact@v5
       with:
         name: artifact-linux-wheels-x86_64
         path: wheelhouse/*.whl
@@ -143,7 +143,7 @@ jobs:
         CIBW_SKIP: "cp314t-*"
         MACOSX_DEPLOYMENT_TARGET: 10.13
 
-    - uses: actions/upload-artifact@v4
+    - uses: actions/upload-artifact@v5
       with:
         name: artifact-macos-wheels-x86_64
         path: wheelhouse/*.whl
@@ -161,7 +161,7 @@ jobs:
     - name: Build wheels
       uses: pypa/cibuildwheel@v2.23
 
-    - uses: actions/upload-artifact@v4
+    - uses: actions/upload-artifact@v5
       with:
         name: artifact-macos-wheels-arm64
         path: wheelhouse/*.whl
@@ -186,7 +186,7 @@ jobs:
         CIBW_ARCHS_WINDOWS: 'AMD64'
         CIBW_BEFORE_ALL: choco install -y --no-progress --no-color cmake>=3.28
 
-    - uses: actions/upload-artifact@v4
+    - uses: actions/upload-artifact@v5
       with:
         name: artifact-windows-wheels-x86_64
         path: wheelhouse/*.whl
@@ -208,7 +208,7 @@ jobs:
         CIBW_ARCHS_WINDOWS: 'ARM64'
         CIBW_BEFORE_ALL: choco install -y --no-progress --no-color cmake>=3.28
 
-    - uses: actions/upload-artifact@v4
+    - uses: actions/upload-artifact@v5
       with:
         name: artifact-windows-wheels-arm64
         path: wheelhouse/*.whl
@@ -229,7 +229,7 @@ jobs:
     - name: Build source distribution
       run: python -m build --sdist
 
-    - uses: actions/upload-artifact@v4
+    - uses: actions/upload-artifact@v5
       with:
         name: artifact-sdist
         path: dist/*
@@ -255,7 +255,7 @@ jobs:
       env:
         CIBW_ARCHS_LINUX: aarch64
 
-    - uses: actions/upload-artifact@v4
+    - uses: actions/upload-artifact@v5
       with:
         name: artifact-linux-wheels-arm64
         path: wheelhouse/*.whl

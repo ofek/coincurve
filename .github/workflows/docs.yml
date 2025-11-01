@@ -45,7 +45,7 @@ jobs:
     - build
 
     steps:
-    - uses: actions/download-artifact@v5
+    - uses: actions/download-artifact@v6
       with:
         name: documentation
         path: site

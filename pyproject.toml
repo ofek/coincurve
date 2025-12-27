@@ -129,6 +129,9 @@ tests = ["tests", "*/coincurve/tests"]
 minversion = "9"
 addopts = [
     "--import-mode=importlib",
+    "-ra",
+    "--strict-config",
+    "--strict-markers",
 ]
 strict_xfail = true
 testpaths = ["tests"]

@@ -129,6 +129,7 @@ tests = ["tests", "*/coincurve/tests"]
 addopts = [
     "--import-mode=importlib",
 ]
+testpaths = ["tests"]
 
 # --- Mypy ---
 [tool.mypy]

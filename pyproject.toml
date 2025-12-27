@@ -126,9 +126,16 @@ tests = ["tests", "*/coincurve/tests"]
 
 # --- Pytest ---
 [tool.pytest.ini_options]
+minversion = "9"
 addopts = [
     "--import-mode=importlib",
+    "-ra",
+    "--strict-config",
+    "--strict-markers",
 ]
+filterwarnings = ["error"]
+strict_xfail = true
+testpaths = ["tests"]
 
 # --- Mypy ---
 [tool.mypy]

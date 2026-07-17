@@ -32,7 +32,7 @@ license-files = [
     "LICENSE-MIT",
     "NOTICE",
 ]
-requires-python = ">=3.9"
+requires-python = ">=3.10"
 classifiers = [
     "Development Status :: 5 - Production/Stable",
     "Intended Audience :: Developers",

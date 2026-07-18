@@ -25,6 +25,11 @@ env:
     COINCURVE_SECP256K1_STATIC
     COINCURVE_CROSS_HOST
   CIBW_BEFORE_ALL_MACOS: ./.github/scripts/install-macos-build-deps.sh
+  # The shared Windows wheel already installs libsecp256k1 beside the extension.
+  # delvewheel only searches outside the wheel for that dependency, so preserve
+  # the already self-contained wheel instead of trying to vendor it a second time.
+  CIBW_REPAIR_WHEEL_COMMAND_WINDOWS: >-
+    python -c "import shutil; shutil.copy2(r'{wheel}', r'{dest_dir}')"
   CIBW_TEST_REQUIRES: pytest
   CIBW_TEST_COMMAND: >
     python -c

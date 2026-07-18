@@ -34,7 +34,7 @@ license-files = [
     "LICENSE-MIT",
     "NOTICE",
 ]
-requires-python = ">=3.9"
+requires-python = ">=3.10"
 classifiers = [
     "Development Status :: 5 - Production/Stable",
     "Intended Audience :: Developers",
@@ -103,7 +103,6 @@ VENDORED_LIBRARY_STATIC_BUILD = { env = "COINCURVE_SECP256K1_STATIC", default = 
 # --- cibuildwheel ---
 [tool.cibuildwheel]
 build = [
-    "cp39-*",
     "cp310-*",
     "cp311-*",
     "cp312-*",

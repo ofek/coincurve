@@ -43,5 +43,23 @@ add_subdirectory(cm_library_cffi_headers)
 add_subdirectory(cm_library_c_binding)
 add_subdirectory(cm_python_module)
 
-# Configure installation of the shared library ${CFFI_OUTPUT_LIBRARY} in the package
-install(TARGETS ${CFFI_OUTPUT_LIBRARY} LIBRARY DESTINATION ${SKBUILD_PLATLIB_DIR}/${SKBUILD_PROJECT_NAME})
+# Configure installation of the extension in the package.
+set(PROJECT_PACKAGE_DIR ${SKBUILD_PLATLIB_DIR}/${SKBUILD_PROJECT_NAME})
+install(TARGETS ${CFFI_OUTPUT_LIBRARY} LIBRARY DESTINATION ${PROJECT_PACKAGE_DIR})
+
+# A dynamically linked vendored libsecp256k1 must survive the temporary build
+# directory so wheel repair tools can find it. Keep it beside the extension and
+# use a loader-relative runtime path; Windows already searches the module's
+# directory for dependent DLLs.
+if ((PROJECT_IGNORE_SYSTEM_LIB OR NOT VENDORED_AS_SYSTEM_LIB_FOUND) AND NOT VENDORED_LIBRARY_STATIC_BUILD)
+    if (APPLE)
+        set_target_properties(${CFFI_OUTPUT_LIBRARY} PROPERTIES INSTALL_RPATH "@loader_path")
+    elseif (UNIX)
+        set_target_properties(${CFFI_OUTPUT_LIBRARY} PROPERTIES INSTALL_RPATH "$ORIGIN")
+    endif()
+    install(
+        TARGETS ${CFFI_INPUT_LIBRARY}
+        LIBRARY DESTINATION ${PROJECT_PACKAGE_DIR}
+        RUNTIME DESTINATION ${PROJECT_PACKAGE_DIR}
+    )
+endif()

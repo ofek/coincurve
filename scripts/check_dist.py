@@ -3,7 +3,7 @@ from __future__ import annotations
 import argparse
 from pathlib import Path
 
-PYTHON_TAGS = {"cp39", "cp310", "cp311", "cp312", "cp313", "cp314", "cp314t"}
+PYTHON_TAGS = {"cp310", "cp311", "cp312", "cp313", "cp314", "cp314t"}
 PLATFORM_TAGS = {
     "macos-arm64",
     "macos-x86_64",

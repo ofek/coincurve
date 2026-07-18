@@ -10,7 +10,8 @@ pip install coincurve
 
 ## Wheel
 
-Binary wheels are available for most platforms and require at least version `19.3` of pip to install.
+Binary wheels are available for most platforms. An up-to-date version of pip is recommended,
+particularly when installing free-threaded wheels.
 
 | | | | | |
 | --- | --- | --- | --- | --- |
@@ -20,6 +21,12 @@ Binary wheels are available for most platforms and require at least version `19.
 | CPython 3.11 | <ul><li>x86_64</li><li>ARM64</li></ul> | <ul><li>x86_64</li><li>ARM64</li></ul> | <ul><li>x86_64</li><li>i686</li><li>AArch64</li></ul> | <ul><li>x86_64</li><li>i686</li><li>AArch64</li></ul> |
 | CPython 3.12 | <ul><li>x86_64</li><li>ARM64</li></ul> | <ul><li>x86_64</li><li>ARM64</li></ul> | <ul><li>x86_64</li><li>i686</li><li>AArch64</li></ul> | <ul><li>x86_64</li><li>i686</li><li>AArch64</li></ul> |
 | CPython 3.13 | <ul><li>x86_64</li><li>ARM64</li></ul> | <ul><li>x86_64</li><li>ARM64</li></ul> | <ul><li>x86_64</li><li>i686</li><li>AArch64</li></ul> | <ul><li>x86_64</li><li>i686</li><li>AArch64</li></ul> |
+| CPython 3.14 | <ul><li>x86_64</li><li>ARM64</li></ul> | <ul><li>x86_64</li><li>ARM64</li></ul> | <ul><li>x86_64</li><li>i686</li><li>AArch64</li></ul> | <ul><li>x86_64</li><li>i686</li><li>AArch64</li></ul> |
+| CPython 3.14t (free-threaded) | <ul><li>x86_64</li><li>ARM64</li></ul> | <ul><li>x86_64</li><li>ARM64</li></ul> | <ul><li>x86_64</li><li>i686</li><li>AArch64</li></ul> | <ul><li>x86_64</li><li>i686</li><li>AArch64</li></ul> |
+
+The x86-64 macOS wheels require macOS 10.15 or later. Python 3.15 prereleases, including
+free-threaded builds, are supported through source installation; binary wheels will be added
+after Python 3.15 reaches release candidate status.
 
 ## Source
 
@@ -28,8 +35,9 @@ If you are on a platform without support for pre-compiled wheels, you will need 
 A few environment variables influence the build:
 
 - `COINCURVE_UPSTREAM_REF` - This is the Git reference of [libsecp256k1][] to use rather than the (frequently updated) default.
-- `COINCURVE_IGNORE_SYSTEM_LIB` - The presence of this will force fetching of [libsecp256k1][] even if it's already detected at the system level.
-- `COINCURVE_VENDOR_CFFI` - Setting this to anything other than `1` (the default) prevents vendoring of the `_cffi_backend` module. Re-distributors should make sure to require `cffi` as a runtime dependency when disabling this.
+- `COINCURVE_IGNORE_SYSTEM_LIB` - Setting this to `ON` forces fetching of [libsecp256k1][] even if it is detected at the system level.
+- `COINCURVE_SECP256K1_STATIC` - Setting this to `OFF` builds the vendored [libsecp256k1][] as a shared library.
+- `COINCURVE_VENDOR_CFFI` - Setting this to anything other than `1` (the default) prevents vendoring of the `_cffi_backend` module and its license. Re-distributors must add `cffi` as a runtime dependency when disabling this.
 
 !!! tip
     To avoid installing the binary wheels on compatible distributions, use the `--no-binary` option.

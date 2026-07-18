@@ -83,7 +83,7 @@ plugins:
           signature_crossrefs: true
           # Other
           show_bases: false
-        import:
+        inventories:
           - https://docs.python.org/3/objects.inv
 
 markdown_extensions:

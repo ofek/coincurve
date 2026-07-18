@@ -11,11 +11,11 @@ on:
     - master
 
 concurrency:
-  group: build-${{ github.head_ref }}
-  cancel-in-progress: true
+  group: build-${{ github.workflow }}-${{ github.ref }}
+  cancel-in-progress: ${{ !startsWith(github.ref, 'refs/tags/') }}
 
 env:
-  PYTHON_VERSION: '3.13'
+  PYTHON_VERSION: '3.14'
   COINCURVE_IGNORE_SYSTEM_LIB: 'ON'
   COINCURVE_SECP256K1_STATIC: 'ON'
   COINCURVE_CROSS_HOST: ''
@@ -33,31 +33,18 @@ env:
     assert a.ecdh(b.public_key.format())==b.ecdh(a.public_key.format())
     " &&
     python -m pytest {project}
-  CIBW_SKIP: >
-      pp*
 
 jobs:
-  test:
-    name: Test Python ${{ matrix.python-version }} on ${{ startsWith(matrix.os, 'macos-') && 'macOS' || startsWith(matrix.os, 'windows-') && 'Windows' || 'Linux' }}
-    runs-on: ${{ matrix.os }}
-    strategy:
-      fail-fast: false
-      matrix:
-        os: [ubuntu-latest, windows-latest, macos-latest]
-        python-version: ["3.9", "3.10", "3.11", "3.12", "3.13", "3.14"]
+  quality:
+    name: Static analysis and types
+    runs-on: ubuntu-latest
 
     steps:
-    - name: Checkout code
-      uses: actions/checkout@v5
+    - uses: actions/checkout@v7
 
-    - name: Set up Python ${{ matrix.python-version }}
-      uses: actions/setup-python@v6
+    - uses: actions/setup-python@v6
       with:
-        python-version: ${{ matrix.python-version }}
-
-    - name: Install system dependencies
-      if: runner.os == 'macOS'
-      run: ./.github/scripts/install-macos-build-deps.sh
+        python-version: ${{ env.PYTHON_VERSION }}
 
     - name: Install Hatch
       uses: pypa/hatch@install
@@ -68,28 +55,34 @@ jobs:
     - name: Check types
       run: hatch run types:check
 
-    - name: Run tests
-      run: hatch test --python ${{ matrix.python-version }} --cover-quiet --randomize
+  test:
+    name: Test Python ${{ matrix.python-version }} on ${{ startsWith(matrix.os, 'macos-') && 'macOS' || startsWith(matrix.os, 'windows-') && 'Windows' || 'Linux' }}
+    runs-on: ${{ matrix.os }}
+    strategy:
+      fail-fast: false
+      matrix:
+        os: [ubuntu-latest, windows-latest, macos-latest]
+        python-version: ["3.9", "3.10", "3.11", "3.12", "3.13", "3.14", "3.14t"]
 
-    - name: Create coverage report
-      run: hatch run hatch-test.py${{ matrix.python-version }}:coverage xml
+    steps:
+    - uses: actions/checkout@v7
 
-    - name: Upload coverage data
-      uses: actions/upload-artifact@v4
+    - uses: actions/setup-python@v6
       with:
-        name: coverage-${{ matrix.os }}-${{ matrix.python-version }}
-        path: coverage.xml
+        python-version: ${{ matrix.python-version }}
 
-    - name: Install uv
-      uses: astral-sh/setup-uv@v5
+    - name: Install system dependencies
+      if: runner.os == 'macOS'
+      run: ./.github/scripts/install-macos-build-deps.sh
 
-    - name: Benchmark
-      run: uv run --python-preference system scripts/bench.py
+    - name: Install Hatch
+      uses: pypa/hatch@install
+
+    - name: Run tests
+      run: hatch test --python ${{ matrix.python-version }} --randomize
 
   coverage:
     name: Upload coverage
-    needs:
-    - test
     runs-on: ubuntu-latest
 
     permissions:
@@ -97,53 +90,149 @@ jobs:
       id-token: write
 
     steps:
-    - name: Download coverage data
-      uses: actions/download-artifact@v5
+    - uses: actions/checkout@v7
+
+    - uses: actions/setup-python@v6
       with:
-        pattern: coverage-*
-        path: coverage_data
+        python-version: ${{ env.PYTHON_VERSION }}
+
+    - name: Install Hatch
+      uses: pypa/hatch@install
+
+    - name: Run tests with coverage
+      run: hatch test --python ${{ env.PYTHON_VERSION }} --cover-quiet --randomize
+
+    - name: Create coverage report
+      run: hatch run hatch-test.py${{ env.PYTHON_VERSION }}:coverage xml
 
     - name: Upload coverage to Codecov
-      uses: codecov/codecov-action@v5
+      uses: codecov/codecov-action@v7
       with:
-        directory: coverage_data
+        files: coverage.xml
         use_oidc: true
 
-  linux-wheels-x86_64:
-    name: Build Linux wheels for x86-64
+  sdist:
+    name: Build source distribution
     needs:
+    - quality
     - test
     runs-on: ubuntu-latest
 
     steps:
-    - uses: actions/checkout@v5
+    - uses: actions/checkout@v7
+
+    - name: Install build dependencies
+      run: python -m pip install build
+
+    - name: Build source distribution
+      run: python -m build --sdist
+
+    - uses: actions/upload-artifact@v7
+      with:
+        name: artifact-sdist
+        path: dist/*
+        if-no-files-found: error
+
+  prerelease-source:
+    name: Test sdist on Python ${{ matrix.python.version }} on ${{ startsWith(matrix.os, 'macos-') && 'macOS' || startsWith(matrix.os, 'windows-') && 'Windows' || 'Linux' }}
+    needs:
+    - sdist
+    runs-on: ${{ matrix.os }}
+    strategy:
+      fail-fast: false
+      matrix:
+        os: [ubuntu-latest, windows-latest, macos-latest]
+        python:
+        - version: 3.15-dev
+          free-threaded: false
+        - version: 3.15t-dev
+          free-threaded: true
+
+    steps:
+    - uses: actions/checkout@v7
+
+    - uses: actions/setup-python@v6
+      with:
+        python-version: ${{ matrix.python.version }}
+        check-latest: true
+
+    - name: Verify prerelease interpreter
+      env:
+        EXPECTED_FREE_THREADED: ${{ matrix.python.free-threaded }}
+      run: python scripts/check_prerelease_python.py
+
+    - uses: actions/download-artifact@v8
+      with:
+        name: artifact-sdist
+        path: dist
+
+    - name: Install source distribution
+      run: >
+        python -m pip install pytest pytest-randomly
+        dist/coincurve-22.0.0.tar.gz
+
+    - name: Run tests
+      run: python -m pytest tests
+
+  linux-wheels-x86_64:
+    name: Build Linux wheels for x86-64 and i686
+    needs:
+    - quality
+    - test
+    runs-on: ubuntu-latest
+
+    steps:
+    - uses: actions/checkout@v7
 
     - name: Build wheels
-      uses: pypa/cibuildwheel@v2.23
+      uses: pypa/cibuildwheel@v4.1.0
+      env:
+        CIBW_ARCHS_LINUX: x86_64 i686
 
-    - uses: actions/upload-artifact@v4
+    - uses: actions/upload-artifact@v7
       with:
-        name: artifact-linux-wheels-x86_64
+        name: artifact-linux-wheels-x86_64-i686
+        path: wheelhouse/*.whl
+        if-no-files-found: error
+
+  linux-wheels-arm64:
+    name: Build Linux wheels for ARM64
+    needs:
+    - quality
+    - test
+    runs-on: ubuntu-24.04-arm
+
+    steps:
+    - uses: actions/checkout@v7
+
+    - name: Build wheels
+      uses: pypa/cibuildwheel@v4.1.0
+      env:
+        CIBW_ARCHS_LINUX: aarch64
+
+    - uses: actions/upload-artifact@v7
+      with:
+        name: artifact-linux-wheels-arm64
         path: wheelhouse/*.whl
         if-no-files-found: error
 
   macos-wheels-x86_64:
     name: Build macOS wheels for x86-64
     needs:
+    - quality
     - test
     runs-on: macos-15-intel
 
     steps:
-    - uses: actions/checkout@v5
+    - uses: actions/checkout@v7
 
     - name: Build wheels
-      uses: pypa/cibuildwheel@v3.2.0
+      uses: pypa/cibuildwheel@v4.1.0
       env:
         CIBW_ARCHS_MACOS: x86_64
-        CIBW_SKIP: "cp314t-*"
-        MACOSX_DEPLOYMENT_TARGET: 10.13
+        MACOSX_DEPLOYMENT_TARGET: '10.15'
 
-    - uses: actions/upload-artifact@v4
+    - uses: actions/upload-artifact@v7
       with:
         name: artifact-macos-wheels-x86_64
         path: wheelhouse/*.whl
@@ -152,16 +241,19 @@ jobs:
   macos-wheels-arm64:
     name: Build macOS wheels for ARM64
     needs:
+    - quality
     - test
     runs-on: macos-latest
 
     steps:
-    - uses: actions/checkout@v5
+    - uses: actions/checkout@v7
 
     - name: Build wheels
-      uses: pypa/cibuildwheel@v2.23
+      uses: pypa/cibuildwheel@v4.1.0
+      env:
+        CIBW_ARCHS_MACOS: arm64
 
-    - uses: actions/upload-artifact@v4
+    - uses: actions/upload-artifact@v7
       with:
         name: artifact-macos-wheels-arm64
         path: wheelhouse/*.whl
@@ -170,23 +262,20 @@ jobs:
   windows-wheels-x86_64:
     name: Build Windows wheels for x86-64
     needs:
+    - quality
     - test
     runs-on: windows-latest
 
     steps:
-    - uses: actions/checkout@v5
-
-    - uses: actions/setup-python@v6
-      with:
-        python-version: ${{ env.PYTHON_VERSION }}
+    - uses: actions/checkout@v7
 
     - name: Build wheels
-      uses: pypa/cibuildwheel@v2.23
+      uses: pypa/cibuildwheel@v4.1.0
       env:
-        CIBW_ARCHS_WINDOWS: 'AMD64'
+        CIBW_ARCHS_WINDOWS: AMD64
         CIBW_BEFORE_ALL: choco install -y --no-progress --no-color cmake>=3.28
 
-    - uses: actions/upload-artifact@v4
+    - uses: actions/upload-artifact@v7
       with:
         name: artifact-windows-wheels-x86_64
         path: wheelhouse/*.whl
@@ -195,82 +284,61 @@ jobs:
   windows-wheels-arm64:
     name: Build Windows wheels for ARM64
     needs:
+    - quality
     - test
-    runs-on: windows-latest
+    runs-on: windows-11-arm
 
     steps:
-    - uses: actions/checkout@v5
+    - uses: actions/checkout@v7
 
     - name: Build wheels
-      uses: pypa/cibuildwheel@v2.23
+      uses: pypa/cibuildwheel@v4.1.0
       env:
-        COINCURVE_CROSS_HOST: 'arm64'
-        CIBW_ARCHS_WINDOWS: 'ARM64'
+        CIBW_ARCHS_WINDOWS: ARM64
         CIBW_BEFORE_ALL: choco install -y --no-progress --no-color cmake>=3.28
 
-    - uses: actions/upload-artifact@v4
+    - uses: actions/upload-artifact@v7
       with:
         name: artifact-windows-wheels-arm64
         path: wheelhouse/*.whl
         if-no-files-found: error
 
-  sdist:
-    name: Build source distribution
+  validate-distribution:
+    name: Validate release artifacts
     needs:
-    - test
-    runs-on: ubuntu-latest
-
-    steps:
-    - uses: actions/checkout@v5
-
-    - name: Install build dependencies
-      run: python -m pip install build
-
-    - name: Build source distribution
-      run: python -m build --sdist
-
-    - uses: actions/upload-artifact@v4
-      with:
-        name: artifact-sdist
-        path: dist/*
-        if-no-files-found: error
-
-  linux-wheels-arm64:
-    name: Build Linux wheels for ARM64
-    needs:
-    - test
-    runs-on: ubuntu-latest
-    if: github.event_name == 'push' && (github.ref == 'refs/heads/master' || startsWith(github.event.ref, 'refs/tags'))
-
-    steps:
-    - uses: actions/checkout@v5
-
-    - name: Set up QEMU
-      uses: docker/setup-qemu-action@v3
-      with:
-        platforms: arm64
-
-    - name: Build wheels
-      uses: pypa/cibuildwheel@v2.23
-      env:
-        CIBW_ARCHS_LINUX: aarch64
-
-    - uses: actions/upload-artifact@v4
-      with:
-        name: artifact-linux-wheels-arm64
-        path: wheelhouse/*.whl
-        if-no-files-found: error
-
-  publish:
-    name: Publish release
-    needs:
+    - prerelease-source
     - linux-wheels-x86_64
+    - linux-wheels-arm64
     - macos-wheels-x86_64
     - macos-wheels-arm64
     - windows-wheels-x86_64
     - windows-wheels-arm64
-    - sdist
-    - linux-wheels-arm64
+    runs-on: ubuntu-latest
+
+    steps:
+    - uses: actions/checkout@v7
+
+    - uses: actions/download-artifact@v8
+      with:
+        pattern: artifact-*
+        merge-multiple: true
+        path: dist
+
+    - name: Install validation tools
+      run: python -m pip install check-wheel-contents twine
+
+    - name: Validate metadata and wheel contents
+      run: |
+        python -m twine check dist/*
+        check-wheel-contents dist/*.whl
+
+    - name: Validate artifact inventory
+      run: python scripts/check_dist.py dist 22.0.0
+
+  publish:
+    name: Publish release
+    needs:
+    - validate-distribution
     runs-on: ubuntu-latest
     if: github.event_name == 'push' && startsWith(github.event.ref, 'refs/tags')
 
@@ -278,14 +346,13 @@ jobs:
       id-token: write
 
     steps:
-    - uses: actions/download-artifact@v5
+    - uses: actions/download-artifact@v8
       with:
         pattern: artifact-*
         merge-multiple: true
         path: dist
-    - run: ls -l dist
 
     - name: Push build artifacts to PyPI
-      uses: pypa/gh-action-pypi-publish@v1.13.0
+      uses: pypa/gh-action-pypi-publish@v1.14.0
       with:
         skip-existing: true

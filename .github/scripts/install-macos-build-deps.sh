@@ -1,14 +1,6 @@
 #!/bin/bash
-set -ex
+set -euxo pipefail
 
-# update brew
-brew update
-
-# Update openssl if necessary
-brew outdated openssl || brew upgrade openssl
-
-# Install packages needed to build lib-secp256k1
-for pkg in pkg-config; do
-    brew list $pkg > /dev/null || brew install $pkg
-    brew outdated --quiet $pkg || brew upgrade $pkg
-done
+# CMake uses pkg-config to detect system libraries. Avoid updating the entire
+# Homebrew installation in every CI job; the hosted runner image is immutable.
+brew list pkg-config > /dev/null 2>&1 || brew install pkg-config

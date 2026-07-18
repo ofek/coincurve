@@ -1,11 +1,10 @@
-# Create the shared library from the CFFI binding and the static library from ${CFFI_INPUT_LIBRARY}
-if (CMAKE_SYSTEM_NAME STREQUAL "Windows")
-    Python_add_library(${CFFI_OUTPUT_LIBRARY} MODULE USE_SABI 3.8 "${CFFI_C_CODE_DIR}/${CFFI_C_CODE}")
-else()
-    set(Python_SOABI ${SKBUILD_SOABI})
-    Python_add_library(${CFFI_OUTPUT_LIBRARY} MODULE WITH_SOABI "${CFFI_C_CODE_DIR}/${CFFI_C_CODE}")
-    target_compile_definitions(${CFFI_OUTPUT_LIBRARY} PRIVATE Py_LIMITED_API)
-endif()
+# Create an interpreter-specific shared library from the CFFI binding.
+# The bundled _cffi_backend is interpreter-specific as well, so the limited API
+# cannot make these wheels abi3. Free-threaded CPython 3.14 also requires the
+# extension to be built without Py_LIMITED_API.
+set(Python_SOABI ${SKBUILD_SOABI})
+Python_add_library(${CFFI_OUTPUT_LIBRARY} MODULE WITH_SOABI "${CFFI_C_CODE_DIR}/${CFFI_C_CODE}")
+target_compile_definitions(${CFFI_OUTPUT_LIBRARY} PRIVATE _CFFI_NO_LIMITED_API)
 
 set_source_files_properties("${CFFI_C_CODE_DIR}/${CFFI_C_CODE}" PROPERTIES GENERATED 1)
 
@@ -20,7 +19,6 @@ if (PROJECT_IGNORE_SYSTEM_LIB OR NOT VENDORED_AS_SYSTEM_LIB_FOUND)
     target_include_directories(${CFFI_OUTPUT_LIBRARY} PUBLIC ${VENDORED_HEADERS_DIR})
 
     # Link the vendored library to the output library
-    # https://docs.python.org/3/c-api/stable.html#limited-c-api
     target_link_libraries(${CFFI_OUTPUT_LIBRARY} PRIVATE ${CFFI_INPUT_LIBRARY})
 elseif(VENDORED_AS_SYSTEM_LIB_FOUND)
     message(STATUS "Vendored system library found: ${VENDORED_AS_SYSTEM_LIB_LIBRARIES}")

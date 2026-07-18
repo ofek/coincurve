@@ -11,17 +11,19 @@ on:
     - master
 
 concurrency:
-  group: build_shared-${{ github.head_ref }}
-  cancel-in-progress: true
+  group: shared-build-${{ github.workflow }}-${{ github.ref }}
+  cancel-in-progress: ${{ !startsWith(github.ref, 'refs/tags/') }}
 
 env:
-  PYTHON_VERSION: '3.12'
-  COINCURVE_IGNORE_SYSTEM_LIB: '1'
-  # Only 'SHARED' is recognized, any other string means 'not SHARED'
-  COINCURVE_SECP256K1_BUILD: 'SHARED'
+  PYTHON_VERSION: '3.14'
+  COINCURVE_IGNORE_SYSTEM_LIB: 'ON'
+  COINCURVE_SECP256K1_STATIC: 'OFF'
+  COINCURVE_CROSS_HOST: ''
+  CIBW_BUILD: 'cp314-*'
   CIBW_ENVIRONMENT_PASS_LINUX: >
     COINCURVE_IGNORE_SYSTEM_LIB
-    COINCURVE_SECP256K1_BUILD
+    COINCURVE_SECP256K1_STATIC
+    COINCURVE_CROSS_HOST
   CIBW_BEFORE_ALL_MACOS: ./.github/scripts/install-macos-build-deps.sh
   CIBW_TEST_REQUIRES: pytest
   CIBW_TEST_COMMAND: >
@@ -32,116 +34,108 @@ env:
     assert a.ecdh(b.public_key.format())==b.ecdh(a.public_key.format())
     " &&
     python -m pytest {project}
-  CIBW_TEST_SKIP: "*-macosx_arm64"
-  CIBW_SKIP: >
-      pp*
 
 jobs:
   test:
-    name: Test latest Python
+    name: Test shared libsecp256k1 build
     runs-on: ubuntu-latest
 
     steps:
-    - uses: actions/checkout@v5
-
-    - name: Set up Python ${{ env.PYTHON_VERSION }}
-      uses: actions/setup-python@v6
-      with:
-        python-version: ${{ env.PYTHON_VERSION }}
-
-    - name: Install system dependencies
-      if: runner.os == 'macOS'
-      run: ./.github/scripts/install-macos-build-deps.sh
-
-    - name: Install Hatch
-      uses: pypa/hatch@install
-
-    - name: Run static analysis
-      run: hatch fmt --check
-
-    - name: Check types
-      run: hatch run types:check
-
-    - name: Run tests
-      run: hatch test
-
-    - name: Install uv
-      uses: astral-sh/setup-uv@v5
-
-    - name: Benchmark
-      run: uv run --python-preference system scripts/bench.py
-
-  linux-wheels-x86_64:
-    name: Build Linux wheels for x86-64
-    needs:
-    - test
-    runs-on: ubuntu-latest
-
-    steps:
-    - uses: actions/checkout@v5
-
-    - name: Build wheels
-      uses: pypa/cibuildwheel@v2.23
-
-  macos-wheels-x86_64:
-    name: Build macOS wheels for x86-64
-    needs:
-    - test
-    runs-on: macos-15-intel
-
-    steps:
-    - uses: actions/checkout@v5
-
-    - name: Build wheels
-      uses: pypa/cibuildwheel@v3.2.0
-      env:
-        CIBW_ARCHS_MACOS: x86_64
-        CIBW_SKIP: "cp314t-*"
-        MACOSX_DEPLOYMENT_TARGET: 10.13
-
-  macos-wheels-arm64:
-    name: Build macOS wheels for ARM64
-    needs:
-    - test
-    runs-on: macos-latest
-
-    steps:
-    - uses: actions/checkout@v5
-
-    - name: Build wheels
-      uses: pypa/cibuildwheel@v2.23
-
-  windows-wheels-x86_64:
-    name: Build Windows wheels for x86-64
-    needs:
-    - test
-    runs-on: windows-latest
-
-    steps:
-    - uses: actions/checkout@v5
+    - uses: actions/checkout@v7
 
     - uses: actions/setup-python@v6
       with:
         python-version: ${{ env.PYTHON_VERSION }}
 
-    - name: Build wheels
-      uses: pypa/cibuildwheel@v2.23
-      env:
-        CIBW_ARCHS_WINDOWS: 'AMD64'
-        CIBW_BEFORE_ALL: choco install -y --no-progress --no-color cmake>=3.28
+    - name: Install Hatch
+      uses: pypa/hatch@install
 
-  windows-wheels-arm64:
-    name: Build Windows wheels for ARM64
+    - name: Run tests
+      run: hatch test --python ${{ env.PYTHON_VERSION }} --randomize
+
+  linux-wheels-x86_64:
+    name: Build shared Linux wheel for x86-64
+    needs:
+    - test
+    runs-on: ubuntu-latest
+
+    steps:
+    - uses: actions/checkout@v7
+
+    - name: Build wheel
+      uses: pypa/cibuildwheel@v4.1.0
+      env:
+        CIBW_ARCHS_LINUX: x86_64
+
+  linux-wheels-arm64:
+    name: Build shared Linux wheel for ARM64
+    needs:
+    - test
+    runs-on: ubuntu-24.04-arm
+
+    steps:
+    - uses: actions/checkout@v7
+
+    - name: Build wheel
+      uses: pypa/cibuildwheel@v4.1.0
+      env:
+        CIBW_ARCHS_LINUX: aarch64
+
+  macos-wheels-x86_64:
+    name: Build shared macOS wheel for x86-64
+    needs:
+    - test
+    runs-on: macos-15-intel
+
+    steps:
+    - uses: actions/checkout@v7
+
+    - name: Build wheel
+      uses: pypa/cibuildwheel@v4.1.0
+      env:
+        CIBW_ARCHS_MACOS: x86_64
+        MACOSX_DEPLOYMENT_TARGET: '10.15'
+
+  macos-wheels-arm64:
+    name: Build shared macOS wheel for ARM64
+    needs:
+    - test
+    runs-on: macos-latest
+
+    steps:
+    - uses: actions/checkout@v7
+
+    - name: Build wheel
+      uses: pypa/cibuildwheel@v4.1.0
+      env:
+        CIBW_ARCHS_MACOS: arm64
+
+  windows-wheels-x86_64:
+    name: Build shared Windows wheel for x86-64
     needs:
     - test
     runs-on: windows-latest
 
     steps:
-    - uses: actions/checkout@v5
+    - uses: actions/checkout@v7
 
-    - name: Build wheels
-      uses: pypa/cibuildwheel@v2.23
+    - name: Build wheel
+      uses: pypa/cibuildwheel@v4.1.0
       env:
-        COINCURVE_CROSS_HOST: 'arm64'
-        CIBW_ARCHS_WINDOWS: 'ARM64'
+        CIBW_ARCHS_WINDOWS: AMD64
+        CIBW_BEFORE_ALL: choco install -y --no-progress --no-color cmake>=3.28
+
+  windows-wheels-arm64:
+    name: Build shared Windows wheel for ARM64
+    needs:
+    - test
+    runs-on: windows-11-arm
+
+    steps:
+    - uses: actions/checkout@v7
+
+    - name: Build wheel
+      uses: pypa/cibuildwheel@v4.1.0
+      env:
+        CIBW_ARCHS_WINDOWS: ARM64
         CIBW_BEFORE_ALL: choco install -y --no-progress --no-color cmake>=3.28

@@ -36,27 +36,8 @@ env:
     python -m pytest {project}
 
 jobs:
-  test:
-    name: Test shared libsecp256k1 build
-    runs-on: ubuntu-latest
-
-    steps:
-    - uses: actions/checkout@v7
-
-    - uses: actions/setup-python@v6
-      with:
-        python-version: ${{ env.PYTHON_VERSION }}
-
-    - name: Install Hatch
-      uses: pypa/hatch@install
-
-    - name: Run tests
-      run: hatch test --python ${{ env.PYTHON_VERSION }} --randomize
-
   linux-wheels-x86_64:
     name: Build shared Linux wheel for x86-64
-    needs:
-    - test
     runs-on: ubuntu-latest
 
     steps:
@@ -69,8 +50,6 @@ jobs:
 
   linux-wheels-arm64:
     name: Build shared Linux wheel for ARM64
-    needs:
-    - test
     runs-on: ubuntu-24.04-arm
 
     steps:
@@ -83,8 +62,6 @@ jobs:
 
   macos-wheels-x86_64:
     name: Build shared macOS wheel for x86-64
-    needs:
-    - test
     runs-on: macos-15-intel
 
     steps:
@@ -98,8 +75,6 @@ jobs:
 
   macos-wheels-arm64:
     name: Build shared macOS wheel for ARM64
-    needs:
-    - test
     runs-on: macos-latest
 
     steps:
@@ -112,8 +87,6 @@ jobs:
 
   windows-wheels-x86_64:
     name: Build shared Windows wheel for x86-64
-    needs:
-    - test
     runs-on: windows-latest
 
     steps:
@@ -127,8 +100,6 @@ jobs:
 
   windows-wheels-arm64:
     name: Build shared Windows wheel for ARM64
-    needs:
-    - test
     runs-on: windows-11-arm
 
     steps:

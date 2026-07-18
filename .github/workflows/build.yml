@@ -75,15 +75,17 @@ jobs:
       if: runner.os == 'macOS'
       run: ./.github/scripts/install-macos-build-deps.sh
 
-    - name: Install Hatch
-      uses: pypa/hatch@install
+    - name: Install project and test dependencies
+      run: python -m pip install . pytest pytest-randomly
 
     - name: Run tests
-      run: hatch test --python ${{ matrix.python-version }} --randomize
+      run: python -m pytest tests
 
   coverage:
     name: Upload coverage
     runs-on: ubuntu-latest
+    env:
+      PYTHON_VERSION: '3.14t'
 
     permissions:
       contents: read

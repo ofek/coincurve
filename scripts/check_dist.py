@@ -8,10 +8,8 @@ PLATFORM_TAGS = {
     "macos-arm64",
     "macos-x86_64",
     "manylinux-aarch64",
-    "manylinux-i686",
     "manylinux-x86_64",
     "musllinux-aarch64",
-    "musllinux-i686",
     "musllinux-x86_64",
     "windows-amd64",
     "windows-arm64",
@@ -33,7 +31,7 @@ def classify_platform(platform: str) -> str:
         message = f"Unsupported wheel platform tag: {platform}"
         raise ValueError(message)
 
-    for architecture in ("aarch64", "arm64", "i686", "x86_64"):
+    for architecture in ("aarch64", "arm64", "x86_64"):
         if platform.endswith(f"_{architecture}"):
             return f"{family}-{architecture}"
 

@@ -7,6 +7,7 @@ Important changes are emphasized.
 ## 22.0.0
 
 - **Breaking:** Drop support for Python 3.9
+- **Breaking:** Stop building 32-bit Linux wheels
 - Add binary wheels for Python 3.14
 - Add binary wheels for free-threaded Python 3.14
 - Add source-build support for Python 3.15, including free-threaded builds

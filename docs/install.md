@@ -16,12 +16,12 @@ particularly when installing free-threaded wheels.
 | | | | | |
 | --- | --- | --- | --- | --- |
 | | macOS | Windows | Linux (glibc) | Linux (musl) |
-| CPython 3.10 | <ul><li>x86_64</li><li>ARM64</li></ul> | <ul><li>x86_64</li><li>ARM64</li></ul> | <ul><li>x86_64</li><li>i686</li><li>AArch64</li></ul> | <ul><li>x86_64</li><li>i686</li><li>AArch64</li></ul> |
-| CPython 3.11 | <ul><li>x86_64</li><li>ARM64</li></ul> | <ul><li>x86_64</li><li>ARM64</li></ul> | <ul><li>x86_64</li><li>i686</li><li>AArch64</li></ul> | <ul><li>x86_64</li><li>i686</li><li>AArch64</li></ul> |
-| CPython 3.12 | <ul><li>x86_64</li><li>ARM64</li></ul> | <ul><li>x86_64</li><li>ARM64</li></ul> | <ul><li>x86_64</li><li>i686</li><li>AArch64</li></ul> | <ul><li>x86_64</li><li>i686</li><li>AArch64</li></ul> |
-| CPython 3.13 | <ul><li>x86_64</li><li>ARM64</li></ul> | <ul><li>x86_64</li><li>ARM64</li></ul> | <ul><li>x86_64</li><li>i686</li><li>AArch64</li></ul> | <ul><li>x86_64</li><li>i686</li><li>AArch64</li></ul> |
-| CPython 3.14 | <ul><li>x86_64</li><li>ARM64</li></ul> | <ul><li>x86_64</li><li>ARM64</li></ul> | <ul><li>x86_64</li><li>i686</li><li>AArch64</li></ul> | <ul><li>x86_64</li><li>i686</li><li>AArch64</li></ul> |
-| CPython 3.14t (free-threaded) | <ul><li>x86_64</li><li>ARM64</li></ul> | <ul><li>x86_64</li><li>ARM64</li></ul> | <ul><li>x86_64</li><li>i686</li><li>AArch64</li></ul> | <ul><li>x86_64</li><li>i686</li><li>AArch64</li></ul> |
+| CPython 3.10 | <ul><li>x86_64</li><li>ARM64</li></ul> | <ul><li>x86_64</li><li>ARM64</li></ul> | <ul><li>x86_64</li><li>AArch64</li></ul> | <ul><li>x86_64</li><li>AArch64</li></ul> |
+| CPython 3.11 | <ul><li>x86_64</li><li>ARM64</li></ul> | <ul><li>x86_64</li><li>ARM64</li></ul> | <ul><li>x86_64</li><li>AArch64</li></ul> | <ul><li>x86_64</li><li>AArch64</li></ul> |
+| CPython 3.12 | <ul><li>x86_64</li><li>ARM64</li></ul> | <ul><li>x86_64</li><li>ARM64</li></ul> | <ul><li>x86_64</li><li>AArch64</li></ul> | <ul><li>x86_64</li><li>AArch64</li></ul> |
+| CPython 3.13 | <ul><li>x86_64</li><li>ARM64</li></ul> | <ul><li>x86_64</li><li>ARM64</li></ul> | <ul><li>x86_64</li><li>AArch64</li></ul> | <ul><li>x86_64</li><li>AArch64</li></ul> |
+| CPython 3.14 | <ul><li>x86_64</li><li>ARM64</li></ul> | <ul><li>x86_64</li><li>ARM64</li></ul> | <ul><li>x86_64</li><li>AArch64</li></ul> | <ul><li>x86_64</li><li>AArch64</li></ul> |
+| CPython 3.14t (free-threaded) | <ul><li>x86_64</li><li>ARM64</li></ul> | <ul><li>x86_64</li><li>ARM64</li></ul> | <ul><li>x86_64</li><li>AArch64</li></ul> | <ul><li>x86_64</li><li>AArch64</li></ul> |
 
 The x86-64 macOS wheels require macOS 10.15 or later. Python 3.15 prereleases, including
 free-threaded builds, are supported through source installation; binary wheels will be added

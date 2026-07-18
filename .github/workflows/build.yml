@@ -177,7 +177,7 @@ jobs:
       run: python -m pytest tests
 
   linux-wheels-x86_64:
-    name: Build Linux wheels for x86-64 and i686
+    name: Build Linux wheels for x86-64
     needs:
     - quality
     - test
@@ -189,11 +189,11 @@ jobs:
     - name: Build wheels
       uses: pypa/cibuildwheel@v4.1.0
       env:
-        CIBW_ARCHS_LINUX: x86_64 i686
+        CIBW_ARCHS_LINUX: x86_64
 
     - uses: actions/upload-artifact@v7
       with:
-        name: artifact-linux-wheels-x86_64-i686
+        name: artifact-linux-wheels-x86_64
         path: wheelhouse/*.whl
         if-no-files-found: error
 

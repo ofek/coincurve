@@ -4,16 +4,11 @@ import os
 import sys
 import sysconfig
 
-MINIMUM_BETA_SERIAL = 4
-
 
 def main() -> None:
     version = sys.version_info
     if version[:2] != (3, 15):
         message = f"Expected Python 3.15, found {sys.version}"
-        raise RuntimeError(message)
-    if version.releaselevel == "alpha" or (version.releaselevel == "beta" and version.serial < MINIMUM_BETA_SERIAL):
-        message = f"Expected Python 3.15.0b4 or newer, found {sys.version}"
         raise RuntimeError(message)
 
     expected_free_threaded = os.environ["EXPECTED_FREE_THREADED"] == "true"

@@ -11,8 +11,8 @@ on:
     - master
 
 concurrency:
-  group: build_conda-${{ github.head_ref }}
-  cancel-in-progress: true
+  group: conda-build-${{ github.workflow }}-${{ github.ref }}
+  cancel-in-progress: ${{ !startsWith(github.ref, 'refs/tags/') }}
 
 env:
   PYTHON_VERSION: '3.12'
@@ -20,23 +20,6 @@ env:
   COINCURVE_IGNORE_SYSTEM_LIB: 'OFF'
   COINCURVE_SECP256K1_STATIC: 'OFF'
   COINCURVE_CROSS_HOST: ''
-  CIBW_ENVIRONMENT_PASS_LINUX: >
-    COINCURVE_UPSTREAM_REF
-    COINCURVE_IGNORE_SYSTEM_LIB
-    COINCURVE_SECP256K1_STATIC
-    COINCURVE_CROSS_HOST
-  CIBW_BEFORE_ALL_MACOS: ./.github/scripts/install-macos-build-deps.sh
-  CIBW_TEST_REQUIRES: pytest
-  CIBW_TEST_COMMAND: >
-    python -c
-    "from coincurve import PrivateKey;
-    a=PrivateKey();
-    b=PrivateKey();
-    assert a.ecdh(b.public_key.format())==b.ecdh(a.public_key.format())
-    " &&
-    python -m pytest {project}
-  CIBW_SKIP: >
-      pp*
 
 jobs:
   test:
@@ -47,7 +30,7 @@ jobs:
         shell: bash -el {0}
 
     steps:
-    - uses: actions/checkout@v5
+    - uses: actions/checkout@v7
 
     - name: Install Miniconda
       uses: conda-incubator/setup-miniconda@v3
@@ -60,20 +43,8 @@ jobs:
     - name: Install Hatch
       uses: pypa/hatch@install
 
-    - name: Run static analysis
-      run: hatch fmt --check
-
-    - name: Check types
-      run: hatch run types:check
-
     - name: Run tests
-      run: LD_LIBRARY_PATH=$CONDA_PREFIX/lib hatch test
-
-    - name: Install uv
-      uses: astral-sh/setup-uv@v5
-
-    - name: Benchmark
-      run: LD_LIBRARY_PATH=$CONDA_PREFIX/lib uv run --python-preference system scripts/bench.py
+      run: LD_LIBRARY_PATH="$CONDA_PREFIX/lib" hatch test --python "$PYTHON_VERSION" --randomize
 
   linux-wheels-x86_64:
     name: Build Linux wheels
@@ -85,7 +56,7 @@ jobs:
         shell: bash -el {0}
 
     steps:
-    - uses: actions/checkout@v5
+    - uses: actions/checkout@v7
 
     - name: Install Miniconda
       uses: conda-incubator/setup-miniconda@v3

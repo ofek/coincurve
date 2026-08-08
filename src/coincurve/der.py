@@ -130,7 +130,7 @@ def encode_der(private_key: bytes, public_key: bytes | None = None) -> bytes:
     ec_key_seq.extend(ec_key_buffer)
 
     # Wrap in octet string for outer structure
-    ec_key_os = encode_octet_string(ec_key_seq)
+    ec_key_os = encode_octet_string(bytes(ec_key_seq))
 
     # Build the outer PKCS#8 structure
     result = bytearray([SEQUENCE_TAG])

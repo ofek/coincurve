@@ -4,7 +4,18 @@
 
 Important changes are emphasized.
 
-## Unreleased
+## 22.0.0
+
+- **Breaking:** Drop support for Python 3.9
+- **Breaking:** Stop building 32-bit Linux wheels
+- Add binary wheels for Python 3.14
+- Add binary wheels for free-threaded Python 3.14
+- Add source-build support for Python 3.15, including free-threaded builds
+- Fix source builds when the installed CFFI distribution does not include its license metadata
+- Fix `COINCURVE_VENDOR_CFFI` so disabling it also excludes the bundled `_cffi_backend` module
+- Build Windows ARM64 and Linux AArch64 wheels on native GitHub Actions runners
+- Require macOS 10.15 or later for x86-64 wheels
+- Improve release artifact validation and reduce duplicated CI work
 
 ## 21.0.0
 

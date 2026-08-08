@@ -4,7 +4,7 @@ import os
 import shutil
 from functools import cached_property
 from importlib.metadata import PackagePath, distribution
-from typing import Any, ClassVar
+from typing import Any
 
 import _cffi_backend  # noqa: PLC2701
 from hatchling.builders.hooks.plugin.interface import BuildHookInterface
@@ -17,10 +17,8 @@ class CustomBuildHook(BuildHookInterface):
     """
 
     LICENSE_NAME = "LICENSE-cffi"
-    FALLBACK_LICENSES: ClassVar[dict[str, str]] = {
-        "1": "LICENSE-cffi-1",
-        "2": "LICENSE-cffi-2",
-    }
+    LICENSE_MAJOR_VERSION = "2"
+    FALLBACK_LICENSE = "LICENSE-cffi-2"
 
     @cached_property
     def local_cffi_license(self) -> str:
@@ -41,14 +39,13 @@ class CustomBuildHook(BuildHookInterface):
             return str(license_files[0].locate())
 
         major_version = cffi_distribution.version.partition(".")[0]
-        fallback_name = self.FALLBACK_LICENSES.get(major_version)
-        if fallback_name is None:
+        if major_version != self.LICENSE_MAJOR_VERSION:
             message = (
                 f"Could not locate the CFFI license for version {cffi_distribution.version}, "
                 "and no matching fallback is available"
             )
             raise RuntimeError(message)
-        return os.path.join(self.root, fallback_name)
+        return os.path.join(self.root, self.FALLBACK_LICENSE)
 
     def initialize(self, version: str, build_data: dict[str, Any]) -> None:  # noqa: ARG002
         if os.environ.get("COINCURVE_VENDOR_CFFI", "1") != "1":

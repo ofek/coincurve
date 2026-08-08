@@ -10,8 +10,7 @@ pip install coincurve
 
 ## Wheel
 
-Binary wheels are available for most platforms. An up-to-date version of pip is recommended,
-particularly when installing free-threaded wheels.
+Binary wheels are available for most platforms. An up-to-date version of pip is recommended, particularly when installing free-threaded wheels.
 
 | | | | | |
 | --- | --- | --- | --- | --- |
@@ -23,9 +22,7 @@ particularly when installing free-threaded wheels.
 | CPython 3.14 | <ul><li>x86_64</li><li>ARM64</li></ul> | <ul><li>x86_64</li><li>ARM64</li></ul> | <ul><li>x86_64</li><li>AArch64</li></ul> | <ul><li>x86_64</li><li>AArch64</li></ul> |
 | CPython 3.14t (free-threaded) | <ul><li>x86_64</li><li>ARM64</li></ul> | <ul><li>x86_64</li><li>ARM64</li></ul> | <ul><li>x86_64</li><li>AArch64</li></ul> | <ul><li>x86_64</li><li>AArch64</li></ul> |
 
-The x86-64 macOS wheels require macOS 10.15 or later. Python 3.15 prereleases, including
-free-threaded builds, are supported through source installation; binary wheels will be added
-after Python 3.15 reaches release candidate status.
+The x86-64 macOS wheels require macOS 10.15 or later. Python 3.15 prereleases, including free-threaded builds, are supported through source installation; binary wheels will be added after Python 3.15 reaches release candidate status.
 
 ## Source
 

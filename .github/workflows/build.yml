@@ -170,8 +170,12 @@ jobs:
 
     - name: Install source distribution
       run: >
-        python -m pip install pytest pytest-randomly
-        dist/coincurve-22.0.0.tar.gz
+        python -c
+        "import subprocess, sys;
+        from pathlib import Path;
+        sdists=list(Path('dist').glob('*.tar.gz'));
+        assert len(sdists)==1, sdists;
+        subprocess.check_call([sys.executable, '-m', 'pip', 'install', 'pytest', 'pytest-randomly', str(sdists[0])])"
 
     - name: Run tests
       run: python -m pytest tests
@@ -335,7 +339,7 @@ jobs:
         check-wheel-contents dist/*.whl
 
     - name: Validate artifact inventory
-      run: python scripts/check_dist.py dist 22.0.0
+      run: python scripts/check_dist.py dist
 
   publish:
     name: Publish release

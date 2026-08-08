@@ -66,7 +66,7 @@ def mk_ffi(
         code.append(source.include)
 
     code.append("#define PY_USE_BUNDLED")
-    _ffi.set_source(name, "\n".join(code), py_limited_api=False)
+    _ffi.set_source(name, "\n".join(code))
 
     return _ffi
 

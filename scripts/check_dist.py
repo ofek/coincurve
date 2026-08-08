@@ -39,8 +39,13 @@ def classify_platform(platform: str) -> str:
     raise ValueError(message)
 
 
-def classify_wheel(wheel: Path) -> tuple[str, str]:
-    _, python_tag, abi_tag, platform = wheel.stem.rsplit("-", 3)
+def classify_wheel(wheel: Path, version: str) -> tuple[str, str]:
+    distribution, python_tag, abi_tag, platform = wheel.stem.rsplit("-", 3)
+    expected_distribution = f"coincurve-{version}"
+    if distribution != expected_distribution:
+        message = f"Expected wheel for {expected_distribution}, found: {wheel.name}"
+        raise ValueError(message)
+
     build_tag = abi_tag if abi_tag.endswith("t") else python_tag
     if build_tag.startswith("cp315"):
         message = f"Python 3.15 wheels are source-only for this release: {wheel.name}"
@@ -51,15 +56,22 @@ def classify_wheel(wheel: Path) -> tuple[str, str]:
     return build_tag, classify_platform(platform)
 
 
-def check_distribution(directory: Path, version: str) -> None:
-    expected_sdist = directory / f"coincurve-{version}.tar.gz"
+def check_distribution(directory: Path) -> None:
     sdists = sorted(directory.glob("*.tar.gz"))
-    if sdists != [expected_sdist]:
-        message = f"Expected only {expected_sdist.name}, found: {[path.name for path in sdists]}"
+    if len(sdists) != 1:
+        message = f"Expected exactly one source distribution, found: {[path.name for path in sdists]}"
         raise RuntimeError(message)
 
+    sdist_name = sdists[0].name
+    sdist_prefix = "coincurve-"
+    sdist_suffix = ".tar.gz"
+    if not sdist_name.startswith(sdist_prefix) or not sdist_name.endswith(sdist_suffix):
+        message = f"Unexpected source distribution name: {sdist_name}"
+        raise RuntimeError(message)
+    version = sdist_name[len(sdist_prefix) : -len(sdist_suffix)]
+
     wheels = sorted(directory.glob("*.whl"))
-    actual = {classify_wheel(wheel) for wheel in wheels}
+    actual = {classify_wheel(wheel, version) for wheel in wheels}
     expected = {(python, platform) for python in PYTHON_TAGS for platform in PLATFORM_TAGS}
 
     missing = sorted(expected - actual)
@@ -75,9 +87,8 @@ def check_distribution(directory: Path, version: str) -> None:
 def main() -> None:
     parser = argparse.ArgumentParser(description="Verify coincurve release artifacts")
     parser.add_argument("directory", type=Path)
-    parser.add_argument("version")
     args = parser.parse_args()
-    check_distribution(args.directory, args.version)
+    check_distribution(args.directory)
 
 
 if __name__ == "__main__":

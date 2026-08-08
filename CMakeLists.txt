@@ -57,9 +57,21 @@ if ((PROJECT_IGNORE_SYSTEM_LIB OR NOT VENDORED_AS_SYSTEM_LIB_FOUND) AND NOT VEND
     elseif (UNIX)
         set_target_properties(${CFFI_OUTPUT_LIBRARY} PROPERTIES INSTALL_RPATH "$ORIGIN")
     endif()
+
+    # Linux otherwise creates a fully versioned library and two symlinks, which
+    # wheel archives store as three copies. Make the SONAME the real file and
+    # omit the development-only linker namelink from the installed package.
+    if (CMAKE_SYSTEM_NAME STREQUAL "Linux")
+        get_target_property(VENDORED_LIBRARY_SOVERSION ${CFFI_INPUT_LIBRARY} SOVERSION)
+        if (VENDORED_LIBRARY_SOVERSION)
+            set_target_properties(${CFFI_INPUT_LIBRARY} PROPERTIES VERSION ${VENDORED_LIBRARY_SOVERSION})
+        endif()
+        unset(VENDORED_LIBRARY_SOVERSION)
+    endif()
+
     install(
         TARGETS ${CFFI_INPUT_LIBRARY}
-        LIBRARY DESTINATION ${PROJECT_PACKAGE_DIR}
+        LIBRARY DESTINATION ${PROJECT_PACKAGE_DIR} NAMELINK_SKIP
         RUNTIME DESTINATION ${PROJECT_PACKAGE_DIR}
     )
 endif()

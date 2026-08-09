@@ -9,8 +9,24 @@ coverage:
 
   status:
     project:
-      default:
+      default: false
+      python:
         target: '70'
+        flags:
+        - python
+      native:
+        target: '70'
+        flags:
+        - native
+        informational: true
     patch:
-      default:
+      default: false
+      python:
         target: '70'
+        flags:
+        - python
+      native:
+        target: '70'
+        flags:
+        - native
+        informational: true

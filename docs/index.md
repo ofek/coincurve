@@ -9,8 +9,7 @@
 
 -----
 
-This library provides well-tested Python bindings for [libsecp256k1][], the heavily optimized
-C library used by [Bitcoin Core][] for operations on the elliptic curve [secp256k1][].
+This library provides well-tested native CPython bindings for [libsecp256k1][], the heavily optimized C library used by [Bitcoin Core][] for operations on the elliptic curve [secp256k1][].
 
 ## Features
 
@@ -21,6 +20,8 @@ C library used by [Bitcoin Core][] for operations on the elliptic curve [secp256
 - Deterministic signatures as specified by [RFC 6979][]
 - Non-malleable signatures (lower-S form) by default
 - Secure, non-malleable [ECDH][] implementation
+- Digest-first and native batch APIs for low binding overhead
+- Free-threaded CPython support without re-enabling the GIL
 
 ## Users
 

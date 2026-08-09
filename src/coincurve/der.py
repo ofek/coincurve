@@ -13,7 +13,7 @@ Only the following ASN.1 types are supported:
     - OCTET STRING
     - OBJECT IDENTIFIER
     - SEQUENCE
-    - Context-specific EXPLICIT tags (for the optional public key)
+    - Context-specific tags for optional parameters, public keys, and attributes
 
 The expected DER structure is as follows:
 
@@ -23,19 +23,21 @@ The expected DER structure is as follows:
             algorithm       OBJECT IDENTIFIER, -- id-ecPublicKey (1.2.840.10045.2.1)
             parameters      OBJECT IDENTIFIER  -- secp256k1 (1.3.132.0.10)
         },
-        privateKey          OCTET STRING       -- DER encoding of ECPrivateKey
+        privateKey          OCTET STRING,      -- DER encoding of ECPrivateKey
+        attributes      [0] IMPLICIT OPTIONAL
     }
 
     ECPrivateKey ::= SEQUENCE {
         version        INTEGER,                     -- must be 1
         privateKey     OCTET STRING,                -- the secret bytes
-        publicKey  [1] EXPLICIT BIT STRING OPTIONAL -- uncompressed public key
+        parameters [0] EXPLICIT OPTIONAL,           -- secp256k1 parameters
+        publicKey  [1] EXPLICIT BIT STRING OPTIONAL -- compressed or uncompressed public key
     }
 """
 
 from __future__ import annotations
 
-from coincurve.utils import int_to_bytes
+from coincurve.utils import _as_bytes, int_to_bytes
 
 # ASN.1 DER tag bytes
 INTEGER_TAG = 0x02
@@ -43,6 +45,8 @@ BIT_STRING_TAG = 0x03
 OCTET_STRING_TAG = 0x04
 OBJECT_IDENTIFIER_TAG = 0x06
 SEQUENCE_TAG = 0x30
+CONTEXT_ZERO_TAG = 0xA0
+CONTEXT_ONE_TAG = 0xA1
 
 # OIDs
 EC_PUBKEY_OID = bytes([0x2A, 0x86, 0x48, 0xCE, 0x3D, 0x02, 0x01])  # 1.2.840.10045.2.1 (ecPublicKey)
@@ -120,7 +124,7 @@ def encode_der(private_key: bytes, public_key: bytes | None = None) -> bytes:
     if public_key is not None:
         public_key_bs = encode_bit_string(public_key)
         pubkey_len = len(public_key_bs)
-        ec_key_buffer.append(0xA1)  # context-specific [1] constructed
+        ec_key_buffer.append(CONTEXT_ONE_TAG)
         ec_key_buffer.extend(encode_length(pubkey_len))
         ec_key_buffer.extend(public_key_bs)
 
@@ -162,20 +166,45 @@ def decode_length(data: bytes, offset: int) -> tuple[int, int]:
     Returns:
         Tuple of (length, new_offset)
     """
+    if offset >= len(data):
+        msg = "Invalid DER: truncated length"
+        raise ValueError(msg)
+
     length_byte = data[offset]
     offset += 1
 
-    # Short form
+    # Decode the short form.
     if length_byte < 128:  # noqa: PLR2004
         return length_byte, offset
 
-    # Long form
+    # Decode the canonical long form.
     num_length_bytes = length_byte & 0x7F
-    length = 0
-    for _ in range(num_length_bytes):
-        length = (length << 8) | data[offset]
-        offset += 1
+    if num_length_bytes == 0 or offset + num_length_bytes > len(data):
+        msg = "Invalid DER: invalid or truncated long-form length"
+        raise ValueError(msg)
+    length_data = data[offset : offset + num_length_bytes]
+    if length_data[0] == 0:
+        msg = "Invalid DER: non-canonical long-form length"
+        raise ValueError(msg)
+    length = int.from_bytes(length_data, "big")
+    if length < 128:  # noqa: PLR2004
+        msg = "Invalid DER: long-form length was used unnecessarily"
+        raise ValueError(msg)
+    offset += num_length_bytes
     return length, offset
+
+
+def decode_value(data: bytes, offset: int, tag: int, name: str) -> tuple[bytes, int]:
+    """Decode one complete DER value with the expected tag."""
+    if offset >= len(data) or data[offset] != tag:
+        msg = f"Invalid DER: expected {name}"
+        raise ValueError(msg)
+    length, value_offset = decode_length(data, offset + 1)
+    end = value_offset + length
+    if end < value_offset or end > len(data):
+        msg = f"Invalid DER: truncated {name}"
+        raise ValueError(msg)
+    return data[value_offset:end], end
 
 
 def decode_der(der_data: bytes) -> bytes:
@@ -189,82 +218,65 @@ def decode_der(der_data: bytes) -> bytes:
     Returns:
         The private key secret as bytes
     """
-    # Quick validation for performance
-    if len(der_data) < 34 or der_data[0] != SEQUENCE_TAG:  # noqa: PLR2004
-        msg = "Invalid DER: not a valid PKCS#8 structure"
+    data = _as_bytes(der_data, "DER data")
+
+    outer, end = decode_value(data, 0, SEQUENCE_TAG, "PKCS#8 SEQUENCE")
+    if end != len(data):
+        msg = "Invalid DER: trailing data after PKCS#8 SEQUENCE"
         raise ValueError(msg)
 
-    # Skip outer sequence tag and length
-    offset = 1
-    _, offset = decode_length(der_data, offset)
-
-    # Skip version INTEGER (should be 0)
-    if der_data[offset] != INTEGER_TAG:
-        msg = "Invalid DER: expected INTEGER tag for version"
-        raise ValueError(msg)
-    offset += 1
-    version_len, offset = decode_length(der_data, offset)
-    offset += version_len  # Skip version value
-
-    # Validate algorithm identifier is for EC
-    if der_data[offset] != SEQUENCE_TAG:
-        msg = "Invalid DER: expected SEQUENCE tag for algorithm"
-        raise ValueError(msg)
-    offset += 1
-
-    alg_len, offset = decode_length(der_data, offset)
-    alg_end = offset + alg_len  # Store the end position of algorithm identifier
-
-    # Check if first OID is EC
-    if der_data[offset] != OBJECT_IDENTIFIER_TAG:
-        msg = "Invalid DER: expected OBJECT IDENTIFIER tag"
-        raise ValueError(msg)
-    offset += 1
-    oid_len, offset = decode_length(der_data, offset)
-    algorithm_oid = der_data[offset : offset + oid_len]
-
-    # Check if it's an EC key
-    if oid_len != len(EC_PUBKEY_OID) or algorithm_oid != EC_PUBKEY_OID:
-        msg = "Not an EC private key"
+    version, offset = decode_value(outer, 0, INTEGER_TAG, "PKCS#8 version")
+    if version != b"\x00":
+        msg = "Invalid DER: PKCS#8 version must be zero"
         raise ValueError(msg)
 
-    # Skip to the end of algorithm identifier section
-    offset = alg_end
-
-    # Extract private key octet string
-    if der_data[offset] != OCTET_STRING_TAG:
-        msg = "Invalid DER: expected OCTET STRING for private key"
-        raise ValueError(msg)
-    offset += 1
-    priv_len, offset = decode_length(der_data, offset)
-
-    # Parse EC private key structure
-    ec_data = der_data[offset : offset + priv_len]
-
-    # Verify EC structure starts with sequence
-    if len(ec_data) < 2 or ec_data[0] != SEQUENCE_TAG:  # noqa: PLR2004
-        msg = "Invalid EC key format: missing sequence"
+    algorithm, offset = decode_value(outer, offset, SEQUENCE_TAG, "algorithm identifier")
+    algorithm_oid, algorithm_offset = decode_value(algorithm, 0, OBJECT_IDENTIFIER_TAG, "EC algorithm OID")
+    curve_oid, algorithm_offset = decode_value(
+        algorithm, algorithm_offset, OBJECT_IDENTIFIER_TAG, "secp256k1 curve OID"
+    )
+    if algorithm_offset != len(algorithm) or algorithm_oid != EC_PUBKEY_OID or curve_oid != SECP256K1_OID:
+        msg = "Invalid DER: key algorithm must be secp256k1"
         raise ValueError(msg)
 
-    # Skip sequence tag and length
-    ec_offset = 1
-    _, ec_offset = decode_length(ec_data, ec_offset)
-
-    # Skip version INTEGER (should be 1)
-    if ec_data[ec_offset] != INTEGER_TAG:
-        msg = "Invalid EC key format: missing version"
+    private_key_data, offset = decode_value(outer, offset, OCTET_STRING_TAG, "private key")
+    if offset < len(outer) and outer[offset] == CONTEXT_ZERO_TAG:
+        _, offset = decode_value(outer, offset, CONTEXT_ZERO_TAG, "attributes")
+    if offset != len(outer):
+        msg = "Invalid DER: trailing PKCS#8 fields"
         raise ValueError(msg)
-    ec_offset += 1
-    ec_ver_len, ec_offset = decode_length(ec_data, ec_offset)
-    ec_offset += ec_ver_len  # Skip version value
 
-    # Get private key octet string
-    if ec_data[ec_offset] != OCTET_STRING_TAG:
-        msg = "Invalid DER: expected OCTET STRING for EC private key"
+    ec_key, ec_end = decode_value(private_key_data, 0, SEQUENCE_TAG, "ECPrivateKey SEQUENCE")
+    if ec_end != len(private_key_data):
+        msg = "Invalid DER: trailing data after ECPrivateKey SEQUENCE"
         raise ValueError(msg)
-    ec_offset += 1
+    ec_version, ec_offset = decode_value(ec_key, 0, INTEGER_TAG, "ECPrivateKey version")
+    if ec_version != b"\x01":
+        msg = "Invalid DER: ECPrivateKey version must be one"
+        raise ValueError(msg)
+    secret, ec_offset = decode_value(ec_key, ec_offset, OCTET_STRING_TAG, "EC private key")
+    if not 1 <= len(secret) <= 32:  # noqa: PLR2004
+        msg = "Invalid DER: EC private key must contain between 1 and 32 bytes"
+        raise ValueError(msg)
+    secret = secret.rjust(32, b"\x00")
 
-    key_len, ec_offset = decode_length(ec_data, ec_offset)
-
-    # Extract private key
-    return ec_data[ec_offset : ec_offset + key_len]
+    if ec_offset < len(ec_key) and ec_key[ec_offset] == CONTEXT_ZERO_TAG:
+        parameters_field, ec_offset = decode_value(ec_key, ec_offset, CONTEXT_ZERO_TAG, "parameters field")
+        parameters, parameters_end = decode_value(
+            parameters_field, 0, OBJECT_IDENTIFIER_TAG, "secp256k1 parameters OID"
+        )
+        if parameters_end != len(parameters_field) or parameters != SECP256K1_OID:
+            msg = "Invalid DER: ECPrivateKey parameters must be secp256k1"
+            raise ValueError(msg)
+    if ec_offset < len(ec_key) and ec_key[ec_offset] == CONTEXT_ONE_TAG:
+        public_key_field, ec_offset = decode_value(ec_key, ec_offset, CONTEXT_ONE_TAG, "public key field")
+        public_key, public_key_end = decode_value(public_key_field, 0, BIT_STRING_TAG, "public key BIT STRING")
+        uncompressed = len(public_key) == 66 and public_key[:2] == b"\x00\x04"  # noqa: PLR2004
+        compressed = len(public_key) == 34 and public_key[0] == 0 and public_key[1] in {2, 3}  # noqa: PLR2004
+        if public_key_end != len(public_key_field) or not (uncompressed or compressed):
+            msg = "Invalid DER: malformed public key"
+            raise ValueError(msg)
+    if ec_offset != len(ec_key):
+        msg = "Invalid DER: trailing ECPrivateKey fields"
+        raise ValueError(msg)
+    return secret

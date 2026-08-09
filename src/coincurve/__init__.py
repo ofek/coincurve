@@ -1,13 +1,16 @@
-from coincurve.context import GLOBAL_CONTEXT, Context
-from coincurve.keys import PrivateKey, PublicKey, PublicKeyXOnly
-from coincurve.utils import verify_signature
+from coincurve._coincurve import (
+    PrivateKey,
+    PublicKey,
+    XOnlyPublicKey,
+    verify_signature,
+    verify_signature_digest,
+)
 
-__version__ = "22.0.0"
+__version__ = "2026.8.0"
 __all__ = [
-    "GLOBAL_CONTEXT",
-    "Context",
     "PrivateKey",
     "PublicKey",
-    "PublicKeyXOnly",
+    "XOnlyPublicKey",
     "verify_signature",
+    "verify_signature_digest",
 ]

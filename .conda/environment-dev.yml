@@ -3,11 +3,9 @@ channels:
   - conda-forge
   - defaults
 dependencies:
-  - cffi >=1.3.0
   - cmake
   - libsecp256k1
+  - pip
   - pkg-config
   - pytest
-  - pytest-benchmark
   - python =3.12
-  - tox-conda

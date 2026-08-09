@@ -1,7 +1,10 @@
 from __future__ import annotations
 
 import argparse
+import re
+from fnmatch import fnmatch
 from pathlib import Path
+from zipfile import ZipFile
 
 PYTHON_TAGS = {"cp310", "cp311", "cp312", "cp313", "cp314", "cp314t"}
 PLATFORM_TAGS = {
@@ -14,6 +17,7 @@ PLATFORM_TAGS = {
     "windows-amd64",
     "windows-arm64",
 }
+CALVER_PATTERN = re.compile(r"^\d{4}\.(?:[1-9]|1[0-2])\.\d+(?:(?:a|b|rc)\d+)?$")
 
 
 def classify_platform(platform: str) -> str:
@@ -56,6 +60,30 @@ def classify_wheel(wheel: Path, version: str) -> tuple[str, str]:
     return build_tag, classify_platform(platform)
 
 
+def check_wheel_contents(wheel: Path) -> None:
+    with ZipFile(wheel) as archive:
+        files = archive.namelist()
+
+    extension_files = [
+        name for name in files if name.startswith("coincurve/_coincurve.") and name.endswith((".so", ".pyd"))
+    ]
+    if len(extension_files) != 1:
+        message = f"Expected exactly one native Coincurve extension in {wheel.name}, found: {extension_files}"
+        raise RuntimeError(message)
+
+    forbidden_patterns = ["*_cffi_backend*", "*LICENSE-cffi*", "coincurve/_csrc/*"]
+    forbidden = [name for name in files if any(fnmatch(name, pattern) for pattern in forbidden_patterns)]
+    if forbidden:
+        message = f"Found removed CFFI or C source artifacts in {wheel.name}: {forbidden}"
+        raise RuntimeError(message)
+
+    shared_libraries = [name for name in files if name.endswith((".dll", ".dylib", ".so")) or ".so." in name]
+    undeclared = [name for name in shared_libraries if name not in extension_files and "secp256k1" not in name.lower()]
+    if undeclared:
+        message = f"Found unexpected shared libraries in {wheel.name}: {undeclared}"
+        raise RuntimeError(message)
+
+
 def check_distribution(directory: Path) -> None:
     sdists = sorted(directory.glob("*.tar.gz"))
     if len(sdists) != 1:
@@ -69,8 +97,13 @@ def check_distribution(directory: Path) -> None:
         message = f"Unexpected source distribution name: {sdist_name}"
         raise RuntimeError(message)
     version = sdist_name[len(sdist_prefix) : -len(sdist_suffix)]
+    if CALVER_PATTERN.fullmatch(version) is None:
+        message = f"Distribution version is not YYYY.MM.PATCH CalVer: {version}"
+        raise RuntimeError(message)
 
     wheels = sorted(directory.glob("*.whl"))
+    for wheel in wheels:
+        check_wheel_contents(wheel)
     actual = {classify_wheel(wheel, version) for wheel in wheels}
     expected = {(python, platform) for python in PYTHON_TAGS for platform in PLATFORM_TAGS}
 

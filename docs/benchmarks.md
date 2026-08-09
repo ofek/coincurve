@@ -2,22 +2,20 @@
 
 -----
 
-## Setup
+The controlled benchmark workflow compares the handwritten extension with the CFFI implementation at commit `2d11b1160c75ae8fd94fe8fe3f226aec176bf9bf` on Linux x86-64 using CPython 3.10, 3.14, and free-threaded 3.14. Every result records the Python environment and the pinned libsecp256k1 commit in pyperf JSON.
 
-Download [Hatch](https://hatch.pypa.io/latest/install/) or [UV](https://docs.astral.sh/uv/getting-started/installation/) in order to run the benchmarks as follows:
+Run the rewrite suite locally with:
 
 ```
-[hatch|uv] run scripts/bench.py
+uv run scripts/bench.py --output benchmark.json --rigorous
 ```
 
-## Results
+Binding overhead is measured with fixed 32-byte digests, while SHA-256 is measured separately. The suite covers fixed and random key construction, ECDSA signing and verification, recoverable signatures, Schnorr signatures, ECDH, parsing, serialization, tweaks, DER and PEM conversion, and sequence and packed batches at sizes 1, 16, 256, and 4096.
 
-| Library | Key generation | Signing | Verification | Key export | Key import |
-| --- | --- | --- | --- | --- | --- |
-| coincurve v21.0.0 | 33.4 | 52.8 | 59.0 | 12.6 | 39.4 |
-| [fastecdsa](https://github.com/AntonKueltz/fastecdsa) v3.0.1 | 1319.6 | 1449.5 | 1160.4 | 1402.9 | 15.5 |
+The release criteria are:
 
-!!! note
-    - the timings are in microseconds
-    - signing and verification use a 16 KiB message
-    - the Python version used for the benchmarks is 3.13.x
+- No scalar hot operation may regress by more than 5% against the CFFI baseline on the controlled runner.
+- Binding-dominated parsing, serialization, and tweak operations should improve by at least 20%.
+- Digest batches of 256 or more items must deliver at least twice the throughput of equivalent scalar Python loops.
+
+These thresholds are evaluated from retained benchmark artifacts before a release candidate is promoted. They are not timing assertions in ordinary CI.

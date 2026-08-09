@@ -4,13 +4,58 @@ dev-mode = false
 
 [envs.hatch-static-analysis]
 config-path = "ruff_defaults.toml"
+
+[envs.hatch-check-code]
+installer = "uv"
 dependencies = ["ruff==0.13.0"]
+
+[envs.hatch-check-code.scripts]
+lint-check = "ruff check {args:.}"
+lint-fix = "ruff check --fix {args:.}"
+
+[envs.hatch-check-fmt]
+installer = "uv"
+dependency-groups = ["format"]
+dependencies = ["ruff==0.13.0"]
+
+[envs.hatch-check-fmt.scripts]
+format-check = [
+  "ruff format --check --diff {args:.}",
+  "python \"{root}{/}scripts{/}check_clang_format.py\"",
+]
+format-fix = [
+  "ruff format {args:.}",
+  "python \"{root}{/}scripts{/}check_clang_format.py\" --fix",
+]
 
 [envs.hatch-test]
 dev-mode = false
 
 [[envs.hatch-test.matrix]]
 python = ["3.14t", "3.14", "3.13", "3.12", "3.11", "3.10"]
+
+[envs.native-coverage]
+installer = "uv"
+skip-install = true
+dependency-groups = ["native-coverage"]
+
+[envs.native-coverage.env-vars]
+COINCURVE_COVERAGE = "ON"
+SKBUILD_INSTALL_STRIP = "false"
+
+[envs.native-coverage.scripts]
+run = [
+  "uv pip install --no-cache --reinstall --no-deps .",
+  "python scripts/native_coverage.py {args:tests}",
+]
+
+[envs.native-coverage.overrides]
+platform.linux.env-vars = "CC=clang"
+platform.macos.env-vars = "CC=clang"
+platform.windows.env-vars = [
+  "CC=clang-cl",
+  "CMAKE_GENERATOR=Ninja",
+]
 
 [envs.types]
 dependencies = [

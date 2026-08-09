@@ -4,6 +4,20 @@
 
 Important changes are emphasized.
 
+Coincurve uses `YYYY.MM.PATCH` calendar versions beginning with 2026.8.0. Versions identify release time rather than API compatibility, and breaking changes are called out in each release's history.
+
+## 2026.8.0
+
+- **Breaking:** Replace the CFFI implementation with immutable handwritten CPython extension types and drop PyPy support.
+- **Breaking:** Require exactly 32 bytes in `PrivateKey()` and move shorter scalar forms to `PrivateKey.from_int()` and `PrivateKey.from_hex()`.
+- **Breaking:** Replace mutable key operations, public contexts, arbitrary nonce callbacks, pointer-oriented helpers, and legacy x-only and recovery names with the clean native API described in the migration guide.
+- **Breaking:** Remove legacy scalar conversion, padding, random-secret, and validation helpers from `coincurve.utils`.
+- Add explicit digest methods, fused one-shot verification, same-key batches, strict pairwise sequence batches, and fixed-width packed batches.
+- Preserve raw Schnorr signing and verification, public-key combination, x-only parity input, and accepted PKCS#8 key variants from the previous API.
+- Reject the former mutating x-only tweak call with migration guidance and provide `add_tweak()` as its immutable replacement.
+- Support concurrent use without the GIL on free-threaded CPython and isolate libsecp256k1 contexts per interpreter.
+- Continue shipping CPython 3.10 through 3.14 wheels, including free-threaded 3.14 wheels, and test Python 3.15 prereleases from source.
+
 ## 22.0.0
 
 - **Breaking:** Drop support for Python 3.9

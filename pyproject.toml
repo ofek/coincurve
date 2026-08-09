@@ -2,8 +2,7 @@
 build-backend = "hatchling.build"
 requires = [
     "hatchling>=1.27.0",
-    "cffi>=2.1.1",
-    "scikit-build-core>=0.9.0",
+    "scikit-build-core[hatchling]>=1.0.3",
     "pkgconf; sys_platform == 'win32'",
 ]
 
@@ -39,7 +38,6 @@ classifiers = [
     "Natural Language :: English",
     "Operating System :: OS Independent",
     "Programming Language :: Python :: Implementation :: CPython",
-    "Programming Language :: Python :: Implementation :: PyPy",
     "Topic :: Software Development :: Libraries",
     "Topic :: Security :: Cryptography",
 ]
@@ -52,11 +50,22 @@ History = "https://ofek.dev/coincurve/history/"
 Tracker = "https://github.com/ofek/coincurve/issues"
 Source = "https://github.com/ofek/coincurve"
 
-# --- hatch ---
+[dependency-groups]
+format = [
+    "clang-format==22.1.8",
+]
+native-coverage = [
+    "ninja; sys_platform == 'win32'",
+    "pytest",
+    "pytest-randomly",
+]
+
+# Configure Hatch.
 [tool.hatch.version]
 path = "src/coincurve/__init__.py"
 
-[tool.hatch.build.targets.wheel.hooks.custom]
+[tool.hatch.build.targets.wheel]
+exclude = ["src/coincurve/_csrc"]
 
 [tool.hatch.build.targets.wheel.hooks.scikit-build]
 experimental = true
@@ -66,21 +75,21 @@ cmake.source-dir = "."
 wheel.py-api = ""
 wheel.packages = []
 
-# --- scikit-build-core ---
+# Configure scikit-build-core.
 [tool.scikit-build.cmake.define]
 CMAKE_BUILD_TYPE = "Release"
-# Coincurve build options - This may be better extracted from the ENV by the CMake directly?
+# Pass Coincurve build options from the environment to CMake.
 PROJECT_IGNORE_SYSTEM_LIB = { env = "COINCURVE_IGNORE_SYSTEM_LIB", default = "ON" }
 PROJECT_CROSS_COMPILE_TARGET = { env = "COINCURVE_CROSS_HOST", default = "" }
-# Vendored library: SECP256K1
+# Configure the vendored libsecp256k1 source.
 VENDORED_LIBRARY_CMAKE_TARGET = "secp256k1"
 VENDORED_LIBRARY_PKG_CONFIG = "libsecp256k1"
 VENDORED_LIBRARY_PKG_CONFIG_VERSION = "0.6.0"
 VENDORED_UPSTREAM_URL = "https://github.com/bitcoin-core/secp256k1/archive/"
 VENDORED_UPSTREAM_REF = { env = "COINCURVE_UPSTREAM_REF", default = "0cdc758a56360bf58a851fe91085a327ec97685a" }
 VENDORED_UPSTREAM_SHA = { env = "COINCURVE_UPSTREAM_SHA", default = "385c115a21ee1ff31d0b0320acc2b278c92f7bde971f510566ad481a38835be0" }
-# SECP256K1 library specific build options
-# `VENDORED_OPTION` is reserved prefix for vendored library build options
+# Configure libsecp256k1-specific build options.
+# The `VENDORED_OPTION` prefix is reserved for vendored library build options.
 VENDORED_LIBRARY_OPTION_PREFIX = "SECP256K1"
 VENDORED_OPTION_DISABLE_SHARED = { env = "COINCURVE_SECP256K1_STATIC", default = "ON" }
 VENDORED_OPTION_BUILD_BENCHMARK = "OFF"
@@ -92,13 +101,18 @@ VENDORED_OPTION_ENABLE_MODULE_ECDH = "ON"
 VENDORED_OPTION_ENABLE_MODULE_RECOVERY = "ON"
 VENDORED_OPTION_ENABLE_MODULE_SCHNORRSIG = "ON"
 VENDORED_OPTION_ENABLE_MODULE_EXTRAKEYS = "ON"
-VENDORED_OPTION_EXPERIMENTAL = "ON"
-# Vendored library build options (cmake, compiler, linker, etc.)
-# VENDORED_CMAKE is reserved prefix for vendored library cmake options
-# VENDORED_CMAKE_<STATIC|SHARED>_<CMAKE_OPTION> = <VALUE>
+VENDORED_OPTION_ENABLE_MODULE_MUSIG = "OFF"
+VENDORED_OPTION_ENABLE_MODULE_ELLSWIFT = "OFF"
+VENDORED_OPTION_EXPERIMENTAL = "OFF"
+# Configure shared and static vendored library builds.
+# The `VENDORED_CMAKE` prefix is reserved for vendored library CMake options.
+# Use `VENDORED_CMAKE_<STATIC|SHARED>_<CMAKE_OPTION> = <VALUE>` for these options.
 VENDORED_LIBRARY_STATIC_BUILD = { env = "COINCURVE_SECP256K1_STATIC", default = "ON" }
+COINCURVE_STRICT_WARNINGS = { env = "COINCURVE_STRICT_WARNINGS", default = "OFF" }
+COINCURVE_SANITIZE = { env = "COINCURVE_SANITIZE", default = "OFF" }
+COINCURVE_COVERAGE = { env = "COINCURVE_COVERAGE", default = "OFF" }
 
-# --- cibuildwheel ---
+# Configure cibuildwheel.
 [tool.cibuildwheel]
 build = [
     "cp310-*",
@@ -109,7 +123,7 @@ build = [
     "cp314t-*",
 ]
 
-# --- Coverage ---
+# Configure coverage.
 [tool.coverage.run]
 source_pkgs = ["coincurve", "tests"]
 branch = true
@@ -123,11 +137,11 @@ omit = [
 exclude_lines =[
     "no cov",
 
-    # Ignore missing debug-only code
+    # Ignore missing debug-only code.
     "def __repr__",
     "if self\\.debug",
 
-    # Ignore non-runnable code
+    # Ignore non-runnable code.
     "if __name__ == .__main__.:",
 ]
 
@@ -135,13 +149,13 @@ exclude_lines =[
 coincurve = ["src/coincurve", "*/coincurve/src/coincurve"]
 tests = ["tests", "*/coincurve/tests"]
 
-# --- Pytest ---
+# Configure pytest.
 [tool.pytest.ini_options]
 addopts = [
     "--import-mode=importlib",
 ]
 
-# --- Mypy ---
+# Configure mypy.
 [tool.mypy]
 disallow_untyped_defs = false
 follow_imports = "normal"

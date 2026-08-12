@@ -1,0 +1,34 @@
+# LLVM provides a conventional C baseline while minimizing custom overrides.
+BasedOnStyle: LLVM
+# C sources always use LF endings so formatter output is consistent across platforms.
+LineEnding: LF
+# Four spaces match the surrounding Python code and make nested C control flow clear.
+IndentWidth: 4
+# Matching continuation indentation avoids visually unrelated alignment when identifiers change.
+ContinuationIndentWidth: 4
+# One hundred columns keep dense native signatures and error paths readable without excessive wrapping.
+ColumnLimit: 100
+# Linux brace placement distinguishes function bodies while keeping control-flow braces attached.
+BreakBeforeBraces: Linux
+# Keeping return types with function names makes definitions easier to find with text searches.
+BreakAfterReturnType: None
+# Wrapped function arguments form an indented block with a matching standalone closing delimiter.
+AlignAfterOpenBracket: BlockIndent
+# Wrapped call arguments remain one per line for smaller diffs.
+BinPackArguments: false
+# Wrapped declaration parameters remain one per line for smaller diffs.
+BinPackParameters: OnePerLine
+# Wrapped calls cannot collapse all arguments onto one continuation line.
+AllowAllArgumentsOnNextLine: false
+# Wrapped declarations cannot collapse all parameters onto one continuation line.
+AllowAllParametersOfDeclarationOnNextLine: false
+# Blocks always retain their structural line breaks so native control flow remains explicit.
+AllowShortBlocksOnASingleLine: Never
+# Functions always retain multiline bodies for consistent scanning and review.
+AllowShortFunctionsOnASingleLine: None
+# Include order remains deliberate because C headers can change compilation behavior.
+SortIncludes: Never
+# Pointer stars bind to declarators, following the conventional C spelling used by CPython.
+PointerAlignment: Right
+# Existing source cannot silently override the configured pointer style.
+DerivePointerAlignment: false

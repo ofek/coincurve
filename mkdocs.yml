@@ -48,6 +48,7 @@ nav:
   - About: index.md
   - Install: install.md
   - API Reference: api.md
+  - Migrating to 2026.8.0: migration.md
   - Benchmarks: benchmarks.md
   - Meta:
     - Users: users.md

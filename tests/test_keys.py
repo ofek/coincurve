@@ -1,11 +1,10 @@
-from hashlib import sha512
+from hashlib import sha256, sha512
 from os import urandom
 
 import pytest
 
-from coincurve.ecdsa import deserialize_recoverable, recover
-from coincurve.keys import PrivateKey, PublicKey, PublicKeyXOnly
-from coincurve.utils import GROUP_ORDER_INT, bytes_to_int, int_to_bytes_padded, verify_signature
+from coincurve import PrivateKey, PublicKey, XOnlyPublicKey, batch, verify_signature, verify_signature_digest
+from coincurve.batch import packed
 
 G = PublicKey(
     b"\x04y\xbef~\xf9\xdc\xbb\xacU\xa0b\x95\xce\x87\x0b\x07\x02\x9b"
@@ -13,197 +12,157 @@ G = PublicKey(
     b"]\xa4\xfb\xfc\x0e\x11\x08\xa8\xfd\x17\xb4H\xa6\x85T\x19\x9cG"
     b"\xd0\x8f\xfb\x10\xd4\xb8"
 )
-n = 0xFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFEBAAEDCE6AF48A03BBFD25E8CD0364141
+N = 0xFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFEBAAEDCE6AF48A03BBFD25E8CD0364141
 
 
 class TestPrivateKey:
-    def test_public_key(self, samples):
-        assert PrivateKey(samples["PRIVATE_KEY_BYTES"]).public_key.format() == samples["PUBLIC_KEY_COMPRESSED"]
+    def test_public_keys(self, samples):
+        key = PrivateKey(samples["PRIVATE_KEY_BYTES"])
+        assert key.public_key.format() == samples["PUBLIC_KEY_COMPRESSED"]
+        assert key.xonly_public_key.format() == samples["PUBLIC_KEY_COMPRESSED"][1:]
 
-    def test_xonly_pubkey(self, samples):
-        assert (
-            PrivateKey(samples["PRIVATE_KEY_BYTES"]).public_key_xonly.format() == samples["PUBLIC_KEY_COMPRESSED"][1:]
-        )
-
-    def test_signature_correct(self):
+    def test_sign_and_verify(self):
         private_key = PrivateKey()
-        public_key = private_key.public_key
-
         message = urandom(200)
         signature = private_key.sign(message)
-
-        assert verify_signature(signature, message, public_key.format(compressed=True))
-        assert verify_signature(signature, message, public_key.format(compressed=False))
+        digest = sha256(message).digest()
+        assert private_key.public_key.verify(signature, message)
+        assert private_key.public_key.verify_digest(signature, digest)
+        assert verify_signature(signature, message, private_key.public_key.format())
+        assert verify_signature_digest(signature, digest, private_key.public_key.format(compressed=False))
 
     def test_signature_deterministic(self, samples):
-        assert PrivateKey(samples["PRIVATE_KEY_BYTES"]).sign(samples["MESSAGE"]) == samples["SIGNATURE"]
-
-    def test_signature_invalid_hasher(self, samples):
-        with pytest.raises(ValueError, match=r"Message hash must be 32 bytes long\."):
-            PrivateKey().sign(samples["MESSAGE"], lambda x: sha512(x).digest())
-
-    def test_signature_recoverable(self, samples):
         private_key = PrivateKey(samples["PRIVATE_KEY_BYTES"])
-        assert (
-            private_key.public_key.format()
-            == PublicKey(
-                recover(
-                    samples["MESSAGE"],
-                    deserialize_recoverable(private_key.sign_recoverable(samples["MESSAGE"])),
-                )
-            ).format()
-        )
+        assert private_key.sign(samples["MESSAGE"]) == samples["SIGNATURE"]
+        assert private_key.sign_digest(sha256(samples["MESSAGE"]).digest()) == samples["SIGNATURE"]
+
+    def test_invalid_hasher(self, samples):
+        with pytest.raises(ValueError, match="exactly 32 bytes"):
+            PrivateKey().sign(samples["MESSAGE"], lambda value: sha512(value).digest())
+
+    def test_recoverable_signature(self, samples):
+        private_key = PrivateKey(samples["PRIVATE_KEY_BYTES"])
+        signature = private_key.sign_recoverable(samples["MESSAGE"])
+        digest = sha256(samples["MESSAGE"]).digest()
+        assert signature == samples["RECOVERABLE_SIGNATURE"]
+        assert PublicKey.recover(signature, samples["MESSAGE"]) == private_key.public_key
+        assert PublicKey.recover_digest(signature, digest) == private_key.public_key
+        assert private_key.sign_recoverable_digests([digest]) == [signature]
+        assert batch.sign_recoverable_digests([private_key], [digest]) == [signature]
+        assert batch.recover_digests([signature], [digest]) == [private_key.public_key]
+        packed_signature, sign_status = packed.sign_recoverable_digests(private_key.secret, digest)
+        packed_public_key, recover_status = packed.recover_public_keys(packed_signature, digest)
+        assert packed_signature == signature
+        assert sign_status == recover_status == b"\x01"
+        assert packed_public_key == bytes(private_key.public_key)
 
     def test_schnorr_signature(self):
         private_key = PrivateKey()
-        message = urandom(32)
+        digest = urandom(32)
+        signature = private_key.sign_schnorr_digest(digest, aux_randomness=bytes(32))
+        assert private_key.xonly_public_key.verify_digest(signature, digest)
+        assert private_key.xonly_public_key.verify(private_key.sign_schnorr(digest), digest)
+        message_signature = private_key.sign_schnorr_message(b"message", aux_randomness=bytes(32))
+        assert private_key.xonly_public_key.verify_message(message_signature, b"message")
+        with pytest.raises(ValueError, match="exactly 32 bytes"):
+            private_key.sign_schnorr_digest(digest + b"\x01")
 
-        # Message must be 32 bytes
-        with pytest.raises(ValueError, match=r"Message must be 32 bytes long\."):
-            private_key.sign_schnorr(message + b"\x01")
-
-        # We can provide supplementary randomness
-        sig = private_key.sign_schnorr(message, urandom(32))
-        assert private_key.public_key_xonly.verify(sig, message)
-
-        # Or not
-        sig = private_key.sign_schnorr(message)
-        assert private_key.public_key_xonly.verify(sig, message)
-
-    def test_to_hex(self, samples):
-        assert PrivateKey(samples["PRIVATE_KEY_BYTES"]).to_hex() == samples["PRIVATE_KEY_HEX"]
-
-    def test_to_int(self, samples):
-        assert PrivateKey(samples["PRIVATE_KEY_BYTES"]).to_int() == samples["PRIVATE_KEY_NUM"]
-
-    def test_to_pem(self, samples):
-        assert PrivateKey(samples["PRIVATE_KEY_BYTES"]).to_pem() == samples["PRIVATE_KEY_PEM"]
-
-    def test_to_der(self, samples):
-        assert PrivateKey(samples["PRIVATE_KEY_BYTES"]).to_der() == samples["PRIVATE_KEY_DER"]
-
-    def test_from_hex(self, samples):
-        assert PrivateKey.from_hex(samples["PRIVATE_KEY_HEX"]).secret == samples["PRIVATE_KEY_BYTES"]
-
-    def test_from_int(self, samples):
-        assert PrivateKey.from_int(samples["PRIVATE_KEY_NUM"]).secret == samples["PRIVATE_KEY_BYTES"]
-
-    def test_from_pem(self, samples):
-        assert PrivateKey.from_pem(samples["PRIVATE_KEY_PEM"]).secret == samples["PRIVATE_KEY_BYTES"]
-
-    def test_from_der(self, samples):
-        assert PrivateKey.from_der(samples["PRIVATE_KEY_DER"]).secret == samples["PRIVATE_KEY_BYTES"]
+    def test_serialization(self, samples):
+        private_key = PrivateKey(samples["PRIVATE_KEY_BYTES"])
+        assert private_key.to_hex() == samples["PRIVATE_KEY_HEX"]
+        assert private_key.to_int() == samples["PRIVATE_KEY_NUM"]
+        assert private_key.to_pem() == samples["PRIVATE_KEY_PEM"]
+        assert private_key.to_der() == samples["PRIVATE_KEY_DER"]
+        assert PrivateKey.from_hex(samples["PRIVATE_KEY_HEX"]) == private_key
+        assert PrivateKey.from_int(samples["PRIVATE_KEY_NUM"]) == private_key
+        assert PrivateKey.from_pem(samples["PRIVATE_KEY_PEM"]) == private_key
+        assert PrivateKey.from_der(samples["PRIVATE_KEY_DER"]) == private_key
 
     def test_ecdh(self):
-        a = PrivateKey()
-        b = PrivateKey()
+        first = PrivateKey()
+        second = PrivateKey()
+        assert first.ecdh(second.public_key) == second.ecdh(first.public_key)
+        generator = PrivateKey.from_int(1)
+        assert generator.ecdh(generator.public_key) == sha256(bytes(generator.public_key)).digest()
 
-        assert a.ecdh(b.public_key.format()) == b.ecdh(a.public_key.format())
-
-    def test_add(self):
-        assert PrivateKey(b"\x01").add(b"\x09").to_int() == 10
-
-    def test_add_update(self):
-        private_key = PrivateKey(b"\x01")
-        new_private_key = private_key.add(b"\x09", update=True)
-
-        assert new_private_key.to_int() == 10
-        assert private_key is new_private_key
-
-    def test_multiply(self):
-        assert PrivateKey(b"\x05").multiply(b"\x05").to_int() == 25
-
-    def test_multiply_update(self):
-        private_key = PrivateKey(b"\x05")
-        new_private_key = private_key.multiply(b"\x05", update=True)
-
-        assert new_private_key.to_int() == 25
-        assert private_key is new_private_key
+    def test_immutable_tweaks(self):
+        one = PrivateKey.from_int(1)
+        five = PrivateKey.from_int(5)
+        assert one.add((9).to_bytes(32, "big")).to_int() == 10
+        assert five.multiply((5).to_bytes(32, "big")).to_int() == 25
+        assert one.to_int() == 1
+        assert five.to_int() == 5
 
 
 class TestPublicKey:
-    def test_from_secret(self, samples):
+    def test_construction_and_serialization(self, samples):
         assert PublicKey.from_secret(samples["PRIVATE_KEY_BYTES"]).format() == samples["PUBLIC_KEY_COMPRESSED"]
-
-    def test_from_point(self, samples):
-        assert PublicKey.from_point(samples["PUBLIC_KEY_X"], samples["PUBLIC_KEY_Y"]).format() == samples.get(
-            "PUBLIC_KEY_COMPRESSED"
-        )
-
-    def test_from_signature_and_message(self, samples):
         assert (
-            PublicKey.from_secret(samples["PRIVATE_KEY_BYTES"]).format()
-            == PublicKey.from_signature_and_message(samples["RECOVERABLE_SIGNATURE"], samples["MESSAGE"]).format()
+            PublicKey.from_point(samples["PUBLIC_KEY_X"], samples["PUBLIC_KEY_Y"]).format()
+            == samples["PUBLIC_KEY_COMPRESSED"]
         )
-
-    def test_format(self, samples):
-        assert PublicKey(samples["PUBLIC_KEY_UNCOMPRESSED"]).format(compressed=True) == samples.get(
-            "PUBLIC_KEY_COMPRESSED"
-        )
-        assert PublicKey(samples["PUBLIC_KEY_COMPRESSED"]).format(compressed=False) == samples.get(
-            "PUBLIC_KEY_UNCOMPRESSED"
-        )
-
-    def test_point(self, samples):
-        assert PublicKey(samples["PUBLIC_KEY_COMPRESSED"]).point() == (
-            samples["PUBLIC_KEY_X"],
-            samples["PUBLIC_KEY_Y"],
-        )
+        key = PublicKey(samples["PUBLIC_KEY_UNCOMPRESSED"])
+        assert bytes(key) == samples["PUBLIC_KEY_COMPRESSED"]
+        assert key.format(compressed=False) == samples["PUBLIC_KEY_UNCOMPRESSED"]
+        assert key.point() == (samples["PUBLIC_KEY_X"], samples["PUBLIC_KEY_Y"])
 
     def test_verify(self, samples):
-        public_key = PublicKey(samples["PUBLIC_KEY_COMPRESSED"])
-        assert public_key.verify(samples["SIGNATURE"], samples["MESSAGE"])
+        assert PublicKey(samples["PUBLIC_KEY_COMPRESSED"]).verify(samples["SIGNATURE"], samples["MESSAGE"])
 
     def test_transform(self):
-        x = urandom(32)
-        k = urandom(32)
-        point = G.multiply(x)
-
-        assert point.add(k) == G.multiply(int_to_bytes_padded((bytes_to_int(x) + bytes_to_int(k)) % n))
+        scalar = urandom(32)
+        tweak = urandom(32)
+        point = G.multiply(scalar)
+        combined = (int.from_bytes(scalar, "big") + int.from_bytes(tweak, "big")) % N
+        assert point.add(tweak) == G.multiply(combined.to_bytes(32, "big"))
 
     def test_combine(self):
-        a = PrivateKey().public_key
-        b = PrivateKey().public_key
+        first = PrivateKey()
+        second = PrivateKey()
+        expected = PrivateKey.from_int((first.to_int() + second.to_int()) % N).public_key
+        assert first.public_key.combine([second.public_key]) == expected
+        assert PublicKey.combine_keys([first.public_key, second.public_key]) == expected
 
-        assert PublicKey.combine_keys([a, b]) == a.combine([b])
 
-
-class TestXonlyPubKey:
+class TestXOnlyPublicKey:
     def test_parse_invalid(self, samples):
-        # Must be 32 bytes
-        with pytest.raises(ValueError, match=f"Secret scalar must be greater than 0 and less than {GROUP_ORDER_INT}"):
-            PublicKeyXOnly.from_secret(bytes(33))
-
-        # Must be an x coordinate for a valid point
-        with pytest.raises(ValueError, match=r"The public key could not be parsed or is invalid\."):
-            PublicKeyXOnly(samples["X_ONLY_PUBKEY_INVALID"])
+        with pytest.raises(ValueError, match="valid secp256k1 private key"):
+            XOnlyPublicKey.from_secret(bytes(32))
+        with pytest.raises(ValueError, match="could not be parsed"):
+            XOnlyPublicKey(samples["X_ONLY_PUBKEY_INVALID"])
 
     def test_roundtrip(self, samples):
-        assert PublicKeyXOnly(samples["X_ONLY_PUBKEY"]).format() == samples["X_ONLY_PUBKEY"]
-        assert PublicKeyXOnly(samples["PUBLIC_KEY_COMPRESSED"][1:]).format() == samples["PUBLIC_KEY_COMPRESSED"][1:]
+        key = XOnlyPublicKey(samples["X_ONLY_PUBKEY"])
+        assert key.format() == samples["X_ONLY_PUBKEY"]
+        assert key == XOnlyPublicKey(samples["X_ONLY_PUBKEY"])
+        assert key.parity is None
+        assert XOnlyPublicKey(samples["X_ONLY_PUBKEY"], parity=False).parity is False
 
-        # Test __eq__
-        assert PublicKeyXOnly(samples["X_ONLY_PUBKEY"]) == PublicKeyXOnly(samples["X_ONLY_PUBKEY"])
-
-    def test_tweak(self):
-        # Taken from BIP341 test vectors.
-        # See github.com/bitcoin/bips/blob/6545b81022212a9f1c814f6ce1673e84bc02c910/bip-0341/wallet-test-vectors.json
-        pubkey = PublicKeyXOnly(bytes.fromhex("d6889cb081036e0faefa3a35157ad71086b123b2b144b649798b494c300a961d"))
-        pubkey.tweak_add(bytes.fromhex("b86e7be8f39bab32a6f2c0443abbc210f0edac0e2c53d501b36b64437d9c6c70"))
-        assert pubkey.format() == bytes.fromhex("53a1f6e454df1aa2776a2814a721372d6258050de330b3c6d10ee8f4e0dda343")
-
-    def test_parity(self):
-        # Taken from BIP341 test vectors.
-        # See github.com/bitcoin/bips/blob/6545b81022212a9f1c814f6ce1673e84bc02c910/bip-0341/wallet-test-vectors.json
-        pubkey = PublicKeyXOnly(bytes.fromhex("187791b6f712a8ea41c8ecdd0ee77fab3e85263b37e1ec18a3651926b3a6cf27"))
-        pubkey.tweak_add(bytes.fromhex("cbd8679ba636c1110ea247542cfbd964131a6be84f873f7f3b62a777528ed001"))
-        assert pubkey.format() == bytes.fromhex("147c9c57132f6e7ecddba9800bb0c4449251c92a1e60371ee77557b6620f3ea3")
-        assert pubkey.parity
-
-        pubkey = PublicKeyXOnly(bytes.fromhex("93478e9488f956df2396be2ce6c5cced75f900dfa18e7dabd2428aae78451820"))
-        pubkey.tweak_add(bytes.fromhex("6af9e28dbf9d6aaf027696e2598a5b3d056f5fd2355a7fd5a37a0e5008132d30"))
-        assert pubkey.format() == bytes.fromhex("e4d810fd50586274face62b8a807eb9719cef49c04177cc6b76a9a4251d5450e")
-        assert not pubkey.parity
+    @pytest.mark.parametrize(
+        ("key_hex", "tweak_hex", "expected_hex", "parity"),
+        [
+            (
+                "187791b6f712a8ea41c8ecdd0ee77fab3e85263b37e1ec18a3651926b3a6cf27",
+                "cbd8679ba636c1110ea247542cfbd964131a6be84f873f7f3b62a777528ed001",
+                "147c9c57132f6e7ecddba9800bb0c4449251c92a1e60371ee77557b6620f3ea3",
+                True,
+            ),
+            (
+                "93478e9488f956df2396be2ce6c5cced75f900dfa18e7dabd2428aae78451820",
+                "6af9e28dbf9d6aaf027696e2598a5b3d056f5fd2355a7fd5a37a0e5008132d30",
+                "e4d810fd50586274face62b8a807eb9719cef49c04177cc6b76a9a4251d5450e",
+                False,
+            ),
+        ],
+    )
+    def test_bip341_tweak(self, key_hex, tweak_hex, expected_hex, parity):
+        original = XOnlyPublicKey(bytes.fromhex(key_hex))
+        tweaked = original.add_tweak(bytes.fromhex(tweak_hex))
+        assert tweaked.format() == bytes.fromhex(expected_hex)
+        assert tweaked.parity is parity
+        assert original.format() == bytes.fromhex(key_hex)
+        with pytest.raises(TypeError, match="add_tweak"):
+            original.tweak_add(bytes.fromhex(tweak_hex))
 
 
 if __name__ == "__main__":

@@ -1,6 +1,10 @@
 # Auto detect text files and perform LF normalization
 * text=auto
 
+# C sources and headers use LF endings in both the index and working tree.
+*.c text eol=lf
+*.h text eol=lf
+
 # Custom for Visual Studio
 *.cs     diff=csharp
 

@@ -1,260 +1,126 @@
 # /// script
 # dependencies = [
 #   "coincurve",
-#   "fastecdsa==3.0.1; sys_platform != 'win32'",
-#   "rich",
+#   "pyperf>=2.9",
 # ]
 # [tool.uv.sources]
 # coincurve = { path = ".." }
 # ///
-import os
-import sys
-from abc import ABC, abstractmethod
-from decimal import Decimal
-from textwrap import dedent
-from time import perf_counter_ns
-from timeit import Timer
+from __future__ import annotations
 
-from rich.live import Live
-from rich.table import Table
+from hashlib import sha256
 
-MESSAGE = os.urandom(8192).hex()
+import pyperf
 
+from coincurve import PrivateKey, PublicKey, batch, verify_signature_digest
+from coincurve.batch import packed
 
-class BenchmarkSpec:
-    __slots__ = ("setup", "statement")
-
-    def __init__(self, setup: str, statement: str):
-        self.setup = dedent(setup[1:])
-        self.statement = dedent(statement[1:])
-
-
-class Benchmark(ABC):
-    @staticmethod
-    @abstractmethod
-    def name() -> str:
-        pass
-
-    @staticmethod
-    @abstractmethod
-    def generate_key_pair() -> BenchmarkSpec:
-        pass
-
-    @staticmethod
-    @abstractmethod
-    def sign() -> BenchmarkSpec:
-        pass
-
-    @staticmethod
-    @abstractmethod
-    def verify() -> BenchmarkSpec:
-        pass
-
-    @staticmethod
-    @abstractmethod
-    def key_export() -> BenchmarkSpec:
-        pass
-
-    @staticmethod
-    @abstractmethod
-    def key_import() -> BenchmarkSpec:
-        pass
+LIBSECP256K1_COMMIT = "0cdc758a56360bf58a851fe91085a327ec97685a"
+SECRET = bytes.fromhex("00" * 31 + "01")
+PEER_SECRET = bytes.fromhex("00" * 31 + "02")
+DIGEST = sha256(b"binding overhead").digest()
+MESSAGE = b"binding overhead"
+PRIVATE_KEY = PrivateKey(SECRET)
+PUBLIC_KEY = PRIVATE_KEY.public_key
+XONLY_PUBLIC_KEY = PRIVATE_KEY.xonly_public_key
+PEER_PUBLIC_KEY = PrivateKey(PEER_SECRET).public_key
+PEER_PUBLIC_KEY_BYTES = bytes(PEER_PUBLIC_KEY)
+ECDSA_SIGNATURE = PRIVATE_KEY.sign_digest(DIGEST)
+RECOVERABLE_SIGNATURE = PRIVATE_KEY.sign_recoverable_digest(DIGEST)
+SCHNORR_SIGNATURE = PRIVATE_KEY.sign_schnorr_digest(DIGEST, aux_randomness=bytes(32))
+PUBLIC_KEY_BYTES = bytes(PUBLIC_KEY)
+PRIVATE_KEY_DER = PRIVATE_KEY.to_der()
+PRIVATE_KEY_PEM = PRIVATE_KEY.to_pem()
+TWEAK = PEER_SECRET
+BATCH_SIZES = (1, 16, 256, 4096)
 
 
-class CoincurveBenchmark(Benchmark):
-    @staticmethod
-    def name() -> str:
-        return "coincurve"
+def benchmark_scalar(runner: pyperf.Runner) -> None:
+    runner.bench_func("hash_sha256", lambda: sha256(MESSAGE).digest())
+    runner.bench_func("private_key_from_fixed_secret", lambda: PrivateKey(SECRET))
+    runner.bench_func("private_key_random", PrivateKey)
+    runner.bench_func("ecdsa_sign_digest", lambda: PRIVATE_KEY.sign_digest(DIGEST))
+    runner.bench_func("ecdsa_sign_message", lambda: PRIVATE_KEY.sign(MESSAGE))
+    runner.bench_func("ecdsa_verify_cached", lambda: PUBLIC_KEY.verify_digest(ECDSA_SIGNATURE, DIGEST))
+    runner.bench_func(
+        "ecdsa_verify_serialized",
+        lambda: verify_signature_digest(ECDSA_SIGNATURE, DIGEST, PUBLIC_KEY_BYTES),
+    )
+    runner.bench_func("recoverable_sign_digest", lambda: PRIVATE_KEY.sign_recoverable_digest(DIGEST))
+    runner.bench_func("recover_public_key", lambda: PublicKey.recover_digest(RECOVERABLE_SIGNATURE, DIGEST))
+    runner.bench_func(
+        "schnorr_sign_digest",
+        lambda: PRIVATE_KEY.sign_schnorr_digest(DIGEST, aux_randomness=bytes(32)),
+    )
+    runner.bench_func(
+        "schnorr_verify_digest",
+        lambda: XONLY_PUBLIC_KEY.verify_digest(SCHNORR_SIGNATURE, DIGEST),
+    )
+    runner.bench_func("ecdh", lambda: PRIVATE_KEY.ecdh(PEER_PUBLIC_KEY_BYTES))
+    runner.bench_func("public_key_parse", lambda: PublicKey(PUBLIC_KEY_BYTES))
+    runner.bench_func("public_key_serialize_compressed", lambda: bytes(PUBLIC_KEY))
+    runner.bench_func("public_key_serialize_uncompressed", lambda: PUBLIC_KEY.format(compressed=False))
+    runner.bench_func("private_key_tweak_add", lambda: PRIVATE_KEY.add(TWEAK))
+    runner.bench_func("public_key_tweak_add", lambda: PUBLIC_KEY.add(TWEAK))
+    runner.bench_func("private_key_to_der", PRIVATE_KEY.to_der)
+    runner.bench_func("private_key_from_der", lambda: PrivateKey.from_der(PRIVATE_KEY_DER))
+    runner.bench_func("private_key_to_pem", PRIVATE_KEY.to_pem)
+    runner.bench_func("private_key_from_pem", lambda: PrivateKey.from_pem(PRIVATE_KEY_PEM))
 
-    @staticmethod
-    def generate_key_pair() -> BenchmarkSpec:
-        return BenchmarkSpec(
-            """
-            from coincurve import PrivateKey
-            """,
-            """
-            PrivateKey()
-            """,
+
+def benchmark_batches(runner: pyperf.Runner) -> None:
+    for size in BATCH_SIZES:
+        digests = [DIGEST] * size
+        keys = [PRIVATE_KEY] * size
+        public_keys = [PUBLIC_KEY] * size
+        signatures = [ECDSA_SIGNATURE] * size
+        packed_secrets = SECRET * size
+        packed_digests = DIGEST * size
+        packed_public_keys = PUBLIC_KEY_BYTES * size
+        packed_signatures = packed.sign_ecdsa_digests(packed_secrets, packed_digests)[0]
+        runner.bench_func(
+            f"ecdsa_sign_scalar_loop_{size}",
+            lambda digests=digests: [PRIVATE_KEY.sign_digest(digest) for digest in digests],
         )
-
-    @staticmethod
-    def sign() -> BenchmarkSpec:
-        return BenchmarkSpec(
-            f"""
-            from coincurve import PrivateKey
-            message = {MESSAGE!r}.encode()
-            private_key = PrivateKey()
-            """,
-            """
-            private_key.sign(message)
-            """,
+        runner.bench_func(
+            f"ecdsa_sign_same_key_batch_{size}",
+            lambda digests=digests: PRIVATE_KEY.sign_digests(digests),
         )
-
-    @staticmethod
-    def verify() -> BenchmarkSpec:
-        return BenchmarkSpec(
-            f"""
-            from coincurve import PrivateKey, verify_signature
-            message = {MESSAGE!r}.encode()
-            private_key = PrivateKey()
-            signature = private_key.sign(message)
-            public_key = private_key.public_key.format(compressed=False)
-            """,
-            """
-            assert verify_signature(signature, message, public_key)
-            """,
+        runner.bench_func(
+            f"ecdsa_sign_pairwise_batch_{size}",
+            lambda keys=keys, digests=digests: batch.sign_digests(keys, digests),
         )
-
-    @staticmethod
-    def key_export() -> BenchmarkSpec:
-        return BenchmarkSpec(
-            """
-            from coincurve import PrivateKey
-            private_key = PrivateKey()
-            """,
-            """
-            private_key.to_pem()
-            """,
+        runner.bench_func(
+            f"ecdsa_sign_packed_batch_{size}",
+            lambda secrets=packed_secrets, digests=packed_digests: packed.sign_ecdsa_digests(secrets, digests),
         )
-
-    @staticmethod
-    def key_import() -> BenchmarkSpec:
-        return BenchmarkSpec(
-            """
-            from coincurve import PrivateKey
-            private_key = PrivateKey()
-            private_key_pem = private_key.to_pem()
-            """,
-            """
-            PrivateKey.from_pem(private_key_pem)
-            """,
+        runner.bench_func(
+            f"ecdsa_verify_scalar_loop_{size}",
+            lambda signatures=signatures, digests=digests: [
+                PUBLIC_KEY.verify_digest(signature, digest)
+                for signature, digest in zip(signatures, digests, strict=True)
+            ],
+        )
+        runner.bench_func(
+            f"ecdsa_verify_pairwise_batch_{size}",
+            lambda public_keys=public_keys, signatures=signatures, digests=digests: batch.verify_digests(
+                public_keys, signatures, digests
+            ),
+        )
+        runner.bench_func(
+            f"ecdsa_verify_packed_batch_{size}",
+            lambda public_keys=packed_public_keys, signatures=packed_signatures, digests=packed_digests: (
+                packed.verify_ecdsa_digests(public_keys, signatures, digests)
+            ),
         )
 
 
-class FastecdsaBenchmark(Benchmark):
-    @staticmethod
-    def name() -> str:
-        return "fastecdsa"
-
-    @staticmethod
-    def generate_key_pair() -> BenchmarkSpec:
-        return BenchmarkSpec(
-            """
-            from fastecdsa import curve, keys
-            """,
-            """
-            keys.gen_keypair(curve.secp256k1)
-            """,
-        )
-
-    @staticmethod
-    def sign() -> BenchmarkSpec:
-        return BenchmarkSpec(
-            f"""
-            from fastecdsa import curve, ecdsa, keys
-            message = {MESSAGE!r}
-            private_key, _ = keys.gen_keypair(curve.secp256k1)
-            """,
-            """
-            r, s = ecdsa.sign(message, private_key, curve=curve.secp256k1)
-            """,
-        )
-
-    @staticmethod
-    def verify() -> BenchmarkSpec:
-        return BenchmarkSpec(
-            f"""
-            from fastecdsa import curve, ecdsa, keys
-            message = {MESSAGE!r}
-            private_key, public_key = keys.gen_keypair(curve.secp256k1)
-            r, s = ecdsa.sign(message, private_key, curve=curve.secp256k1)
-            """,
-            """
-            assert ecdsa.verify((r, s), message, public_key, curve=curve.secp256k1)
-            """,
-        )
-
-    @staticmethod
-    def key_export() -> BenchmarkSpec:
-        return BenchmarkSpec(
-            """
-            from fastecdsa import curve, keys
-            from fastecdsa.encoding.pem import PEMEncoder
-            private_key, _ = keys.gen_keypair(curve.secp256k1)
-            encoder = PEMEncoder()
-            """,
-            """
-            encoder.encode_private_key(private_key, curve=curve.secp256k1)
-            """,
-        )
-
-    @staticmethod
-    def key_import() -> BenchmarkSpec:
-        return BenchmarkSpec(
-            """
-            from fastecdsa import curve, keys
-            from fastecdsa.encoding.pem import PEMEncoder
-            private_key, _ = keys.gen_keypair(curve.secp256k1)
-            encoder = PEMEncoder()
-            private_key_pem = encoder.encode_private_key(private_key, curve=curve.secp256k1)
-            """,
-            """
-            encoder.decode_private_key(private_key_pem)
-            """,
-        )
-
-
-def generate_table(rows: list[list[str]]):
-    table = Table()
-    table.add_column("Library")
-    table.add_column("Key generation")
-    table.add_column("Signing")
-    table.add_column("Verification")
-    table.add_column("Key export")
-    table.add_column("Key import")
-
-    for row in rows:
-        table.add_row(*row)
-
-    return table
-
-
-def main():
-    print(sys.version)
-    rows = []
-    table = generate_table(rows)
-
-    with Live(table, auto_refresh=False) as live:
-        for benchmark in [CoincurveBenchmark, FastecdsaBenchmark]:
-            row = [benchmark.name()]
-            rows.append(row)
-            live.update(generate_table(rows), refresh=True)
-
-            for method in [
-                benchmark.generate_key_pair,
-                benchmark.sign,
-                benchmark.verify,
-                benchmark.key_export,
-                benchmark.key_import,
-            ]:
-                spec = method()
-                timer = Timer(stmt=spec.statement, setup=spec.setup, timer=perf_counter_ns)
-
-                try:
-                    loops, _ = timer.autorange()
-                    times = timer.repeat(number=loops, repeat=1000)
-                except Exception as e:  # noqa: BLE001
-                    row.append(str(e))
-                    live.update(generate_table(rows), refresh=True)
-                    continue
-
-                best = Decimal(min(times))
-                # Convert nanoseconds to microseconds and round to 1 decimal place
-                best /= 1_000
-                best = best.quantize(Decimal("0.1"))
-
-                row.append(str(best))
-                live.update(generate_table(rows), refresh=True)
+def main() -> None:
+    runner = pyperf.Runner()
+    runner.metadata["implementation"] = "handwritten CPython extension"
+    runner.metadata["libsecp256k1_commit"] = LIBSECP256K1_COMMIT
+    benchmark_scalar(runner)
+    benchmark_batches(runner)
 
 
 if __name__ == "__main__":

@@ -19,10 +19,12 @@ env:
   COINCURVE_IGNORE_SYSTEM_LIB: 'ON'
   COINCURVE_SECP256K1_STATIC: 'ON'
   COINCURVE_CROSS_HOST: ''
+  COINCURVE_STRICT_WARNINGS: 'ON'
   CIBW_ENVIRONMENT_PASS_LINUX: >
     COINCURVE_IGNORE_SYSTEM_LIB
     COINCURVE_SECP256K1_STATIC
     COINCURVE_CROSS_HOST
+    COINCURVE_STRICT_WARNINGS
   CIBW_BEFORE_ALL_MACOS: ./.github/scripts/install-macos-build-deps.sh
   CIBW_TEST_REQUIRES: pytest
   CIBW_TEST_COMMAND: >
@@ -46,11 +48,16 @@ jobs:
       with:
         python-version: ${{ env.PYTHON_VERSION }}
 
+    - uses: astral-sh/setup-uv@v9.0.0
+
     - name: Install Hatch
       uses: pypa/hatch@install
 
-    - name: Run static analysis
-      run: hatch fmt --check
+    - name: Check code
+      run: hatch check code
+
+    - name: Check formatting
+      run: hatch check fmt
 
     - name: Check types
       run: hatch run types:check
@@ -81,8 +88,79 @@ jobs:
     - name: Run tests
       run: python -m pytest tests
 
+  system-library:
+    name: Test with system libsecp256k1
+    runs-on: ubuntu-latest
+    env:
+      PYTHON_VERSION: '3.12'
+      COINCURVE_UPSTREAM_REF: __no_upstream__
+      COINCURVE_IGNORE_SYSTEM_LIB: 'OFF'
+      COINCURVE_SECP256K1_STATIC: 'OFF'
+    defaults:
+      run:
+        shell: bash -el {0}
+
+    steps:
+    - uses: actions/checkout@v7
+
+    - name: Install Miniconda
+      uses: conda-incubator/setup-miniconda@v3
+      with:
+        environment-file: ./.conda/environment-dev.yml
+        activate-environment: coincurve-with-conda-dev
+        python-version: ${{ env.PYTHON_VERSION }}
+        auto-activate-base: false
+
+    - name: Build wheel
+      run: |
+        python -m pip install build
+        python -m build --wheel --outdir system-dist
+
+    - name: Install wheel and run tests
+      run: |
+        python -m pip install --no-deps system-dist/*.whl
+        LD_LIBRARY_PATH="$CONDA_PREFIX/lib${LD_LIBRARY_PATH:+:$LD_LIBRARY_PATH}" python -m pytest tests
+
+  shared-library:
+    name: Test shared libsecp256k1 on ${{ matrix.platform }}
+    runs-on: ${{ matrix.os }}
+    env:
+      COINCURVE_SECP256K1_STATIC: 'OFF'
+      CIBW_BUILD: 'cp314-*'
+      CIBW_ARCHS: ${{ matrix.arch }}
+      MACOSX_DEPLOYMENT_TARGET: ${{ matrix.macos-target }}
+      # The shared Windows wheel already installs libsecp256k1 beside the extension.
+      # Delvewheel only searches outside the wheel for that dependency, so preserve
+      # the already self-contained wheel instead of trying to vendor it a second time.
+      CIBW_REPAIR_WHEEL_COMMAND_WINDOWS: >-
+        python -c "import shutil; shutil.copy2(r'{wheel}', r'{dest_dir}')"
+    strategy:
+      fail-fast: false
+      matrix:
+        include:
+        - platform: Linux
+          os: ubuntu-latest
+          arch: x86_64
+          macos-target: ''
+        - platform: macOS
+          os: macos-15-intel
+          arch: x86_64
+          macos-target: '10.15'
+        - platform: Windows
+          os: windows-latest
+          arch: AMD64
+          macos-target: ''
+
+    steps:
+    - uses: actions/checkout@v7
+
+    - name: Build and test wheel
+      uses: pypa/cibuildwheel@v4.1.0
+      env:
+        CIBW_BEFORE_ALL_WINDOWS: choco install -y --no-progress --no-color cmake>=3.28
+
   coverage:
-    name: Upload coverage
+    name: Measure Python coverage
     runs-on: ubuntu-latest
     env:
       PYTHON_VERSION: '3.14t'
@@ -111,7 +189,69 @@ jobs:
       uses: codecov/codecov-action@v7
       with:
         files: coverage.xml
+        flags: python
         use_oidc: true
+
+  native-coverage:
+    name: Measure project C coverage
+    runs-on: ubuntu-latest
+
+    permissions:
+      contents: read
+      id-token: write
+
+    steps:
+    - uses: actions/checkout@v7
+
+    - uses: actions/setup-python@v6
+      with:
+        python-version: ${{ env.PYTHON_VERSION }}
+
+    - uses: astral-sh/setup-uv@v9.0.0
+
+    - name: Install LLVM coverage tools
+      run: |
+        sudo apt-get update
+        sudo apt-get install --no-install-recommends clang llvm
+
+    - name: Install Hatch
+      uses: pypa/hatch@install
+
+    - name: Measure native coverage
+      run: hatch run native-coverage:run
+
+    - name: Upload coverage to Codecov
+      uses: codecov/codecov-action@v7
+      with:
+        files: build/native-coverage/coverage.lcov
+        flags: native
+        use_oidc: true
+
+    - name: Upload native coverage report
+      uses: actions/upload-artifact@v7
+      with:
+        name: native-coverage-report
+        path: build/native-coverage
+        if-no-files-found: error
+
+  sanitizers:
+    name: Test project C sources with sanitizers
+    runs-on: ubuntu-latest
+    env:
+      COINCURVE_SANITIZE: 'ON'
+
+    steps:
+    - uses: actions/checkout@v7
+
+    - uses: actions/setup-python@v6
+      with:
+        python-version: ${{ env.PYTHON_VERSION }}
+
+    - name: Install project and test dependencies
+      run: python -m pip install . pytest
+
+    - name: Run tests under AddressSanitizer and UndefinedBehaviorSanitizer
+      run: LD_PRELOAD="$(cc -print-file-name=libasan.so)" python -m pytest tests
 
   sdist:
     name: Build source distribution
@@ -312,6 +452,8 @@ jobs:
   validate-distribution:
     name: Validate release artifacts
     needs:
+    - system-library
+    - shared-library
     - prerelease-source
     - linux-wheels-x86_64
     - linux-wheels-arm64
@@ -335,7 +477,7 @@ jobs:
 
     - name: Validate metadata and wheel contents
       run: |
-        python -m twine check dist/*
+        python -m twine check --strict dist/*
         check-wheel-contents dist/*.whl
 
     - name: Validate artifact inventory

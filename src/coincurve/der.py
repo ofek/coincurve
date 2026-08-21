@@ -188,6 +188,9 @@ def decode_length(data: bytes, offset: int) -> tuple[int, int]:
     for _ in range(num_length_bytes):
         length = (length << 8) | data[offset]
         offset += 1
+    # Bounds check: ensure the claimed length does not exceed the buffer
+    if offset + length > len(data):
+        raise ValueError("Invalid DER: length exceeds buffer")
     return length, offset
 
 
